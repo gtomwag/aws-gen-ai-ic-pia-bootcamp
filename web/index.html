@@ -2,674 +2,1459 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GenAI Disruption Management</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <title>FlyAssist</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    /* ── Reset & Foundation ─────────────────────────────── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html { font-size: 16px; -webkit-text-size-adjust: 100%; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #0f1117;
-      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+      background: #F2F2F7;
+      color: #1C1C1E;
       min-height: 100vh;
+      min-height: 100dvh;
       display: flex;
       flex-direction: column;
-    }
-
-    /* Header */
-    header {
-      background: #1a1b26;
-      border-bottom: 1px solid #2d2f3e;
-      padding: 16px 24px;
-      display: flex;
       align-items: center;
-      justify-content: space-between;
-    }
-    header h1 {
-      font-size: 18px;
-      color: #7aa2f7;
-    }
-    header .status {
-      font-size: 12px;
-      color: #565f89;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow: hidden;
     }
 
-    /* Main layout */
-    .container {
-      display: flex;
-      flex: 1;
-      max-width: 1200px;
+    /* ── iOS Color Tokens ──────────────────────────────── */
+    :root {
+      --ios-blue: #007AFF;
+      --ios-red: #FF3B30;
+      --ios-green: #34C759;
+      --ios-orange: #FF9500;
+      --ios-purple: #AF52DE;
+      --ios-gray: #8E8E93;
+      --ios-gray2: #AEAEB2;
+      --ios-gray3: #C7C7CC;
+      --ios-gray4: #D1D1D6;
+      --ios-gray5: #E5E5EA;
+      --ios-gray6: #F2F2F7;
+      --ios-bg: #F2F2F7;
+      --ios-card: #FFFFFF;
+      --ios-text: #1C1C1E;
+      --ios-text2: #3C3C43;
+      --ios-text3: #8E8E93;
+      --ios-separator: #E5E5EA;
+      --card-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+      --card-radius: 12px;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    /* ── App Shell ─────────────────────────────────────── */
+    .app-shell {
       width: 100%;
-      margin: 0 auto;
-      padding: 16px;
-      gap: 16px;
+      max-width: 428px;
+      height: 100vh;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
       overflow: hidden;
+      background: var(--ios-bg);
     }
 
-    /* Chat panel */
-    .chat-panel {
-      flex: 1;
-      display: flex;
+    /* ── Screens ───────────────────────────────────────── */
+    .screen {
+      display: none;
       flex-direction: column;
-      background: #1a1b26;
-      border-radius: 12px;
-      border: 1px solid #2d2f3e;
+      flex: 1;
       overflow: hidden;
+      position: relative;
     }
-    .chat-messages {
-      flex: 1;
-      overflow-y: auto;
-      padding: 16px;
+    .screen.active {
       display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .msg {
-      max-width: 80%;
-      padding: 10px 14px;
-      border-radius: 12px;
-      font-size: 14px;
-      line-height: 1.5;
-      white-space: pre-wrap;
-    }
-    .msg.user {
-      align-self: flex-end;
-      background: #364fc7;
-      color: #fff;
-      border-bottom-right-radius: 4px;
-    }
-    .msg.assistant {
-      align-self: flex-start;
-      background: #24283b;
-      color: #c0caf5;
-      border-bottom-left-radius: 4px;
-    }
-    .msg.system {
-      align-self: center;
-      background: #1e2030;
-      color: #565f89;
-      font-size: 12px;
-      border-radius: 8px;
     }
 
-    /* Chat input */
-    .chat-input {
-      display: flex;
-      gap: 8px;
-      padding: 12px;
-      border-top: 1px solid #2d2f3e;
-      background: #16161e;
-    }
-    .chat-input input {
-      flex: 1;
-      padding: 10px 14px;
-      border: 1px solid #2d2f3e;
-      border-radius: 8px;
-      background: #1a1b26;
-      color: #e4e4e7;
-      font-size: 14px;
-      outline: none;
-    }
-    .chat-input input:focus { border-color: #7aa2f7; }
-
-    /* Side panel */
-    .side-panel {
-      width: 360px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+    @media (prefers-reduced-motion: no-preference) {
+      .screen { animation: screenFadeIn 0.25s ease; }
+      @keyframes screenFadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
     }
 
-    /* Buttons */
-    button {
-      padding: 10px 18px;
+    /* ── Navigation Bar ────────────────────────────────── */
+    .ios-nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 16px;
+      padding-top: calc(var(--safe-top) + 10px);
+      min-height: 44px;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 0.5px solid var(--ios-separator);
+      position: relative;
+      z-index: 10;
+    }
+    .ios-nav-bar .nav-back {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
       border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
+      color: var(--ios-blue);
+      font-size: 17px;
       cursor: pointer;
-      transition: all 0.15s ease;
-    }
-    button:hover { filter: brightness(1.1); }
-    button:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    .btn-primary { background: #7aa2f7; color: #1a1b26; }
-    .btn-success { background: #9ece6a; color: #1a1b26; }
-    .btn-warning { background: #e0af68; color: #1a1b26; }
-    .btn-danger  { background: #f7768e; color: #1a1b26; }
-    .btn-send    { background: #7aa2f7; color: #1a1b26; min-width: 70px; }
-
-    /* Action buttons row */
-    .actions {
+      padding: 8px 4px;
+      min-width: 44px;
+      min-height: 44px;
       display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
+      align-items: center;
+    }
+    .ios-nav-bar .nav-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--ios-text);
+      user-select: none;
+    }
+    .ios-nav-bar .nav-right {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
-    /* Options panel */
-    .options-panel {
-      background: #1a1b26;
-      border: 1px solid #2d2f3e;
-      border-radius: 12px;
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      max-height: 400px;
+    /* ── Screen 1: Lock Screen ─────────────────────────── */
+    #screenLock {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      justify-content: flex-start;
+      padding-top: calc(var(--safe-top) + 60px);
       overflow-y: auto;
     }
-    .options-panel h3 {
-      font-size: 14px;
-      color: #7aa2f7;
-      margin-bottom: 4px;
+    .lock-time {
+      font-size: 72px;
+      font-weight: 200;
+      text-align: center;
+      letter-spacing: -2px;
+      line-height: 1;
     }
-    .option-card {
-      background: #24283b;
-      border: 2px solid #2d2f3e;
-      border-radius: 8px;
-      padding: 10px 12px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-    .option-card:hover { border-color: #7aa2f7; }
-    .option-card.selected { border-color: #9ece6a; background: #1e2a1e; }
-    .option-card .opt-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 4px;
-    }
-    .option-card .opt-id {
-      font-weight: 700;
-      color: #7aa2f7;
-      font-size: 15px;
-    }
-    .option-card .opt-time {
-      font-size: 12px;
-      color: #9ece6a;
-    }
-    .option-card .opt-route {
-      font-size: 13px;
-      color: #c0caf5;
-    }
-    .option-card .opt-notes {
-      font-size: 12px;
-      color: #565f89;
+    .lock-date {
+      font-size: 17px;
+      font-weight: 400;
+      text-align: center;
       margin-top: 4px;
+      opacity: 0.8;
     }
-
-    /* Booking result */
-    .booking-panel {
-      background: #1a2e1a;
-      border: 2px solid #9ece6a;
-      border-radius: 12px;
-      padding: 16px;
+    .lock-notification-area {
+      flex: 1;
+      padding: 40px 20px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .lock-notif-card {
+      width: 100%;
+      background: rgba(255,255,255,0.18);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border-radius: 16px;
+      padding: 14px 16px;
+      cursor: pointer;
       display: none;
+      transition: transform 0.15s ease;
     }
-    .booking-panel.visible { display: block; }
-    .booking-panel h3 { color: #9ece6a; margin-bottom: 8px; }
-    .booking-panel .pnr {
-      font-size: 24px;
-      font-weight: 700;
-      color: #9ece6a;
-      letter-spacing: 2px;
+    .lock-notif-card:active { transform: scale(0.98); }
+    .lock-notif-card.visible { display: block; }
+    @media (prefers-reduced-motion: no-preference) {
+      .lock-notif-card.visible {
+        animation: notifSlideDown 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      @keyframes notifSlideDown {
+        from { opacity: 0; transform: translateY(-30px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+      }
     }
-    .booking-panel .details {
-      font-size: 13px;
-      color: #a9b665;
-      margin-top: 8px;
-    }
-
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: #16161e; }
-    ::-webkit-scrollbar-thumb { background: #2d2f3e; border-radius: 3px; }
-
-    /* Notification Center */
-    .notification-center {
-      background: linear-gradient(135deg, #1a1b26 0%, #24283b 100%);
-      border: 1px solid #7aa2f7;
-      border-radius: 12px;
-      padding: 0;
-      margin-bottom: 12px;
-      display: none;
-      overflow: hidden;
-    }
-    .notification-center.visible { display: block; }
-    .notification-center .notif-header {
-      background: #2d2f3e;
-      padding: 10px 14px;
+    .lock-notif-header {
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 13px;
-      font-weight: 700;
-      color: #7aa2f7;
-    }
-    .notification-center .notif-body {
-      padding: 12px 14px;
-    }
-    .notif-passenger {
-      font-size: 15px;
-      font-weight: 600;
-      color: #c0caf5;
-      margin-bottom: 4px;
-    }
-    .notif-flight {
-      font-size: 13px;
-      color: #e0af68;
-      margin-bottom: 4px;
-    }
-    .notif-cause {
-      font-size: 13px;
-      color: #f7768e;
       margin-bottom: 8px;
     }
+    .lock-notif-icon {
+      width: 28px;
+      height: 28px;
+      background: rgba(255,255,255,0.25);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+    .lock-notif-app {
+      font-size: 13px;
+      font-weight: 600;
+      opacity: 0.8;
+      flex: 1;
+    }
+    .lock-notif-time {
+      font-size: 12px;
+      opacity: 0.6;
+    }
+    .lock-notif-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .lock-notif-body {
+      font-size: 14px;
+      opacity: 0.85;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      line-height: 1.35;
+    }
+    .lock-bottom {
+      padding: 20px;
+      padding-bottom: calc(var(--safe-bottom) + 20px);
+    }
+    .lock-cta-btn {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 22px;
+      background: rgba(255,255,255,0.25);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color: #fff;
+      font-size: 17px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease;
+      min-height: 50px;
+    }
+    .lock-cta-btn:active { background: rgba(255,255,255,0.35); }
+    .lock-cta-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .lock-slide-hint {
+      text-align: center;
+      font-size: 13px;
+      opacity: 0.4;
+      margin-top: 12px;
+    }
+
+    /* ── Screen 2: Notification Detail ─────────────────── */
+    #screenDetail {
+      background: var(--ios-bg);
+    }
+    .detail-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      padding-bottom: calc(var(--safe-bottom) + 16px);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .alert-banner {
+      background: var(--ios-card);
+      border-radius: var(--card-radius);
+      box-shadow: var(--card-shadow);
+      padding: 14px 16px;
+      border-left: 4px solid var(--ios-red);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .alert-banner .alert-emoji { font-size: 22px; }
+    .alert-banner .alert-content { flex: 1; }
+    .alert-banner .alert-type {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ios-red);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .alert-banner .alert-cause {
+      font-size: 14px;
+      color: var(--ios-text2);
+      margin-top: 2px;
+    }
+
+    .flight-card {
+      background: var(--ios-card);
+      border-radius: var(--card-radius);
+      box-shadow: var(--card-shadow);
+      padding: 16px;
+    }
+    .flight-number {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--ios-text);
+    }
+    .flight-route {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .flight-route .airport-code {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--ios-text);
+    }
+    .flight-route .route-line {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .flight-route .route-line .line {
+      flex: 1;
+      height: 1px;
+      background: var(--ios-gray4);
+    }
+    .flight-route .route-line .plane-icon {
+      font-size: 16px;
+      color: var(--ios-blue);
+    }
+    .flight-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+      font-size: 14px;
+      color: var(--ios-text3);
+    }
+    .status-pill {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 50px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .status-pill.cancelled { background: #FFE5E5; color: var(--ios-red); }
+    .status-pill.delayed { background: #FFF3E0; color: var(--ios-orange); }
+
+    .passenger-card {
+      background: var(--ios-card);
+      border-radius: var(--card-radius);
+      box-shadow: var(--card-shadow);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .passenger-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--ios-blue), var(--ios-purple));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .passenger-info { flex: 1; }
+    .passenger-name { font-size: 17px; font-weight: 600; }
+    .passenger-pnr { font-size: 13px; color: var(--ios-text3); margin-top: 1px; }
     .tier-badge {
       display: inline-block;
-      padding: 2px 10px;
-      border-radius: 12px;
+      padding: 3px 10px;
+      border-radius: 50px;
       font-size: 11px;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
-    .tier-badge.Platinum { background: #a9a1e1; color: #1a1b26; }
-    .tier-badge.Gold { background: #e0af68; color: #1a1b26; }
-    .tier-badge.Silver { background: #9aa5ce; color: #1a1b26; }
-    .tier-badge.General { background: #565f89; color: #e4e4e7; }
-    .notif-cta {
-      display: flex;
-      gap: 8px;
-      margin-top: 8px;
-    }
-    .notif-cta button {
-      padding: 6px 14px;
-      font-size: 12px;
-    }
-    .notif-copy {
-      font-size: 12px;
-      color: #9aa5ce;
-      line-height: 1.5;
-      margin-top: 8px;
-      padding: 8px;
-      background: #16161e;
-      border-radius: 6px;
+    .tier-badge.Platinum { background: linear-gradient(135deg, #9B59B6, #8E44AD); color: #fff; }
+    .tier-badge.Gold { background: linear-gradient(135deg, #F39C12, #E67E22); color: #fff; }
+    .tier-badge.Silver { background: linear-gradient(135deg, #BDC3C7, #95A5A6); color: #fff; }
+    .tier-badge.General { background: var(--ios-gray5); color: var(--ios-text3); }
+
+    .notif-body-card {
+      background: var(--ios-card);
+      border-radius: var(--card-radius);
+      box-shadow: var(--card-shadow);
+      padding: 16px;
+      font-size: 15px;
+      line-height: 1.55;
+      color: var(--ios-text2);
       white-space: pre-wrap;
     }
-    .notif-channel {
-      font-size: 11px;
-      color: #565f89;
+
+    .detail-cta {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
       margin-top: 4px;
     }
-
-    /* Manifest summary bar */
-    .manifest-bar {
-      display: none;
-      background: #1e2030;
-      border: 1px solid #2d2f3e;
-      border-radius: 8px;
-      padding: 8px 12px;
-      margin-bottom: 12px;
-      font-size: 12px;
-      color: #9aa5ce;
+    .ios-btn {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 14px;
+      font-size: 17px;
+      font-weight: 600;
+      cursor: pointer;
+      min-height: 50px;
+      transition: opacity 0.15s ease, transform 0.1s ease;
     }
-    .manifest-bar.visible { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
-    .manifest-bar .stat {
+    .ios-btn:active { transform: scale(0.98); opacity: 0.85; }
+    .ios-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .ios-btn-primary { background: var(--ios-blue); color: #fff; }
+    .ios-btn-secondary {
+      background: transparent;
+      color: var(--ios-blue);
+      border: 1.5px solid var(--ios-blue);
+    }
+    .ios-btn-success { background: var(--ios-green); color: #fff; }
+    .ios-btn-danger { background: var(--ios-red); color: #fff; }
+
+    /* ── Screen 3: Options (Tab) ───────────────────────── */
+    #screenOptions {
+      background: var(--ios-bg);
+    }
+    .options-header {
+      padding: 4px 16px 12px;
+    }
+    .options-large-title {
+      font-size: 34px;
+      font-weight: 700;
+      color: var(--ios-text);
+    }
+    .filter-pills {
+      display: flex;
+      gap: 8px;
+      padding: 0 16px 12px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .filter-pills::-webkit-scrollbar { display: none; }
+    .filter-pill {
+      padding: 7px 16px;
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: 500;
+      border: 1.5px solid var(--ios-gray4);
+      background: var(--ios-card);
+      color: var(--ios-text2);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+      min-height: 34px;
+    }
+    .filter-pill:active { transform: scale(0.96); }
+    .filter-pill.active {
+      background: var(--ios-blue);
+      color: #fff;
+      border-color: var(--ios-blue);
+    }
+    .options-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 16px;
+      padding-bottom: calc(80px + var(--safe-bottom));
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .option-card {
+      background: var(--ios-card);
+      border-radius: var(--card-radius);
+      box-shadow: var(--card-shadow);
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      position: relative;
+      border-left: 4px solid transparent;
+    }
+    .option-card:active { transform: scale(0.985); }
+    .option-card.selected {
+      border-left-color: var(--ios-blue);
+      background: #F0F5FF;
+    }
+    .option-card .opt-rank {
+      position: absolute;
+      top: -6px;
+      left: -6px;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--ios-blue);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(0,122,255,0.3);
+    }
+    .option-card .opt-times {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .option-card .opt-time-lg {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--ios-text);
+    }
+    .option-card .opt-arrow { color: var(--ios-gray3); font-size: 14px; }
+    .option-card .opt-route {
+      font-size: 14px;
+      color: var(--ios-text3);
+      margin-bottom: 8px;
+    }
+    .option-card .opt-meta-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 6px;
+    }
+    .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 50px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .meta-pill.class-pill { background: #E8F0FE; color: var(--ios-blue); }
+    .meta-pill.cost-positive { background: #FFE5E5; color: var(--ios-red); }
+    .meta-pill.cost-negative { background: #E8F8EE; color: var(--ios-green); }
+    .meta-pill.cost-zero { background: var(--ios-gray6); color: var(--ios-gray); }
+    .meta-pill.stops-pill { background: var(--ios-gray6); color: var(--ios-text3); }
+    .option-card .opt-rationale {
+      font-size: 13px;
+      color: var(--ios-text3);
+      font-style: italic;
+      margin-bottom: 4px;
+    }
+    .option-card .opt-perks {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .perk-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 50px;
+      font-size: 11px;
+      font-weight: 600;
+      background: #FFF8E1;
+      color: #B8860B;
+    }
+    .option-card .opt-compat-bar {
+      height: 3px;
+      border-radius: 2px;
+      background: var(--ios-gray5);
+      margin-top: 8px;
+      overflow: hidden;
+    }
+    .option-card .opt-compat-fill {
+      height: 100%;
+      border-radius: 2px;
+      background: linear-gradient(90deg, var(--ios-green), #2ECC71);
+      transition: width 0.4s ease;
+    }
+    .opt-selected-check {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--ios-blue);
+      color: #fff;
+      font-size: 14px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .option-card.selected .opt-selected-check { display: flex; }
+
+    /* Sticky confirm at bottom of options */
+    .options-confirm-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 12px 16px;
+      padding-bottom: calc(12px + var(--safe-bottom));
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 0.5px solid var(--ios-separator);
+      z-index: 5;
+    }
+    .options-no-items {
+      text-align: center;
+      color: var(--ios-text3);
+      font-size: 15px;
+      padding: 40px 20px;
+    }
+
+    /* ── Screen 4: Chat (Tab) ──────────────────────────── */
+    #screenChat {
+      background: var(--ios-bg);
+    }
+    .chat-nav-sentiment {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--ios-gray3);
+      display: inline-block;
+      margin-left: 6px;
+    }
+    .chat-nav-sentiment.POSITIVE { background: var(--ios-green); }
+    .chat-nav-sentiment.NEGATIVE { background: var(--ios-red); }
+    .chat-nav-sentiment.NEUTRAL { background: var(--ios-gray3); }
+    .chat-nav-sentiment.MIXED { background: var(--ios-orange); }
+
+    .auto-escalation-banner {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: #FFF0F0;
+      border-bottom: 0.5px solid #FFD4D4;
+    }
+    .auto-escalation-banner.visible { display: flex; }
+    .auto-escalation-banner .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--ios-red);
+      animation: pulseDot 1.5s ease-in-out infinite;
+    }
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+    .auto-escalation-banner .escalation-text {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ios-red);
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .msg {
+      max-width: 78%;
+      padding: 10px 14px;
+      font-size: 16px;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    .msg.user {
+      align-self: flex-end;
+      background: var(--ios-blue);
+      color: #fff;
+      border-radius: 18px 18px 4px 18px;
+    }
+    .msg.assistant {
+      align-self: flex-start;
+      background: #E9E9EB;
+      color: var(--ios-text);
+      border-radius: 18px 18px 18px 4px;
+    }
+    .msg.system {
+      align-self: center;
+      background: none;
+      color: var(--ios-text3);
+      font-size: 13px;
+      padding: 6px 0;
+      max-width: 100%;
+      text-align: center;
+    }
+
+    .msg-source-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+      margin-bottom: 4px;
+    }
+    .msg-source-badge.source-kb { background: #E8F8EE; color: #1B7A3D; }
+    .msg-source-badge.source-bedrock { background: #E8F0FE; color: #1A56DB; }
+    .msg-source-badge.source-fallback { background: #FFF8E1; color: #B8860B; }
+
+    .msg-citations {
+      margin-top: 8px;
+      padding-top: 6px;
+      border-top: 1px solid rgba(0,0,0,0.08);
+      font-size: 12px;
+    }
+    .msg-citations .citation-toggle {
+      color: var(--ios-blue);
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 13px;
       display: flex;
       align-items: center;
       gap: 4px;
     }
-    .manifest-bar .stat strong { color: #7aa2f7; }
-
-    /* Sort/filter row */
-    .sort-filter-row {
+    .msg-citations .citation-list {
       display: none;
-      gap: 6px;
-      margin-bottom: 8px;
-      flex-wrap: wrap;
-    }
-    .sort-filter-row.visible { display: flex; }
-    .sort-filter-row button {
-      padding: 4px 10px;
-      font-size: 11px;
-      border-radius: 6px;
-      background: #24283b;
-      color: #9aa5ce;
-      border: 1px solid #2d2f3e;
-    }
-    .sort-filter-row button.active {
-      background: #7aa2f7;
-      color: #1a1b26;
-      border-color: #7aa2f7;
-    }
-
-    /* Enhanced option cards */
-    .option-card .opt-meta {
-      display: flex;
-      gap: 8px;
-      margin-top: 4px;
-      flex-wrap: wrap;
-    }
-    .option-card .opt-meta span {
-      font-size: 11px;
-      padding: 1px 6px;
-      border-radius: 4px;
-      background: #1e2030;
-      color: #9aa5ce;
-    }
-    .option-card .opt-meta .cost-delta-positive { color: #f7768e; }
-    .option-card .opt-meta .cost-delta-negative { color: #9ece6a; }
-    .option-card .opt-meta .cost-delta-zero { color: #9aa5ce; }
-    .option-card .opt-rationale {
-      font-size: 11px;
-      color: #7aa2f7;
-      margin-top: 4px;
-      font-style: italic;
-    }
-    .option-card .opt-perks {
-      font-size: 11px;
-      color: #a9a1e1;
       margin-top: 4px;
     }
-
-    /* Enhanced Booking Panel */
-    .booking-panel .itinerary {
-      margin-top: 8px;
-      font-size: 13px;
-      color: #c0caf5;
-      line-height: 1.6;
-    }
-    .booking-panel .offline-note {
-      margin-top: 8px;
-      padding: 6px 10px;
-      background: #1e2a1e;
-      border-radius: 6px;
-      font-size: 11px;
-      color: #9ece6a;
-    }
-
-    /* Escalation Panel */
-    .escalation-panel {
-      background: #1a1b26;
-      border: 2px solid #f7768e;
-      border-radius: 12px;
-      padding: 16px;
-      display: none;
-      max-height: 300px;
-      overflow-y: auto;
-    }
-    .escalation-panel.visible { display: block; }
-    .escalation-panel h3 { color: #f7768e; margin-bottom: 8px; font-size: 14px; }
-    .escalation-panel .esc-section {
-      margin-bottom: 8px;
-    }
-    .escalation-panel .esc-section h4 {
-      font-size: 12px;
-      color: #e0af68;
-      margin-bottom: 4px;
-    }
-    .escalation-panel .esc-section p,
-    .escalation-panel .esc-section pre {
-      font-size: 12px;
-      color: #9aa5ce;
-      line-height: 1.4;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-    .escalation-panel .esc-priority {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 700;
-    }
-    .esc-priority.HIGH { background: #f7768e; color: #1a1b26; }
-    .esc-priority.MEDIUM { background: #e0af68; color: #1a1b26; }
-    .esc-priority.NORMAL { background: #565f89; color: #e4e4e7; }
-
-    /* Metrics log panel */
-    .metrics-panel {
-      background: #16161e;
-      border: 1px solid #2d2f3e;
-      border-radius: 8px;
-      padding: 8px 12px;
-      margin-top: 12px;
-      max-height: 120px;
-      overflow-y: auto;
-      font-family: 'Courier New', monospace;
-      font-size: 11px;
-      color: #565f89;
-      display: none;
-    }
-    .metrics-panel.visible { display: block; }
-    .metrics-panel .metric-line { margin-bottom: 2px; }
-    .metrics-panel .metric-line .metric-name { color: #9ece6a; }
-    .metrics-panel .metric-line .metric-val { color: #e0af68; }
-
-    /* ── Source Badge on Assistant Messages ─────────────── */
-    .msg-source-badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 10px;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.3px;
-      margin-bottom: 6px;
-    }
-    .msg-source-badge.source-kb {
-      background: #1e3a2f;
-      color: #73daca;
-      border: 1px solid #73daca44;
-    }
-    .msg-source-badge.source-bedrock {
-      background: #1e2a3a;
-      color: #7aa2f7;
-      border: 1px solid #7aa2f744;
-    }
-    .msg-source-badge.source-fallback {
-      background: #2a2a1e;
-      color: #e0af68;
-      border: 1px solid #e0af6844;
-    }
-
-    /* ── Citation Footnotes ─────────────────────────────── */
-    .msg-citations {
-      margin-top: 8px;
-      padding-top: 6px;
-      border-top: 1px solid #2d2f3e;
-      font-size: 11px;
-    }
-    .msg-citations .citation-label {
-      color: #565f89;
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
+    .msg-citations .citation-list.expanded { display: block; }
     .msg-citations .citation-item {
-      color: #73daca;
-      cursor: pointer;
+      color: var(--ios-text3);
       display: block;
       padding: 2px 0;
-      text-decoration: none;
-    }
-    .msg-citations .citation-item:hover {
-      text-decoration: underline;
-      color: #9ece6a;
+      font-size: 12px;
     }
 
-    /* ── PII Warning (inline on user messages) ──────────── */
     .msg-pii-warning {
-      display: inline-block;
-      margin-top: 6px;
-      padding: 2px 8px;
-      border-radius: 6px;
-      background: #3a1e2a;
-      color: #f7768e;
-      font-size: 10px;
-      font-weight: 600;
-      border: 1px solid #f7768e44;
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      margin-top: 4px;
+      font-size: 11px;
+      color: rgba(255,255,255,0.7);
     }
 
-    /* ── Sentiment Indicator Bar ────────────────────────── */
-    .sentiment-bar {
+    .chat-input-area {
+      padding: 8px 12px;
+      padding-bottom: calc(8px + var(--safe-bottom));
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 0.5px solid var(--ios-separator);
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+    }
+    .chat-input-wrapper {
+      flex: 1;
+      position: relative;
+    }
+    .chat-input-wrapper input {
+      width: 100%;
+      padding: 10px 16px;
+      border: 1px solid var(--ios-gray4);
+      border-radius: 20px;
+      background: var(--ios-gray6);
+      font-size: 16px;
+      color: var(--ios-text);
+      outline: none;
+      font-family: inherit;
+      min-height: 40px;
+    }
+    .chat-input-wrapper input:focus { border-color: var(--ios-blue); }
+    .chat-input-wrapper input::placeholder { color: var(--ios-gray); }
+    .chat-send-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--ios-blue);
+      border: none;
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.15s ease;
+      flex-shrink: 0;
+    }
+    .chat-send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .chat-send-btn:active { opacity: 0.7; }
+
+    /* ── Screen 5: Booking Confirmation ────────────────── */
+    #screenBooking {
+      background: var(--ios-bg);
+    }
+    .booking-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 16px;
+      padding-bottom: calc(var(--safe-bottom) + 20px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .booking-checkmark {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: var(--ios-green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      color: #fff;
+      margin-top: 20px;
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .booking-checkmark {
+        animation: checkPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      @keyframes checkPop {
+        from { transform: scale(0); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+      }
+    }
+    .booking-success-text {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--ios-text);
+    }
+    .pnr-card {
+      width: 100%;
+      background: var(--ios-card);
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      padding: 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .pnr-label {
+      font-size: 13px;
+      color: var(--ios-text3);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+    .pnr-code {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      font-family: 'SF Mono', 'Menlo', 'Courier New', monospace;
+      color: var(--ios-text);
+    }
+    .pnr-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--ios-blue), var(--ios-purple));
+    }
+
+    .itinerary-card {
+      width: 100%;
+      background: var(--ios-card);
+      border-radius: var(--card-radius);
+      box-shadow: var(--card-shadow);
+      padding: 16px;
+    }
+    .itinerary-card .itin-passenger {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .itinerary-card .itin-route {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 12px 0;
+    }
+    .itinerary-card .itin-airport {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--ios-text);
+    }
+    .itinerary-card .itin-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 8px;
+      font-size: 14px;
+      color: var(--ios-text2);
+    }
+    .itinerary-card .itin-meta-row {
+      display: flex;
+      justify-content: space-between;
+    }
+    .itinerary-card .itin-meta-label { color: var(--ios-text3); }
+
+    .offline-note-card {
+      width: 100%;
+      background: #F0F5FF;
+      border-radius: var(--card-radius);
+      padding: 12px 16px;
       display: none;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 14px;
+      color: var(--ios-text2);
+    }
+    .offline-note-card.visible { display: flex; }
+
+    .wallet-btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 14px;
+      background: #1C1C1E;
+      color: #fff;
+      font-size: 17px;
+      font-weight: 600;
+      cursor: pointer;
+      min-height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .wallet-btn:active { opacity: 0.85; }
+
+    /* ── Screen 6: Escalation Modal Sheet ──────────────── */
+    .escalation-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 100;
+      justify-content: center;
+      align-items: flex-end;
+    }
+    .escalation-overlay.visible { display: flex; }
+    .escalation-sheet {
+      width: 100%;
+      max-width: 428px;
+      background: var(--ios-card);
+      border-radius: 16px 16px 0 0;
+      padding: 12px 20px 20px;
+      padding-bottom: calc(20px + var(--safe-bottom));
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .escalation-overlay.visible .escalation-sheet {
+        animation: sheetSlideUp 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+      }
+      @keyframes sheetSlideUp {
+        from { transform: translateY(100%); }
+        to { transform: translateY(0); }
+      }
+    }
+    .sheet-handle {
+      width: 36px;
+      height: 5px;
+      border-radius: 3px;
+      background: var(--ios-gray4);
+      margin: 0 auto 16px;
+    }
+    .sheet-header {
+      display: flex;
       align-items: center;
       gap: 10px;
-      padding: 6px 14px;
-      background: #1e2030;
-      border: 1px solid #2d2f3e;
-      border-radius: 8px;
-      margin-bottom: 8px;
-      font-size: 12px;
-      color: #9aa5ce;
+      margin-bottom: 16px;
     }
-    .sentiment-bar.visible { display: flex; }
-    .sentiment-bar .sentiment-label { font-weight: 600; color: #7aa2f7; }
-    .sentiment-badge {
-      display: inline-block;
-      padding: 2px 10px;
-      border-radius: 10px;
+    .sheet-header .pulse-dot-blue {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--ios-blue);
+      animation: pulseDot 1.5s ease-in-out infinite;
+    }
+    .sheet-header .sheet-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--ios-text);
+    }
+    .sheet-body {
+      font-size: 15px;
+      color: var(--ios-text2);
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+    .sheet-wait {
+      font-size: 14px;
+      color: var(--ios-text3);
+      margin-bottom: 20px;
+    }
+
+    /* ── Bottom Tab Bar ────────────────────────────────── */
+    .tab-bar {
+      display: none;
+      height: 83px;
+      padding-bottom: 34px;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 0.5px solid var(--ios-separator);
+      flex-shrink: 0;
+      z-index: 20;
+    }
+    .tab-bar.visible {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-around;
+    }
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding-top: 6px;
+      cursor: pointer;
+      min-width: 76px;
+      min-height: 49px;
+      position: relative;
+      background: none;
+      border: none;
+      font-family: inherit;
+    }
+    .tab-item:active { opacity: 0.7; }
+    .tab-icon { font-size: 24px; position: relative; }
+    .tab-label { font-size: 10px; font-weight: 500; }
+    .tab-item.active .tab-icon,
+    .tab-item.active .tab-label { color: var(--ios-blue); }
+    .tab-item:not(.active) .tab-icon,
+    .tab-item:not(.active) .tab-label { color: var(--ios-gray); }
+    .tab-badge {
+      position: absolute;
+      top: -4px;
+      right: -10px;
+      min-width: 18px;
+      height: 18px;
+      border-radius: 9px;
+      background: var(--ios-red);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+    }
+    .tab-badge.visible { display: flex; }
+    .tab-dot {
+      position: absolute;
+      top: 0px;
+      right: -4px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--ios-red);
+      display: none;
+    }
+    .tab-dot.visible { display: block; }
+
+    /* ── Metrics Drawer (Hidden Dev View) ──────────────── */
+    .metrics-drawer-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 200;
+      justify-content: center;
+      align-items: flex-end;
+    }
+    .metrics-drawer-overlay.visible { display: flex; }
+    .metrics-drawer {
+      width: 100%;
+      max-width: 428px;
+      background: #1C1C1E;
+      border-radius: 16px 16px 0 0;
+      padding: 12px 16px 20px;
+      padding-bottom: calc(20px + var(--safe-bottom));
+      max-height: 55vh;
+      overflow-y: auto;
+      color: #E5E5EA;
+      font-family: 'SF Mono', 'Menlo', 'Courier New', monospace;
+      font-size: 12px;
+    }
+    .metrics-drawer .sheet-handle { background: #48484A; }
+    .metrics-drawer-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 12px;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+    }
+    .metrics-section {
+      margin-bottom: 12px;
+    }
+    .metrics-section-title {
       font-size: 11px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 1px;
+      color: #8E8E93;
+      margin-bottom: 6px;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
     }
-    .sentiment-badge.POSITIVE { background: #1e3a2f; color: #9ece6a; border: 1px solid #9ece6a44; }
-    .sentiment-badge.NEGATIVE { background: #3a1e2a; color: #f7768e; border: 1px solid #f7768e44; }
-    .sentiment-badge.NEUTRAL  { background: #1e2030; color: #9aa5ce; border: 1px solid #9aa5ce44; }
-    .sentiment-badge.MIXED    { background: #2a2a1e; color: #e0af68; border: 1px solid #e0af6844; }
-    .sentiment-scores {
+    .manifest-stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+    }
+    .manifest-stat {
+      background: #2C2C2E;
+      border-radius: 8px;
+      padding: 8px 10px;
+    }
+    .manifest-stat-val {
+      font-size: 18px;
+      font-weight: 700;
+      color: #007AFF;
+    }
+    .manifest-stat-label {
       font-size: 10px;
-      color: #565f89;
+      color: #8E8E93;
+      margin-top: 1px;
     }
+    .metric-line {
+      padding: 3px 0;
+      border-bottom: 1px solid #2C2C2E;
+      display: flex;
+      gap: 8px;
+    }
+    .metric-name { color: #34C759; white-space: nowrap; }
+    .metric-val { color: #FF9500; flex: 1; word-break: break-all; }
+    .metric-ts { color: #48484A; white-space: nowrap; }
 
-    /* ── Auto-Escalation Alert Banner ───────────────────── */
-    .auto-escalation-alert {
-      display: none;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 14px;
-      background: linear-gradient(135deg, #3a1e2a 0%, #2a1a1a 100%);
-      border: 2px solid #f7768e;
-      border-radius: 10px;
-      margin-bottom: 8px;
-      animation: alertPulse 2s ease-in-out infinite;
+    /* ── Skeleton Loading ──────────────────────────────── */
+    .skeleton {
+      background: linear-gradient(90deg, #E5E5EA 25%, #F2F2F7 50%, #E5E5EA 75%);
+      background-size: 200% 100%;
+      border-radius: 8px;
+      min-height: 20px;
     }
-    .auto-escalation-alert.visible { display: flex; }
-    .auto-escalation-alert .alert-icon { font-size: 20px; }
-    .auto-escalation-alert .alert-text {
-      font-size: 13px;
-      font-weight: 600;
-      color: #f7768e;
+    @media (prefers-reduced-motion: no-preference) {
+      .skeleton { animation: shimmer 1.5s ease-in-out infinite; }
+      @keyframes shimmer {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+      }
     }
-    .auto-escalation-alert .alert-detail {
-      font-size: 11px;
-      color: #9aa5ce;
-      margin-top: 2px;
+    .skeleton-card {
+      background: var(--ios-card);
+      border-radius: var(--card-radius);
+      box-shadow: var(--card-shadow);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
-    @keyframes alertPulse {
-      0%, 100% { border-color: #f7768e; }
-      50% { border-color: #f7768e88; }
+    .skeleton-line { height: 14px; }
+    .skeleton-line.w75 { width: 75%; }
+    .skeleton-line.w50 { width: 50%; }
+    .skeleton-line.w100 { width: 100%; }
+    .skeleton-line.h24 { height: 24px; }
+
+    /* ── Status Text (hidden in iOS UI, used internally) ─ */
+    #statusText { display: none; }
+
+    /* ── Scrollbar Styling ─────────────────────────────── */
+    ::-webkit-scrollbar { width: 0; background: transparent; }
+
+    /* ── Dark Mode Support ─────────────────────────────── */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ios-bg: #000000;
+        --ios-card: #1C1C1E;
+        --ios-text: #FFFFFF;
+        --ios-text2: #EBEBF5;
+        --ios-text3: #8E8E93;
+        --ios-separator: #38383A;
+        --ios-gray5: #2C2C2E;
+        --ios-gray6: #1C1C1E;
+      }
+      body { background: #000; }
+      .ios-nav-bar {
+        background: rgba(28,28,30,0.92);
+        border-bottom-color: #38383A;
+      }
+      .msg.assistant { background: #2C2C2E; color: #fff; }
+      .option-card.selected { background: #1A2A40; }
+      .chat-input-wrapper input {
+        background: #2C2C2E;
+        border-color: #38383A;
+        color: #fff;
+      }
+      .chat-input-area { background: rgba(28,28,30,0.95); border-top-color: #38383A; }
+      .tab-bar { background: rgba(28,28,30,0.92); border-top-color: #38383A; }
+      .filter-pill { background: #2C2C2E; border-color: #38383A; color: #EBEBF5; }
+      .options-confirm-bar { background: rgba(28,28,30,0.92); border-top-color: #38383A; }
+      .pnr-card { background: #1C1C1E; }
+      .itinerary-card { background: #1C1C1E; }
+      .escalation-sheet { background: #1C1C1E; }
+      .meta-pill.class-pill { background: #1A2A40; }
+      .meta-pill.cost-positive { background: #3A1E1E; }
+      .meta-pill.cost-negative { background: #1E3A2F; }
+      .meta-pill.cost-zero { background: #2C2C2E; }
+      .meta-pill.stops-pill { background: #2C2C2E; }
+      .msg-source-badge.source-kb { background: #1E3A2F; color: #34C759; }
+      .msg-source-badge.source-bedrock { background: #1A2A40; color: #64B5F6; }
+      .msg-source-badge.source-fallback { background: #3A351E; color: #FFB74D; }
+      .auto-escalation-banner { background: #3A1E1E; border-bottom-color: #5A2020; }
+      .status-pill.cancelled { background: #3A1E1E; }
+      .status-pill.delayed { background: #3A351E; }
+      .offline-note-card { background: #1A2A40; }
+      .alert-banner { background: #1C1C1E; }
+      .flight-card { background: #1C1C1E; }
+      .passenger-card { background: #1C1C1E; }
+      .notif-body-card { background: #1C1C1E; color: #EBEBF5; }
+      .booking-scroll { background: #000; }
+      .skeleton { background: linear-gradient(90deg, #2C2C2E 25%, #3A3A3C 50%, #2C2C2E 75%); background-size: 200% 100%; }
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>✈ GenAI Disruption Management</h1>
-    <span class="status" id="statusText">Ready</span>
-  </header>
+  <span id="statusText" aria-hidden="true"></span>
 
-  <div class="container">
-    <!-- Chat Panel -->
-    <div class="chat-panel">
-      <div class="chat-messages" id="chatMessages">
-        <div class="msg system">Welcome! Click "Create Disruption" to begin a rebooking session.</div>
-      </div>
-      <div class="chat-input">
-        <input type="text" id="chatInput" placeholder="Type a message..." disabled />
-        <button class="btn-send" id="btnSend" onclick="sendChat()" disabled>Send</button>
-      </div>
-    </div>
+  <div class="app-shell">
 
-    <!-- Side Panel -->
-    <div class="side-panel">
-      <!-- Notification Center -->
-      <div class="notification-center" id="notificationCenter">
-        <div class="notif-header">🔔 Proactive Notification (Simulated Push)</div>
-        <div class="notif-body">
-          <div class="notif-passenger" id="notifPassenger"></div>
-          <div class="notif-flight" id="notifFlight"></div>
-          <div class="notif-cause" id="notifCause"></div>
-          <div id="notifTierBadge"></div>
-          <div class="notif-copy" id="notifCopy"></div>
-          <div class="notif-channel" id="notifChannel"></div>
-          <div class="notif-cta">
-            <button class="btn-primary" onclick="document.getElementById('optionsPanel').scrollIntoView({behavior:'smooth'})">View Options</button>
-            <button class="btn-warning" onclick="escalate()">Speak to Agent</button>
+    <!-- ══════ Screen 1: Lock Screen ══════ -->
+    <div class="screen active" id="screenLock">
+      <div style="flex:1; display:flex; flex-direction:column;">
+        <div style="padding-top: 20px;">
+          <div class="lock-time" id="lockTime">9:41</div>
+          <div class="lock-date" id="lockDate">Tuesday, February 25</div>
+        </div>
+        <div class="lock-notification-area">
+          <div class="lock-notif-card" id="lockNotifCard" aria-label="Flight notification — tap to view details">
+            <div class="lock-notif-header">
+              <div class="lock-notif-icon">✈️</div>
+              <div class="lock-notif-app">FlyAssist</div>
+              <div class="lock-notif-time">now</div>
+            </div>
+            <div class="lock-notif-title" id="lockNotifTitle">Flight Update</div>
+            <div class="lock-notif-body" id="lockNotifBody">Your flight status has changed.</div>
           </div>
         </div>
-      </div>
-
-      <!-- Manifest Summary -->
-      <div class="manifest-bar" id="manifestBar">
-        <div class="stat"><strong id="mTotal">0</strong> passengers</div>
-        <div class="stat">🏆 <strong id="mPlatinum">0</strong> Platinum</div>
-        <div class="stat">🥇 <strong id="mGold">0</strong> Gold</div>
-        <div class="stat">⚠ <strong id="mConnRisk">0</strong> at connection risk</div>
-        <div class="stat">📱 <strong id="mProactive">0</strong> proactive eligible</div>
-      </div>
-
-      <!-- Sentiment Indicator -->
-      <div class="sentiment-bar" id="sentimentBar">
-        <span class="sentiment-label">Sentiment:</span>
-        <span class="sentiment-badge NEUTRAL" id="sentimentBadge">NEUTRAL</span>
-        <span class="sentiment-scores" id="sentimentScores"></span>
-      </div>
-
-      <!-- Auto-Escalation Alert -->
-      <div class="auto-escalation-alert" id="autoEscalationAlert">
-        <span class="alert-icon">🚨</span>
-        <div>
-          <div class="alert-text">Auto-Escalation Triggered</div>
-          <div class="alert-detail" id="autoEscalationDetail">Consecutive negative sentiment detected — routing to agent.</div>
+        <div class="lock-bottom">
+          <button class="lock-cta-btn" id="btnDisruption" aria-label="Simulate flight disruption">
+            Simulate Disruption
+          </button>
+          <div class="lock-slide-hint">swipe up to open</div>
         </div>
-      </div>
-
-      <div class="actions">
-        <button class="btn-primary" id="btnDisruption" onclick="createDisruption()">Create Disruption</button>
-        <button class="btn-success" id="btnConfirm" onclick="confirmSelection()" disabled>Confirm Selected</button>
-        <button class="btn-danger" id="btnEscalate" onclick="escalate()" disabled>Escalate</button>
-      </div>
-
-      <div class="options-panel" id="optionsPanel">
-        <h3>Rebooking Options</h3>
-        <div class="sort-filter-row" id="sortFilterRow">
-          <button id="sortTime" onclick="sortOptions('time')" class="active">Sort: Time</button>
-          <button id="sortCost" onclick="sortOptions('cost')">Sort: Cost</button>
-          <button id="filterRecommended" onclick="toggleRecommendedFilter()">Recommended Only</button>
-        </div>
-        <div id="optionsList">
-          <p style="color:#565f89; font-size:13px;">No options yet. Create a disruption to see options.</p>
-        </div>
-      </div>
-
-      <div class="booking-panel" id="bookingPanel">
-        <h3>🎉 Booking Confirmed</h3>
-        <div class="pnr" id="pnrCode"></div>
-        <div class="details" id="bookingDetails"></div>
-        <div class="itinerary" id="bookingItinerary"></div>
-        <div class="offline-note" id="offlineNote"></div>
-      </div>
-
-      <div class="escalation-panel" id="escalationPanel">
-        <h3>📋 Agent Escalation Context</h3>
-        <div id="escalationContent"></div>
-      </div>
-
-      <div class="metrics-panel" id="metricsPanel">
-        <div style="color:#7aa2f7; font-weight:600; margin-bottom:4px;">📊 Metrics Log</div>
-        <div id="metricsLog"></div>
       </div>
     </div>
+
+    <!-- ══════ Screen 2: Notification Detail ══════ -->
+    <div class="screen" id="screenDetail">
+      <div class="ios-nav-bar">
+        <button class="nav-back" id="detailBack" aria-label="Go back">‹ Back</button>
+        <span class="nav-title" id="navTitleDetail">Flight Update</span>
+      </div>
+      <div class="detail-scroll" id="detailScroll">
+        <div class="alert-banner" id="alertBanner">
+          <span class="alert-emoji">⚠️</span>
+          <div class="alert-content">
+            <div class="alert-type" id="alertType">CANCELLATION</div>
+            <div class="alert-cause" id="alertCause">Loading...</div>
+          </div>
+        </div>
+        <div class="flight-card" id="flightCard">
+          <div class="flight-number" id="flightNumber">UA891</div>
+          <div class="flight-route">
+            <span class="airport-code" id="originCode">FRA</span>
+            <div class="route-line">
+              <div class="line"></div>
+              <span class="plane-icon">✈</span>
+              <div class="line"></div>
+            </div>
+            <span class="airport-code" id="destCode">JFK</span>
+          </div>
+          <div class="flight-meta">
+            <span id="flightDate">2026-02-25</span>
+            <span class="status-pill cancelled" id="flightStatus">CANCELLED</span>
+          </div>
+        </div>
+        <div class="passenger-card" id="passengerCard">
+          <div class="passenger-avatar" id="passengerAvatar">AA</div>
+          <div class="passenger-info">
+            <div class="passenger-name" id="passengerName">Alice Anderson</div>
+            <div class="passenger-pnr" id="passengerPnr">PAX-0001</div>
+          </div>
+          <span class="tier-badge Platinum" id="passengerTier">Platinum</span>
+        </div>
+        <div class="notif-body-card" id="notifBodyCard">Loading notification...</div>
+        <div class="detail-cta">
+          <button class="ios-btn ios-btn-primary" id="ctaViewOptions" aria-label="View rebooking options">View Rebooking Options</button>
+          <button class="ios-btn ios-btn-secondary" id="ctaChatAssistant" aria-label="Chat with assistant">Chat with Assistant</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════ Screen 3: Options (Tab) ══════ -->
+    <div class="screen" id="screenOptions">
+      <div class="ios-nav-bar">
+        <span class="nav-title" id="navTitleOptions">FlyAssist</span>
+      </div>
+      <div class="options-header">
+        <div class="options-large-title">Rebooking Options</div>
+      </div>
+      <div class="filter-pills">
+        <button class="filter-pill active" id="sortTime" aria-label="Sort by earliest">Earliest</button>
+        <button class="filter-pill" id="sortCost" aria-label="Sort by lowest cost">Lowest Cost</button>
+        <button class="filter-pill" id="filterRecommended" aria-label="Show recommended only">Recommended</button>
+      </div>
+      <div class="options-scroll" id="optionsList">
+        <div class="options-no-items">Create a disruption to see options.</div>
+      </div>
+      <div class="options-confirm-bar">
+        <button class="ios-btn ios-btn-success" id="btnConfirm" disabled aria-label="Confirm selection">Confirm Selection</button>
+      </div>
+    </div>
+
+    <!-- ══════ Screen 4: Chat (Tab) ══════ -->
+    <div class="screen" id="screenChat">
+      <div class="ios-nav-bar">
+        <span class="nav-title">Assistant<span class="chat-nav-sentiment NEUTRAL" id="sentimentDot"></span></span>
+        <div class="nav-right">
+          <button class="nav-back" id="btnEscalate" style="position:static;transform:none;color:var(--ios-red);font-size:14px;font-weight:600;" aria-label="Escalate to agent" disabled>Escalate</button>
+        </div>
+      </div>
+      <div class="auto-escalation-banner" id="autoEscalationAlert">
+        <div class="pulse-dot"></div>
+        <span class="escalation-text" id="autoEscalationDetail">Routing to live agent...</span>
+      </div>
+      <div class="chat-messages" id="chatMessages">
+        <div class="msg system">Welcome! Simulate a disruption to begin.</div>
+      </div>
+      <div class="chat-input-area">
+        <div class="chat-input-wrapper">
+          <input type="text" id="chatInput" placeholder="Ask about your options..." disabled aria-label="Chat message input" />
+        </div>
+        <button class="chat-send-btn" id="btnSend" disabled aria-label="Send message">↑</button>
+      </div>
+    </div>
+
+    <!-- ══════ Screen 5: Booking Confirmation ══════ -->
+    <div class="screen" id="screenBooking">
+      <div class="ios-nav-bar">
+        <span class="nav-title">Confirmation</span>
+      </div>
+      <div class="booking-scroll">
+        <div class="booking-checkmark">✓</div>
+        <div class="booking-success-text">Booking Confirmed</div>
+        <div class="pnr-card">
+          <div class="pnr-label">Confirmation Code</div>
+          <div class="pnr-code" id="pnrCode"></div>
+        </div>
+        <div class="itinerary-card" id="bookingItinerary">
+          <div class="itin-passenger">
+            <span id="itinPassenger">Alice Anderson</span>
+            <span class="tier-badge Platinum" id="itinTier">Platinum</span>
+          </div>
+          <div class="itin-route">
+            <span class="itin-airport" id="itinOrigin">FRA</span>
+            <div class="route-line" style="flex:1;display:flex;align-items:center;gap:6px;">
+              <div class="line" style="flex:1;height:1px;background:var(--ios-gray4)"></div>
+              <span style="font-size:16px;color:var(--ios-blue)">✈</span>
+              <div class="line" style="flex:1;height:1px;background:var(--ios-gray4)"></div>
+            </div>
+            <span class="itin-airport" id="itinDest">JFK</span>
+          </div>
+          <div class="itin-meta" id="itinMeta"></div>
+        </div>
+        <div class="offline-note-card" id="offlineNote">
+          <span>ℹ️</span>
+          <span id="offlineNoteText"></span>
+        </div>
+        <button class="wallet-btn" aria-label="Add to Apple Wallet">🎫 Add to Wallet</button>
+        <button class="ios-btn ios-btn-primary" id="btnDone" aria-label="Done — reset app">Done</button>
+      </div>
+    </div>
+
+    <!-- ══════ Escalation Modal Sheet ══════ -->
+    <div class="escalation-overlay" id="escalationOverlay">
+      <div class="escalation-sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-header">
+          <div class="pulse-dot-blue"></div>
+          <span class="sheet-title">Connecting to Agent</span>
+        </div>
+        <div class="sheet-body" id="escalationBody">
+          We're connecting you with a live agent. Your case details have been shared so you won't need to repeat yourself.
+        </div>
+        <div class="sheet-wait">Est. wait: &lt; 2 minutes</div>
+        <button class="ios-btn ios-btn-secondary" id="btnDismissEscalation" aria-label="Dismiss escalation">Dismiss</button>
+      </div>
+    </div>
+
+    <!-- ══════ Metrics Drawer (Hidden Dev View) ══════ -->
+    <div class="metrics-drawer-overlay" id="metricsOverlay">
+      <div class="metrics-drawer">
+        <div class="sheet-handle"></div>
+        <div class="metrics-drawer-title">📊 Developer Metrics</div>
+
+        <div class="metrics-section" id="metricsManifestSection" style="display:none;">
+          <div class="metrics-section-title">Manifest Summary</div>
+          <div class="manifest-stats">
+            <div class="manifest-stat"><div class="manifest-stat-val" id="mTotal">0</div><div class="manifest-stat-label">Total Passengers</div></div>
+            <div class="manifest-stat"><div class="manifest-stat-val" id="mPlatinum">0</div><div class="manifest-stat-label">Platinum</div></div>
+            <div class="manifest-stat"><div class="manifest-stat-val" id="mGold">0</div><div class="manifest-stat-label">Gold</div></div>
+            <div class="manifest-stat"><div class="manifest-stat-val" id="mConnRisk">0</div><div class="manifest-stat-label">Connection Risk</div></div>
+            <div class="manifest-stat"><div class="manifest-stat-val" id="mProactive">0</div><div class="manifest-stat-label">Proactive Eligible</div></div>
+          </div>
+        </div>
+
+        <div class="metrics-section" id="metricsSentimentSection" style="display:none;">
+          <div class="metrics-section-title">Sentiment</div>
+          <div id="sentimentDetail" style="padding:6px 0;color:#E5E5EA;"></div>
+        </div>
+
+        <div class="metrics-section">
+          <div class="metrics-section-title">Event Log</div>
+          <div id="metricsLog"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════ Bottom Tab Bar ══════ -->
+    <nav class="tab-bar" id="tabBar" role="navigation" aria-label="Main navigation">
+      <button class="tab-item active" data-tab="notifications" aria-label="Updates tab">
+        <span class="tab-icon">🔔<span class="tab-dot" id="tabDotNotif"></span></span>
+        <span class="tab-label">Updates</span>
+      </button>
+      <button class="tab-item" data-tab="chat" aria-label="Chat tab">
+        <span class="tab-icon">💬<span class="tab-badge" id="tabBadgeChat"></span></span>
+        <span class="tab-label">Chat</span>
+      </button>
+      <button class="tab-item" data-tab="options" aria-label="Flights tab">
+        <span class="tab-icon">✈️<span class="tab-badge" id="tabBadgeOptions"></span></span>
+        <span class="tab-label">Flights</span>
+      </button>
+    </nav>
+
   </div>
 
   <script src="app.js"></script>
