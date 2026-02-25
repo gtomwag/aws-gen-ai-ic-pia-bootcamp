@@ -223,6 +223,228 @@
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: #16161e; }
     ::-webkit-scrollbar-thumb { background: #2d2f3e; border-radius: 3px; }
+
+    /* Notification Center */
+    .notification-center {
+      background: linear-gradient(135deg, #1a1b26 0%, #24283b 100%);
+      border: 1px solid #7aa2f7;
+      border-radius: 12px;
+      padding: 0;
+      margin-bottom: 12px;
+      display: none;
+      overflow: hidden;
+    }
+    .notification-center.visible { display: block; }
+    .notification-center .notif-header {
+      background: #2d2f3e;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #7aa2f7;
+    }
+    .notification-center .notif-body {
+      padding: 12px 14px;
+    }
+    .notif-passenger {
+      font-size: 15px;
+      font-weight: 600;
+      color: #c0caf5;
+      margin-bottom: 4px;
+    }
+    .notif-flight {
+      font-size: 13px;
+      color: #e0af68;
+      margin-bottom: 4px;
+    }
+    .notif-cause {
+      font-size: 13px;
+      color: #f7768e;
+      margin-bottom: 8px;
+    }
+    .tier-badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .tier-badge.Platinum { background: #a9a1e1; color: #1a1b26; }
+    .tier-badge.Gold { background: #e0af68; color: #1a1b26; }
+    .tier-badge.Silver { background: #9aa5ce; color: #1a1b26; }
+    .tier-badge.General { background: #565f89; color: #e4e4e7; }
+    .notif-cta {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .notif-cta button {
+      padding: 6px 14px;
+      font-size: 12px;
+    }
+    .notif-copy {
+      font-size: 12px;
+      color: #9aa5ce;
+      line-height: 1.5;
+      margin-top: 8px;
+      padding: 8px;
+      background: #16161e;
+      border-radius: 6px;
+      white-space: pre-wrap;
+    }
+    .notif-channel {
+      font-size: 11px;
+      color: #565f89;
+      margin-top: 4px;
+    }
+
+    /* Manifest summary bar */
+    .manifest-bar {
+      display: none;
+      background: #1e2030;
+      border: 1px solid #2d2f3e;
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-bottom: 12px;
+      font-size: 12px;
+      color: #9aa5ce;
+    }
+    .manifest-bar.visible { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    .manifest-bar .stat {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .manifest-bar .stat strong { color: #7aa2f7; }
+
+    /* Sort/filter row */
+    .sort-filter-row {
+      display: none;
+      gap: 6px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    .sort-filter-row.visible { display: flex; }
+    .sort-filter-row button {
+      padding: 4px 10px;
+      font-size: 11px;
+      border-radius: 6px;
+      background: #24283b;
+      color: #9aa5ce;
+      border: 1px solid #2d2f3e;
+    }
+    .sort-filter-row button.active {
+      background: #7aa2f7;
+      color: #1a1b26;
+      border-color: #7aa2f7;
+    }
+
+    /* Enhanced option cards */
+    .option-card .opt-meta {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+      flex-wrap: wrap;
+    }
+    .option-card .opt-meta span {
+      font-size: 11px;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: #1e2030;
+      color: #9aa5ce;
+    }
+    .option-card .opt-meta .cost-delta-positive { color: #f7768e; }
+    .option-card .opt-meta .cost-delta-negative { color: #9ece6a; }
+    .option-card .opt-meta .cost-delta-zero { color: #9aa5ce; }
+    .option-card .opt-rationale {
+      font-size: 11px;
+      color: #7aa2f7;
+      margin-top: 4px;
+      font-style: italic;
+    }
+    .option-card .opt-perks {
+      font-size: 11px;
+      color: #a9a1e1;
+      margin-top: 4px;
+    }
+
+    /* Enhanced Booking Panel */
+    .booking-panel .itinerary {
+      margin-top: 8px;
+      font-size: 13px;
+      color: #c0caf5;
+      line-height: 1.6;
+    }
+    .booking-panel .offline-note {
+      margin-top: 8px;
+      padding: 6px 10px;
+      background: #1e2a1e;
+      border-radius: 6px;
+      font-size: 11px;
+      color: #9ece6a;
+    }
+
+    /* Escalation Panel */
+    .escalation-panel {
+      background: #1a1b26;
+      border: 2px solid #f7768e;
+      border-radius: 12px;
+      padding: 16px;
+      display: none;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .escalation-panel.visible { display: block; }
+    .escalation-panel h3 { color: #f7768e; margin-bottom: 8px; font-size: 14px; }
+    .escalation-panel .esc-section {
+      margin-bottom: 8px;
+    }
+    .escalation-panel .esc-section h4 {
+      font-size: 12px;
+      color: #e0af68;
+      margin-bottom: 4px;
+    }
+    .escalation-panel .esc-section p,
+    .escalation-panel .esc-section pre {
+      font-size: 12px;
+      color: #9aa5ce;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .escalation-panel .esc-priority {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .esc-priority.HIGH { background: #f7768e; color: #1a1b26; }
+    .esc-priority.MEDIUM { background: #e0af68; color: #1a1b26; }
+    .esc-priority.NORMAL { background: #565f89; color: #e4e4e7; }
+
+    /* Metrics log panel */
+    .metrics-panel {
+      background: #16161e;
+      border: 1px solid #2d2f3e;
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-top: 12px;
+      max-height: 120px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      color: #565f89;
+      display: none;
+    }
+    .metrics-panel.visible { display: block; }
+    .metrics-panel .metric-line { margin-bottom: 2px; }
+    .metrics-panel .metric-line .metric-name { color: #9ece6a; }
+    .metrics-panel .metric-line .metric-val { color: #e0af68; }
   </style>
 </head>
 <body>
@@ -245,6 +467,32 @@
 
     <!-- Side Panel -->
     <div class="side-panel">
+      <!-- Notification Center -->
+      <div class="notification-center" id="notificationCenter">
+        <div class="notif-header">🔔 Proactive Notification (Simulated Push)</div>
+        <div class="notif-body">
+          <div class="notif-passenger" id="notifPassenger"></div>
+          <div class="notif-flight" id="notifFlight"></div>
+          <div class="notif-cause" id="notifCause"></div>
+          <div id="notifTierBadge"></div>
+          <div class="notif-copy" id="notifCopy"></div>
+          <div class="notif-channel" id="notifChannel"></div>
+          <div class="notif-cta">
+            <button class="btn-primary" onclick="document.getElementById('optionsPanel').scrollIntoView({behavior:'smooth'})">View Options</button>
+            <button class="btn-warning" onclick="escalate()">Speak to Agent</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Manifest Summary -->
+      <div class="manifest-bar" id="manifestBar">
+        <div class="stat"><strong id="mTotal">0</strong> passengers</div>
+        <div class="stat">🏆 <strong id="mPlatinum">0</strong> Platinum</div>
+        <div class="stat">🥇 <strong id="mGold">0</strong> Gold</div>
+        <div class="stat">⚠ <strong id="mConnRisk">0</strong> at connection risk</div>
+        <div class="stat">📱 <strong id="mProactive">0</strong> proactive eligible</div>
+      </div>
+
       <div class="actions">
         <button class="btn-primary" id="btnDisruption" onclick="createDisruption()">Create Disruption</button>
         <button class="btn-success" id="btnConfirm" onclick="confirmSelection()" disabled>Confirm Selected</button>
@@ -253,6 +501,11 @@
 
       <div class="options-panel" id="optionsPanel">
         <h3>Rebooking Options</h3>
+        <div class="sort-filter-row" id="sortFilterRow">
+          <button id="sortTime" onclick="sortOptions('time')" class="active">Sort: Time</button>
+          <button id="sortCost" onclick="sortOptions('cost')">Sort: Cost</button>
+          <button id="filterRecommended" onclick="toggleRecommendedFilter()">Recommended Only</button>
+        </div>
         <div id="optionsList">
           <p style="color:#565f89; font-size:13px;">No options yet. Create a disruption to see options.</p>
         </div>
@@ -262,6 +515,18 @@
         <h3>🎉 Booking Confirmed</h3>
         <div class="pnr" id="pnrCode"></div>
         <div class="details" id="bookingDetails"></div>
+        <div class="itinerary" id="bookingItinerary"></div>
+        <div class="offline-note" id="offlineNote"></div>
+      </div>
+
+      <div class="escalation-panel" id="escalationPanel">
+        <h3>📋 Agent Escalation Context</h3>
+        <div id="escalationContent"></div>
+      </div>
+
+      <div class="metrics-panel" id="metricsPanel">
+        <div style="color:#7aa2f7; font-weight:600; margin-bottom:4px;">📊 Metrics Log</div>
+        <div id="metricsLog"></div>
       </div>
     </div>
   </div>

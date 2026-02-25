@@ -1,0 +1,56 @@
+graph LR
+    subgraph "Static Web UI"
+        A["web/index.html + app.js<br>Dependency-free HTML/JS/CSS"]
+    end
+
+    subgraph "AWS Cloud (or Local)"
+        B["API Gateway<br>(REST)"]
+        C["Lambda Function<br>Node.js 18<br>handler.js"]
+        D["DynamoDB<br>Single Table<br>(pk/sk)"]
+        E["Amazon Bedrock<br>(Optional)<br>Claude 3 Haiku"]
+    end
+
+    A -->|"HTTP POST/GET"| B
+    B --> C
+    C -->|"Read/Write"| D
+    C -.->|"Optional"| E
+
+    subgraph "DynamoDB Entities"
+        D1["DISRUPTION#id META"]
+        D2["DISRUPTION#id MANIFEST_SUMMARY"]
+        D3["SESSION#id META"]
+        D4["SESSION#id OPTIONS"]
+        D5["SESSION#id NOTIFICATION"]
+        D6["SESSION#id TURN#ts"]
+        D7["SESSION#id SELECTION"]
+        D8["SESSION#id BOOKING"]
+        D9["SESSION#id ESCALATION"]
+    end
+
+    D --- D1
+    D --- D2
+    D --- D3
+    D --- D4
+    D --- D5
+    D --- D6
+    D --- D7
+    D --- D8
+    D --- D9
+
+    subgraph "API Endpoints"
+        E1["POST /disruption"]
+        E2["POST /chat"]
+        E3["POST /select-option"]
+        E4["POST /confirm"]
+        E5["POST /escalate"]
+        E6["GET /notification"]
+        E7["GET /health"]
+    end
+
+    B --- E1
+    B --- E2
+    B --- E3
+    B --- E4
+    B --- E5
+    B --- E6
+    B --- E7

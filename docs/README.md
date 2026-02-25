@@ -1,0 +1,38 @@
+# 📁 Docs Index — GenAI Disruption Management POC
+
+> **Hackathon submission:** Open this page first, then follow the links below.
+
+## What to Open for Hackathon Submission
+
+| Deliverable | Location |
+|---|---|
+| **Project Report** | [hackathon/project-report.md](hackathon/project-report.md) |
+| **5-Minute Demo Script** | [demo/demo-script-5min.md](demo/demo-script-5min.md) |
+| **Solution Architecture** | [architecture/solution-architecture.md](architecture/solution-architecture.md) |
+| **POC Demo** | Run locally — see [runbook/local-dev.md](runbook/local-dev.md) |
+
+## All Documents
+
+### Hackathon
+
+- [hackathon/project-report.md](hackathon/project-report.md) — Full narrative report (template-aligned)
+
+### Architecture
+
+- [architecture/solution-architecture.md](architecture/solution-architecture.md) — POC + Target architecture narrative
+- [architecture/diagrams/poc-architecture.mmd](architecture/diagrams/poc-architecture.mmd) — POC Mermaid diagram
+- [architecture/diagrams/target-architecture.mmd](architecture/diagrams/target-architecture.mmd) — Target PRD Mermaid diagram
+
+### Demo
+
+- [demo/demo-script-5min.md](demo/demo-script-5min.md) — Timed 5-minute demo script
+- [demo/demo-storyboard.md](demo/demo-storyboard.md) — Shot-by-shot storyboard
+- [demo/sample-scenarios.md](demo/sample-scenarios.md) — Runnable demo scenarios
+
+### Recommendations
+
+- [recommendations/next-steps.md](recommendations/next-steps.md) — Prioritized roadmap from POC to PRD
+
+### Runbook
+
+- [runbook/local-dev.md](runbook/local-dev.md) — Local development setup & run instructions
