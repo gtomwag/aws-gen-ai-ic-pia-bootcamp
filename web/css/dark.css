@@ -1,0 +1,50 @@
+/* ── Dark Mode Support ─────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ios-bg: #000000;
+    --ios-card: #1C1C1E;
+    --ios-text: #FFFFFF;
+    --ios-text2: #EBEBF5;
+    --ios-text3: #8E8E93;
+    --ios-separator: #38383A;
+    --ios-gray5: #2C2C2E;
+    --ios-gray6: #1C1C1E;
+  }
+  body { background: #000; }
+  .ios-nav-bar {
+    background: rgba(28,28,30,0.92);
+    border-bottom-color: #38383A;
+  }
+  .msg.assistant { background: #2C2C2E; color: #fff; }
+  .option-card.selected { background: #1A2A40; }
+  .chat-input-wrapper input {
+    background: #2C2C2E;
+    border-color: #38383A;
+    color: #fff;
+  }
+  .chat-input-area { background: rgba(28,28,30,0.95); border-top-color: #38383A; }
+  .tab-bar { background: rgba(28,28,30,0.92); border-top-color: #38383A; }
+  .filter-pill { background: #2C2C2E; border-color: #38383A; color: #EBEBF5; }
+  .options-confirm-bar { background: rgba(28,28,30,0.92); border-top-color: #38383A; }
+  .pnr-card { background: #1C1C1E; }
+  .itinerary-card { background: #1C1C1E; }
+  .escalation-sheet { background: #1C1C1E; }
+  .meta-pill.class-pill { background: #1A2A40; }
+  .meta-pill.cost-positive { background: #3A1E1E; }
+  .meta-pill.cost-negative { background: #1E3A2F; }
+  .meta-pill.cost-zero { background: #2C2C2E; }
+  .meta-pill.stops-pill { background: #2C2C2E; }
+  .msg-source-badge.source-kb { background: #1E3A2F; color: #34C759; }
+  .msg-source-badge.source-bedrock { background: #1A2A40; color: #64B5F6; }
+  .msg-source-badge.source-fallback { background: #3A351E; color: #FFB74D; }
+  .auto-escalation-banner { background: #3A1E1E; border-bottom-color: #5A2020; }
+  .status-pill.cancelled { background: #3A1E1E; }
+  .status-pill.delayed { background: #3A351E; }
+  .offline-note-card { background: #1A2A40; }
+  .alert-banner { background: #1C1C1E; }
+  .flight-card { background: #1C1C1E; }
+  .passenger-card { background: #1C1C1E; }
+  .notif-body-card { background: #1C1C1E; color: #EBEBF5; }
+  .booking-scroll { background: #000; }
+  .skeleton { background: linear-gradient(90deg, #2C2C2E 25%, #3A3A3C 50%, #2C2C2E 75%); background-size: 200% 100%; }
+}

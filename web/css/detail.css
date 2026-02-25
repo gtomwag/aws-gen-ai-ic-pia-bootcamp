@@ -1,0 +1,127 @@
+/* ── Screen 2: Notification Detail ─────────────────── */
+#screenDetail {
+  background: var(--ios-bg);
+}
+.detail-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  padding-bottom: calc(var(--safe-bottom) + 16px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  -webkit-overflow-scrolling: touch;
+}
+.alert-banner {
+  background: var(--ios-card);
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
+  padding: 14px 16px;
+  border-left: 4px solid var(--ios-red);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.alert-banner .alert-emoji { font-size: 22px; }
+.alert-banner .alert-content { flex: 1; }
+.alert-banner .alert-type {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ios-red);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.alert-banner .alert-cause {
+  font-size: 14px;
+  color: var(--ios-text2);
+  margin-top: 2px;
+}
+
+.flight-card {
+  background: var(--ios-card);
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
+  padding: 16px;
+}
+.flight-number {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ios-text);
+}
+.flight-route {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+.flight-route .airport-code {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--ios-text);
+}
+.flight-route .route-line {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.flight-route .route-line .line {
+  flex: 1;
+  height: 1px;
+  background: var(--ios-gray4);
+}
+.flight-route .route-line .plane-icon {
+  font-size: 16px;
+  color: var(--ios-blue);
+}
+.flight-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--ios-text3);
+}
+
+.passenger-card {
+  background: var(--ios-card);
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.passenger-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--ios-blue), var(--ios-purple));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+}
+.passenger-info { flex: 1; }
+.passenger-name { font-size: 17px; font-weight: 600; }
+.passenger-pnr { font-size: 13px; color: var(--ios-text3); margin-top: 1px; }
+
+.notif-body-card {
+  background: var(--ios-card);
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
+  padding: 16px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--ios-text2);
+  white-space: pre-wrap;
+}
+
+.detail-cta {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
