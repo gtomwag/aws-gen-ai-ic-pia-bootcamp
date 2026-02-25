@@ -1,0 +1,8 @@
+{
+  "httpMethod": "POST",
+  "path": "/disruption",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": "{\"type\":\"CANCELLATION\",\"reason\":\"Mechanical issue\",\"airport\":\"ORD\",\"passenger\":{\"firstName\":\"Alice\",\"tier\":\"Gold\",\"origin\":\"ORD\",\"destination\":\"SFO\",\"flightNumber\":\"UA1234\",\"date\":\"2026-02-25\",\"constraints\":[\"arrive_before_21_00\"]}}"
+}

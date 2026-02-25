@@ -1,0 +1,13 @@
+{
+  "name": "genai-disruption-management-root",
+  "version": "1.0.0",
+  "private": true,
+  "description": "GenAI Disruption Management POC",
+  "scripts": {
+    "backend": "cd backend && node server-local.js",
+    "backend:sam": "cd backend && sam local start-api",
+    "frontend": "npx serve web",
+    "install:backend": "cd backend && npm install",
+    "postinstall": "npm run install:backend"
+  }
+}

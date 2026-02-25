@@ -1,0 +1,98 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: GenAI Disruption Management POC
+
+Globals:
+  Function:
+    Timeout: 30
+    Runtime: nodejs18.x
+    MemorySize: 256
+    Environment:
+      Variables:
+        TABLE_NAME: !Ref DisruptionTable
+        USE_BEDROCK: "false"
+        USE_LOCAL_STORE: "false"
+        BEDROCK_MODEL_ID: "anthropic.claude-3-haiku-20240307-v1:0"
+  Api:
+    Cors:
+      AllowMethods: "'GET,POST,OPTIONS'"
+      AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
+      AllowOrigin: "'*'"
+
+Resources:
+  DisruptionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src/handler.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DisruptionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+              Resource: "*"
+      Events:
+        Health:
+          Type: Api
+          Properties:
+            Path: /health
+            Method: get
+        Disruption:
+          Type: Api
+          Properties:
+            Path: /disruption
+            Method: post
+        GetDisruptions:
+          Type: Api
+          Properties:
+            Path: /disruption
+            Method: get
+        Chat:
+          Type: Api
+          Properties:
+            Path: /chat
+            Method: post
+        SelectOption:
+          Type: Api
+          Properties:
+            Path: /select-option
+            Method: post
+        Confirm:
+          Type: Api
+          Properties:
+            Path: /confirm
+            Method: post
+        Escalate:
+          Type: Api
+          Properties:
+            Path: /escalate
+            Method: post
+
+  DisruptionTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${AWS::StackName}-table"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+
+Outputs:
+  ApiUrl:
+    Description: API Gateway endpoint URL
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+  FunctionArn:
+    Description: Lambda Function ARN
+    Value: !GetAtt DisruptionFunction.Arn
+  TableName:
+    Description: DynamoDB Table Name
+    Value: !Ref DisruptionTable

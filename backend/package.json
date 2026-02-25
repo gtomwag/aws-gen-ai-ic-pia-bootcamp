@@ -1,0 +1,22 @@
+{
+  "name": "genai-disruption-management",
+  "version": "1.0.0",
+  "description": "GenAI Disruption Management POC - AWS SAM Lambda backend",
+  "main": "src/handler.js",
+  "scripts": {
+    "start": "node server-local.js",
+    "dev": "node server-local.js",
+    "sam": "sam local start-api",
+    "build": "sam build",
+    "deploy": "sam deploy --guided"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.400.0",
+    "@aws-sdk/lib-dynamodb": "^3.400.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.400.0",
+    "uuid": "^9.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

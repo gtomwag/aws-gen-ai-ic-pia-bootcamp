@@ -1,1 +1,16 @@
 /.local
+
+# Dependencies
+node_modules/
+.aws-sam/
+
+# Environment
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# SAM build artifacts
+packaged.yaml
+samconfig.toml
