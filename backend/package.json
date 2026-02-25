@@ -8,7 +8,8 @@
     "dev": "node server-local.js",
     "sam": "sam local start-api",
     "build": "sam build",
-    "deploy": "sam deploy --guided"
+    "deploy": "sam deploy --guided",
+    "deploy:auto": "powershell -ExecutionPolicy Bypass -File deploy.ps1"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.400.0",
