@@ -29,8 +29,12 @@ function getComprehendClient() {
  * @returns {Promise<Object>} { sentiment, scores, shouldEscalate }
  */
 async function analyzeSentiment(text, languageCode = 'en') {
-  if (!USE_COMPREHEND || !text || text.trim().length === 0) {
+  if (!text || text.trim().length === 0) {
     return buildNeutralResult();
+  }
+
+  if (!USE_COMPREHEND) {
+    return estimateLocalSentiment(text);
   }
 
   try {
@@ -143,6 +147,90 @@ function buildNeutralResult() {
   return {
     sentiment: 'NEUTRAL',
     scores: { positive: 0, negative: 0, neutral: 1, mixed: 0 },
+    shouldEscalate: false,
+  };
+}
+
+/**
+ * Keyword-based local sentiment estimator for demo/local-dev mode.
+ * Provides realistic sentiment variation without requiring Amazon Comprehend.
+ *
+ * @param {string} text - The message to analyze
+ * @returns {Object} { sentiment, scores, shouldEscalate }
+ */
+function estimateLocalSentiment(text) {
+  const lower = (text || '').toLowerCase();
+
+  const negativeSignals = [
+    'angry', 'furious', 'unacceptable', 'ridiculous', 'terrible', 'worst',
+    'horrible', 'awful', 'disgusting', 'outraged', 'frustrated', 'frustrated',
+    'annoyed', 'upset', 'disappointed', 'unhappy', 'hate', 'never again',
+    'incompetent', 'useless', 'waste', 'stupid', 'ruined', 'disaster',
+    'sue', 'lawyer', 'legal action', 'complaint', 'complain',
+    'sucks', 'bad', 'mad',
+    'demand', 'refund now', 'unbelievable', 'sick of', 'fed up',
+    'how dare', 'not good enough', 'absolutely not', 'this is wrong',
+    'i want to speak', 'manager', 'supervisor', 'escalate',
+    'waited hours', 'no help', 'still waiting', 'ignored',
+    'cancel', 'never flying', 'switch airline',
+  ];
+
+  const positiveSignals = [
+    'thank', 'thanks', 'great', 'excellent', 'perfect', 'wonderful',
+    'appreciate', 'helpful', 'good', 'happy', 'pleased', 'satisfied',
+    'awesome', 'love', 'amazing', 'fantastic', 'well done', 'nice',
+    'sounds good', 'that works', 'yes please', 'looks good',
+    'brilliant', 'impressive', 'quick', 'efficient',
+    'wow', 'yeah', 'cool',
+  ];
+
+  let negCount = 0;
+  let posCount = 0;
+  for (const kw of negativeSignals) {
+    if (lower.includes(kw)) negCount++;
+  }
+  for (const kw of positiveSignals) {
+    if (lower.includes(kw)) posCount++;
+  }
+
+  // Exclamation marks and ALL-CAPS words amplify negative tone
+  const exclamations = (text.match(/!/g) || []).length;
+  const capsWords = (text.match(/\b[A-Z]{2,}\b/g) || []).filter(
+    (w) => !['EU261', 'EU', 'GDPR', 'ATC', 'USA', 'UK', 'PNR', 'FRA', 'JFK', 'DEN', 'DFW', 'UA'].includes(w)
+  ).length;
+  negCount += Math.min(exclamations, 3) * 0.5;
+  negCount += Math.min(capsWords, 3) * 0.5;
+
+  // Compute scores
+  const total = negCount + posCount + 1; // +1 baseline for neutral
+  let negative = negCount / total;
+  let positive = posCount / total;
+  let neutral = 1 / total;
+
+  // Normalize to sum to 1
+  const sum = negative + positive + neutral;
+  negative = parseFloat((negative / sum).toFixed(4));
+  positive = parseFloat((positive / sum).toFixed(4));
+  neutral = parseFloat((neutral / sum).toFixed(4));
+  const mixed = parseFloat(Math.min(negative * positive * 4, 0.3).toFixed(4)); // small mixed component
+
+  // Re-normalize with mixed
+  const total2 = negative + positive + neutral + mixed;
+  negative = parseFloat((negative / total2).toFixed(4));
+  positive = parseFloat((positive / total2).toFixed(4));
+  neutral = parseFloat((neutral / total2).toFixed(4));
+
+  // Determine label
+  let sentiment = 'NEUTRAL';
+  if (negative > positive && negative > neutral) sentiment = 'NEGATIVE';
+  else if (positive > negative && positive > neutral) sentiment = 'POSITIVE';
+  else if (mixed > 0.2) sentiment = 'MIXED';
+
+  console.log(`METRIC: LOCAL_SENTIMENT | sentiment=${sentiment} | neg=${negative} pos=${positive} neu=${neutral}`);
+
+  return {
+    sentiment,
+    scores: { positive, negative, neutral, mixed: parseFloat((mixed / total2).toFixed(4)) },
     shouldEscalate: false,
   };
 }
