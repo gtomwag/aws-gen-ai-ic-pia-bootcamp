@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Support Team Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f172a;
+      background-image: 
+        radial-gradient(at 27% 37%, hsla(215, 98%, 61%, 0.15) 0px, transparent 50%),
+        radial-gradient(at 97% 21%, hsla(125, 98%, 72%, 0.1) 0px, transparent 50%),
+        radial-gradient(at 52% 99%, hsla(354, 98%, 61%, 0.1) 0px, transparent 50%);
+      min-height: 100vh;
+      padding: 20px;
+      color: #cbd5e1;
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 40px;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 24px 32px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .nav-links select,
+    .nav-links a,
+    .refresh-btn {
+      color: #e2e8f0;
+      text-decoration: none;
+      padding: 10px 20px;
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.3s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .nav-links select:hover,
+    .nav-links a:hover,
+    .refresh-btn:hover {
+      background: rgba(59, 130, 246, 0.25);
+      border-color: rgba(59, 130, 246, 0.5);
+    }
+
+    .timestamp {
+      color: #94a3b8;
+      font-size: 13px;
+      margin-top: 12px;
+      font-weight: 400;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+
+    .card {
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .card:hover::before {
+      opacity: 1;
+    }
+
+    .card h2 {
+      font-size: 12px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 20px;
+      font-weight: 600;
+    }
+
+    .card .metric-value {
+      font-size: 52px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+    }
+
+    .card .metric-label {
+      font-size: 13px;
+      color: #64748b;
+      margin-top: 12px;
+      font-weight: 400;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 12px 0;
+      padding: 14px 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .stat-label {
+      color: #cbd5e1;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    .stat-value {
+      color: #e2e8f0;
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .stat-value.positive {
+      color: #34d399;
+      text-shadow: 0 0 20px rgba(52, 211, 153, 0.3);
+    }
+
+    .stat-value.negative {
+      color: #f87171;
+      text-shadow: 0 0 20px rgba(248, 113, 113, 0.3);
+    }
+
+    .stat-value.warning {
+      color: #fbbf24;
+      text-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+    }
+
+    .charts-section {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+
+    .chart-card {
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .chart-card:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .chart-card h3 {
+      font-size: 14px;
+      color: #cbd5e1;
+      margin-bottom: 24px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 320px;
+    }
+
+    .bar-chart {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-around;
+      height: 260px;
+      margin: 24px 0;
+      gap: 20px;
+      padding: 0 10px;
+    }
+
+    .bar {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      height: 100%;
+      justify-content: flex-end;
+    }
+
+    .bar-item {
+      width: 100%;
+      border-radius: 12px 12px 0 0;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .bar-item:hover {
+      filter: brightness(1.15);
+      transform: scaleY(1.02);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .bar-label {
+      margin-top: 14px;
+      font-size: 11px;
+      color: #94a3b8;
+      text-align: center;
+      width: 100%;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .bar-value {
+      position: absolute;
+      top: -32px;
+      width: 100%;
+      text-align: center;
+      font-size: 16px;
+      font-weight: 700;
+      color: #e2e8f0;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .loading {
+      text-align: center;
+      padding: 60px 20px;
+      color: #cbd5e1;
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    .loading::after {
+      content: '...';
+      display: inline-block;
+      animation: dots 1.5s steps(4, end) infinite;
+    }
+
+    @keyframes dots {
+      0%, 20% { content: '.'; }
+      40% { content: '..'; }
+      60%, 100% { content: '...'; }
+    }
+
+    .legend {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #f0f0f0;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #666;
+    }
+
+    .legend-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: white;
+    }
+
+    .error {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .refresh-btn {
+      background: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      color: #667eea;
+      transition: all 0.3s;
+    }
+
+    .refresh-btn:hover {
+      background: #f0f0f0;
+    }
+
+    .time-filter {
+      background: white;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      color: #667eea;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 14px;
+    }
+
+    .time-filter:hover {
+      background: #f9f9f9;
+    }
+
+    .time-filter:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    @media (max-width: 768px) {
+      .charts-section {
+        grid-template-columns: 1fr;
+      }
+
+      .dashboard {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .nav-links {
+        width: 100%;
+        margin-top: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>📊 Support Team Dashboard</h1>
+        <p class="timestamp">Last updated: <span id="timestamp">Loading...</span></p>
+      </div>
+      <div class="nav-links">
+        <select class="time-filter" id="timeFilter" onchange="loadDashboard()">
+          <option value="1h">Last 1 Hour</option>
+          <option value="24h">Last 24 Hours</option>
+          <option value="7d" selected>Last 7 Days</option>
+          <option value="30d">Last 30 Days</option>
+        </select>
+        <button class="refresh-btn" onclick="loadDashboard()">🔄 Refresh</button>
+        <a href="index.html">← Back to App</a>
+      </div>
+    </header>
+
+    <div id="error" style="display: none;"></div>
+
+    <div id="loading" class="loading" style="display: none;">
+      Loading dashboard data...
+    </div>
+
+    <div id="dashboard-content" style="display: none;">
+      <!-- KPI Cards -->
+      <div class="dashboard">
+        <div class="card">
+          <h2>Agent Escalation Requests</h2>
+          <div class="metric-value" id="escalation-total">0</div>
+          <div class="metric-label">Total escalations to date</div>
+          <div style="margin-top: 20px;">
+            <div class="stat-row">
+              <span class="stat-label">Platinum</span>
+              <span class="stat-value" id="escalations-platinum">0</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Gold</span>
+              <span class="stat-value" id="escalations-gold">0</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Silver</span>
+              <span class="stat-value" id="escalations-silver">0</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">General</span>
+              <span class="stat-value" id="escalations-general">0</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Successful Rebookings</h2>
+          <div class="metric-value" id="booking-total">0</div>
+          <div class="metric-label">Total confirmed bookings</div>
+          <div style="margin-top: 20px;">
+            <div class="stat-row">
+              <span class="stat-label">Platinum</span>
+              <span class="stat-value" id="bookings-platinum">0</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Gold</span>
+              <span class="stat-value" id="bookings-gold">0</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Silver</span>
+              <span class="stat-value" id="bookings-silver">0</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">General</span>
+              <span class="stat-value" id="bookings-general">0</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Unsuccessful Rebookings</h2>
+          <div class="metric-value negative" id="failed-booking-total">0</div>
+          <div class="metric-label">Total failed booking attempts</div>
+          <div style="margin-top: 20px;">
+            <div class="stat-row">
+              <span class="stat-label">Failure Rate</span>
+              <span class="stat-value warning" id="failure-rate">0%</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Platinum</span>
+              <span class="stat-value" id="failed-bookings-platinum">0</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Gold</span>
+              <span class="stat-value" id="failed-bookings-gold">0</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Silver</span>
+              <span class="stat-value" id="failed-bookings-silver">0</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">General</span>
+              <span class="stat-value" id="failed-bookings-general">0</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Key Metrics</h2>
+          <div style="margin-top: 20px;">
+            <div class="stat-row">
+              <span class="stat-label">Success Rate</span>
+              <span class="stat-value positive" id="success-rate">0%</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Agent Requests %</span>
+              <span class="stat-value" id="agent-request-pct">0%</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Total Sessions</span>
+              <span class="stat-value" id="total-sessions">0</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Disruptions</span>
+              <span class="stat-value" id="disruption-count">0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="charts-section">
+        <div class="chart-card">
+          <h3>Escalation Requests by Tier</h3>
+          <div class="bar-chart" id="escalation-chart"></div>
+        </div>
+
+        <div class="chart-card">
+          <h3>Successful Rebookings by Tier</h3>
+          <div class="bar-chart" id="rebooking-chart"></div>
+        </div>
+
+        <div class="chart-card">
+          <h3>Failed Rebookings by Tier</h3>
+          <div class="bar-chart" id="failed-rebooking-chart"></div>
+        </div>
+      </div>
+
+      <!-- Escalation Reasons -->
+      <div class="chart-card">
+        <h3>Top Escalation Reasons</h3>
+        <div id="escalation-reasons"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE_URL = window.API_BASE_URL || 'http://127.0.0.1:3000';
+
+    // Sample data for demo
+    const SAMPLE_DATA = {
+      timestamp: new Date().toISOString(),
+      escalations: {
+        total: 12,
+        byTier: { Platinum: 5, Gold: 4, Silver: 2, General: 1 },
+        byReason: {
+          'Customer requested agent assistance': 4,
+          'Sentiment auto-escalation (negative)': 3,
+          'Wheelchair assistance needed': 2,
+          'Complex rebooking scenario': 2,
+          'Compensation inquiry': 1
+        },
+        avgResponseTime: 45,
+      },
+      rebookings: {
+        total: 28,
+        byTier: { Platinum: 10, Gold: 9, Silver: 6, General: 3 },
+        byChannel: { chat: 22, voice: 4, web: 2 },
+        successRate: '70.00',
+      },
+      failedRebookings: {
+        total: 8,
+        byTier: { Platinum: 2, Gold: 3, Silver: 2, General: 1 },
+        failureRate: '22.22',
+      },
+      disruptions: {
+        total: 3,
+        byType: { cancellation: 2, delay: 1 }
+      },
+      summary: {
+        totalSessions: 40,
+        agentRequestsPercentage: '30.00',
+      },
+    };
+
+    async function loadDashboard() {
+      const loadingEl = document.getElementById('loading');
+      const contentEl = document.getElementById('dashboard-content');
+      const errorEl = document.getElementById('error');
+      const timeFilter = document.getElementById('timeFilter').value;
+
+      loadingEl.style.display = 'block';
+      contentEl.style.display = 'none';
+      errorEl.style.display = 'none';
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/dashboard?timeRange=${timeFilter}`);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        renderDashboard(data);
+        loadingEl.style.display = 'none';
+        contentEl.style.display = 'block';
+      } catch (err) {
+        console.error('Dashboard error:', err);
+        console.log('Using sample data instead...');
+        // Fall back to sample data
+        renderDashboard(SAMPLE_DATA);
+        loadingEl.style.display = 'none';
+        contentEl.style.display = 'block';
+      }
+    }
+
+    function renderDashboard(data) {
+      const { escalations, rebookings, failedRebookings, disruptions, summary } = data;
+
+      // Update timestamp
+      const date = new Date(data.timestamp);
+      document.getElementById('timestamp').textContent = date.toLocaleString();
+
+      // KPI Cards
+      document.getElementById('escalation-total').textContent = escalations.total;
+      document.getElementById('escalations-platinum').textContent = escalations.byTier.Platinum;
+      document.getElementById('escalations-gold').textContent = escalations.byTier.Gold;
+      document.getElementById('escalations-silver').textContent = escalations.byTier.Silver;
+      document.getElementById('escalations-general').textContent = escalations.byTier.General;
+
+      document.getElementById('booking-total').textContent = rebookings.total;
+      document.getElementById('bookings-platinum').textContent = rebookings.byTier.Platinum;
+      document.getElementById('bookings-gold').textContent = rebookings.byTier.Gold;
+      document.getElementById('bookings-silver').textContent = rebookings.byTier.Silver;
+      document.getElementById('bookings-general').textContent = rebookings.byTier.General;
+
+      document.getElementById('failed-booking-total').textContent = failedRebookings.total;
+      document.getElementById('failed-bookings-platinum').textContent = failedRebookings.byTier.Platinum;
+      document.getElementById('failed-bookings-gold').textContent = failedRebookings.byTier.Gold;
+      document.getElementById('failed-bookings-silver').textContent = failedRebookings.byTier.Silver;
+      document.getElementById('failed-bookings-general').textContent = failedRebookings.byTier.General;
+      document.getElementById('failure-rate').textContent = `${failedRebookings.failureRate}%`;
+
+      document.getElementById('success-rate').textContent = `${rebookings.successRate}%`;
+      document.getElementById('agent-request-pct').textContent = `${summary.agentRequestsPercentage}%`;
+      document.getElementById('total-sessions').textContent = summary.totalSessions;
+      document.getElementById('disruption-count').textContent = disruptions.total;
+
+      // Render charts with combined max value for correct proportions
+      const allTierValues = [
+        ...Object.values(escalations.byTier),
+        ...Object.values(rebookings.byTier),
+        ...Object.values(failedRebookings.byTier)
+      ];
+      const globalMax = Math.max(...allTierValues, 1);
+      
+      renderEscalationChart(escalations.byTier, globalMax);
+      renderRebookingChart(rebookings.byTier, globalMax);
+      renderFailedRebookingChart(failedRebookings.byTier, globalMax);
+      renderEscalationReasons(escalations.byReason);
+    }
+
+    function renderEscalationChart(byTier, globalMax) {
+      const container = document.getElementById('escalation-chart');
+      const maxValue = globalMax || Math.max(...Object.values(byTier), 1);
+
+      const colors = {
+        Platinum: '#667eea',
+        Gold: '#f59e0b',
+        Silver: '#8b5cf6',
+        General: '#6b7280'
+      };
+
+      // Ensure all tiers are displayed
+      const tiers = ['Platinum', 'Gold', 'Silver', 'General'];
+      container.innerHTML = tiers.map(tier => {
+        const count = byTier[tier] || 0;
+        const height = (count / maxValue) * 100;
+        return `
+          <div class="bar">
+            <div class="bar-item" style="height: ${height}%; background-color: ${colors[tier]};">
+              ${count > 0 ? `<div class="bar-value">${count}</div>` : ''}
+            </div>
+            ${count === 0 ? `<div class="bar-value" style="position: static; margin-top: 8px;">${count}</div>` : ''}
+            <div class="bar-label">${tier}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderRebookingChart(byTier, globalMax) {
+      const container = document.getElementById('rebooking-chart');
+      const maxValue = globalMax || Math.max(...Object.values(byTier), 1);
+
+      const colors = {
+        Platinum: '#10b981',
+        Gold: '#3b82f6',
+        Silver: '#8b5cf6',
+        General: '#6b7280'
+      };
+
+      // Ensure all tiers are displayed
+      const tiers = ['Platinum', 'Gold', 'Silver', 'General'];
+      container.innerHTML = tiers.map(tier => {
+        const count = byTier[tier] || 0;
+        const height = (count / maxValue) * 100;
+        return `
+          <div class="bar">
+            <div class="bar-item" style="height: ${height}%; background-color: ${colors[tier]};">
+              ${count > 0 ? `<div class="bar-value">${count}</div>` : ''}
+            </div>
+            ${count === 0 ? `<div class="bar-value" style="position: static; margin-top: 8px;">${count}</div>` : ''}
+            <div class="bar-label">${tier}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderFailedRebookingChart(byTier, globalMax) {
+      const container = document.getElementById('failed-rebooking-chart');
+      const maxValue = globalMax || Math.max(...Object.values(byTier), 1);
+
+      const colors = {
+        Platinum: '#ef4444',
+        Gold: '#f97316',
+        Silver: '#f59e0b',
+        General: '#6b7280'
+      };
+
+      // Ensure all tiers are displayed
+      const tiers = ['Platinum', 'Gold', 'Silver', 'General'];
+      container.innerHTML = tiers.map(tier => {
+        const count = byTier[tier] || 0;
+        const height = (count / maxValue) * 100;
+        return `
+          <div class="bar">
+            <div class="bar-item" style="height: ${height}%; background-color: ${colors[tier]};">
+              ${count > 0 ? `<div class="bar-value">${count}</div>` : ''}
+            </div>
+            ${count === 0 ? `<div class="bar-value" style="position: static; margin-top: 8px;">${count}</div>` : ''}
+            <div class="bar-label">${tier}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderEscalationReasons(byReason) {
+      const container = document.getElementById('escalation-reasons');
+      const sorted = Object.entries(byReason)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5); // Top 5 reasons
+
+      if (sorted.length === 0) {
+        container.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">No escalations yet</p>';
+        return;
+      }
+
+      const maxValue = Math.max(...sorted.map(([_, count]) => count), 1);
+
+      container.innerHTML = sorted.map(([reason, count]) => {
+        const percentage = (count / maxValue) * 100;
+        return `
+          <div style="margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+              <span style="color: #333; font-weight: 500;">${reason}</span>
+              <span style="color: #667eea; font-weight: 600;">${count}</span>
+            </div>
+            <div style="height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;">
+              <div style="height: 100%; width: ${percentage}%; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Load dashboard on page load
+    document.addEventListener('DOMContentLoaded', loadDashboard);
+
+    // Auto-refresh every 30 seconds
+    setInterval(loadDashboard, 30000);
+  </script>
+</body>
+</html>
