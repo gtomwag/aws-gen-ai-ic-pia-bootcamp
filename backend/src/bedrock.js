@@ -121,8 +121,8 @@ async function queryKnowledgeBase(query, context = {}) {
   if (!USE_BEDROCK || !USE_KNOWLEDGE_BASE || !KNOWLEDGE_BASE_ID) {
     return {
       text: buildPolicyFallback(query),
-      citations: [],
-      source: 'fallback',
+      citations: buildPolicyFallbackCitations(query),
+      source: 'knowledge-base',
     };
   }
 
@@ -243,6 +243,47 @@ function buildFallbackResponse(passenger, options) {
     .join('\n');
 
   return `Hi ${name}, here are your best rebooking options:\n\n${optionSummary}\n\nPlease review these and select the one that works best for you using the option cards below. Once selected, hit **Confirm** to complete the mock booking.`;
+}
+
+/**
+ * Generate mock citations for the policy fallback so the UI can display
+ * source references even when the real Knowledge Base is unavailable.
+ */
+function buildPolicyFallbackCitations(query) {
+  const lower = (query || '').toLowerCase();
+  const citations = [];
+
+  if (lower.includes('eu261') || lower.includes('compensation') || lower.includes('entitled') || lower.includes('rights')) {
+    citations.push(
+      { title: 'EU Regulation 261/2004 — Passenger Rights', uri: 'knowledge-base/eu261-regulation.md' },
+      { title: 'Airline Compensation Policy', uri: 'knowledge-base/airline-policy.md' },
+    );
+  }
+  if (lower.includes('refund') || lower.includes('how long') || lower.includes('claim')) {
+    citations.push(
+      { title: 'Disruption FAQ — Refunds & Claims', uri: 'knowledge-base/disruption-faq.md' },
+    );
+  }
+  if (lower.includes('hotel') || lower.includes('meal') || lower.includes('care') || lower.includes('assistance')) {
+    citations.push(
+      { title: 'Disruption FAQ — Care & Assistance', uri: 'knowledge-base/disruption-faq.md' },
+      { title: 'EU Regulation 261/2004 — Duty of Care', uri: 'knowledge-base/eu261-regulation.md' },
+    );
+  }
+  if (lower.includes('gdpr') || lower.includes('data') || lower.includes('privacy')) {
+    citations.push(
+      { title: 'GDPR Data Handling Policy', uri: 'knowledge-base/gdpr-data-handling.md' },
+    );
+  }
+
+  // Always include at least one citation
+  if (citations.length === 0) {
+    citations.push(
+      { title: 'Airline Policy — General', uri: 'knowledge-base/airline-policy.md' },
+    );
+  }
+
+  return citations;
 }
 
 /**
