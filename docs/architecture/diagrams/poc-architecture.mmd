@@ -1,19 +1,30 @@
 graph LR
     subgraph "Static Web UI"
-        A["web/index.html + app.js<br>Dependency-free HTML/JS/CSS"]
+        A["web/index.html + app.js<br>Dependency-free HTML/JS/CSS<br>Source badges, citations,<br>sentiment bar, PII warning"]
     end
 
     subgraph "AWS Cloud (or Local)"
         B["API Gateway<br>(REST)"]
         C["Lambda Function<br>Node.js 18<br>handler.js"]
         D["DynamoDB<br>Single Table<br>(pk/sk)"]
-        E["Amazon Bedrock<br>(Optional)<br>Claude 3 Haiku"]
+    end
+
+    subgraph "AWS AI Services (Feature-Flagged)"
+        E["Amazon Bedrock<br>Claude 3 Haiku<br>(USE_BEDROCK)"]
+        KB["Bedrock Knowledge Base<br>RAG — EU261, Policy,<br>GDPR, FAQ docs<br>(USE_KNOWLEDGE_BASE)"]
+        BG["Bedrock Guardrails<br>PII filter, content safety<br>(USE_GUARDRAILS)"]
+        CO["Amazon Comprehend<br>Sentiment + PII detection<br>(USE_COMPREHEND)"]
+        TR["Amazon Translate<br>75+ languages<br>(USE_TRANSLATE)"]
     end
 
     A -->|"HTTP POST/GET"| B
     B --> C
     C -->|"Read/Write"| D
-    C -.->|"Optional"| E
+    C -.->|"General chat"| E
+    C -.->|"Policy Q&A (RAG)"| KB
+    E -.->|"Safety"| BG
+    C -.->|"Sentiment / PII"| CO
+    C -.->|"Translate"| TR
 
     subgraph "DynamoDB Entities"
         D1["DISRUPTION#id META"]
@@ -36,6 +47,18 @@ graph LR
     D --- D7
     D --- D8
     D --- D9
+
+    subgraph "Knowledge Base Documents"
+        KD1["eu261-regulation.md"]
+        KD2["airline-policy.md"]
+        KD3["disruption-faq.md"]
+        KD4["gdpr-data-handling.md"]
+    end
+
+    KB --- KD1
+    KB --- KD2
+    KB --- KD3
+    KB --- KD4
 
     subgraph "API Endpoints"
         E1["POST /disruption"]
