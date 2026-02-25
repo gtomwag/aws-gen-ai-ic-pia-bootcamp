@@ -17,12 +17,18 @@ const server = http.createServer(async (req, res) => {
   req.on('data', (chunk) => { body += chunk; });
   req.on('end', async () => {
     // Build a minimal API Gateway-like event
+    const urlParts = req.url.split('?');
+    const queryString = urlParts[1] || '';
+    const queryParams = queryString
+      ? Object.fromEntries(new URLSearchParams(queryString).entries())
+      : null;
+
     const event = {
       httpMethod: req.method,
-      path: req.url.split('?')[0],
+      path: urlParts[0],
       headers: req.headers,
       body: body || null,
-      queryStringParameters: null,
+      queryStringParameters: queryParams,
       pathParameters: null,
     };
 
@@ -50,5 +56,12 @@ server.listen(PORT, () => {
   console.log('    POST /select-option');
   console.log('    POST /confirm');
   console.log('    POST /escalate');
+  console.log('');
+  console.log('  AI Capabilities:');
+  console.log(`    Bedrock Chat:      ${process.env.USE_BEDROCK === 'true' ? '✅ ON' : '⬚ OFF (fallback)'}`);
+  console.log(`    Knowledge Base:    ${process.env.USE_KNOWLEDGE_BASE === 'true' ? '✅ ON' : '⬚ OFF (fallback)'}`);
+  console.log(`    Guardrails:        ${process.env.USE_GUARDRAILS === 'true' ? '✅ ON' : '⬚ OFF'}`);
+  console.log(`    Comprehend:        ${process.env.USE_COMPREHEND === 'true' ? '✅ ON' : '⬚ OFF (neutral)'}`);
+  console.log(`    Translate:         ${process.env.USE_TRANSLATE === 'true' ? '✅ ON' : '⬚ OFF (English)'}`);
   console.log('');
 });

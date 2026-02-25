@@ -20,6 +20,7 @@
 ### Architecture
 
 - [architecture/solution-architecture.md](architecture/solution-architecture.md) — POC + Target architecture narrative
+- [architecture/ai-services-guide.md](architecture/ai-services-guide.md) — AWS AI services integration guide (Bedrock KB, Guardrails, Comprehend, Translate)
 - [architecture/diagrams/poc-architecture.mmd](architecture/diagrams/poc-architecture.mmd) — POC Mermaid diagram
 - [architecture/diagrams/target-architecture.mmd](architecture/diagrams/target-architecture.mmd) — Target PRD Mermaid diagram
 

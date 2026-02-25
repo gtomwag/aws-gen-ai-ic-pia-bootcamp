@@ -12,6 +12,38 @@ Parameters:
     Type: String
     Default: "anthropic.claude-3-haiku-20240307-v1:0"
     Description: Bedrock model ID
+  UseKnowledgeBase:
+    Type: String
+    Default: "false"
+    AllowedValues: ["true", "false"]
+    Description: Enable Bedrock Knowledge Base for policy-aware RAG answers
+  KnowledgeBaseId:
+    Type: String
+    Default: ""
+    Description: Bedrock Knowledge Base ID (create via setup-kb.js or console)
+  UseGuardrails:
+    Type: String
+    Default: "false"
+    AllowedValues: ["true", "false"]
+    Description: Enable Bedrock Guardrails for PII filtering and content safety
+  GuardrailId:
+    Type: String
+    Default: ""
+    Description: Bedrock Guardrail ID (create via console or CLI)
+  GuardrailVersion:
+    Type: String
+    Default: "DRAFT"
+    Description: Bedrock Guardrail version
+  UseComprehend:
+    Type: String
+    Default: "false"
+    AllowedValues: ["true", "false"]
+    Description: Enable Amazon Comprehend for sentiment analysis and PII detection
+  UseTranslate:
+    Type: String
+    Default: "false"
+    AllowedValues: ["true", "false"]
+    Description: Enable Amazon Translate for multi-language notifications
 
 Globals:
   Function:
@@ -24,6 +56,13 @@ Globals:
         USE_BEDROCK: !Ref UseBedrock
         USE_LOCAL_STORE: "false"
         BEDROCK_MODEL_ID: !Ref BedrockModelId
+        USE_KNOWLEDGE_BASE: !Ref UseKnowledgeBase
+        KNOWLEDGE_BASE_ID: !Ref KnowledgeBaseId
+        USE_GUARDRAILS: !Ref UseGuardrails
+        GUARDRAIL_ID: !Ref GuardrailId
+        GUARDRAIL_VERSION: !Ref GuardrailVersion
+        USE_COMPREHEND: !Ref UseComprehend
+        USE_TRANSLATE: !Ref UseTranslate
   Api:
     Cors:
       AllowMethods: "'GET,POST,OPTIONS'"
@@ -43,6 +82,26 @@ Resources:
             - Effect: Allow
               Action:
                 - bedrock:InvokeModel
+              Resource: "*"
+            - Effect: Allow
+              Action:
+                - bedrock:Retrieve
+                - bedrock:RetrieveAndGenerate
+              Resource: "*"
+            - Effect: Allow
+              Action:
+                - bedrock:ApplyGuardrail
+              Resource: "*"
+            - Effect: Allow
+              Action:
+                - comprehend:DetectSentiment
+                - comprehend:DetectPiiEntities
+                - comprehend:DetectDominantLanguage
+              Resource: "*"
+            - Effect: Allow
+              Action:
+                - translate:TranslateText
+                - translate:DetectDominantLanguage
               Resource: "*"
       Events:
         Health:

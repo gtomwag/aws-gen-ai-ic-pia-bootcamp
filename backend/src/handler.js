@@ -1,7 +1,9 @@
 const { generateId, generatePNR, respond, parseBody, logMetric } = require('./util');
 const store = require('./store');
-const { maybeBedrockChat } = require('./bedrock');
+const { maybeBedrockChat, queryKnowledgeBase, isPolicyQuestion } = require('./bedrock');
 const { generateManifest, getDemoFocusPassengers } = require('./passengers');
+const { analyzeSentiment, detectPII, evaluateEscalationTrigger } = require('./comprehend');
+const { translateText, translateNotification } = require('./translate');
 
 // ──────────────────────────────────────────────
 // Option generation (PRD-aligned)
@@ -182,6 +184,7 @@ function generateNotificationCopy(passenger, disruption, optionCount) {
     affectedFlight: flight,
     cause: reason,
     ctaOptions: ['View Options', 'Speak to Agent'],
+    language: passenger.preferredLanguage || 'en',
   };
 }
 
@@ -262,7 +265,15 @@ async function handleDisruption(body) {
   await store.upsertJson(`SESSION#${sessionId}`, 'OPTIONS', { options });
 
   // Generate proactive notification (PRD: proactive notification)
-  const notification = generateNotificationCopy(enrichedPassenger, disruption, options.length);
+  let notification = generateNotificationCopy(enrichedPassenger, disruption, options.length);
+
+  // Translate notification if passenger has a preferred language
+  const passengerLang = enrichedPassenger.preferredLanguage || 'en';
+  if (passengerLang !== 'en') {
+    notification = await translateNotification(notification, passengerLang);
+    logMetric('NOTIFICATION_TRANSLATED', 1, { sessionId, language: passengerLang });
+  }
+
   const notificationRecord = {
     ...notification,
     notificationSentAt: new Date().toISOString(),
@@ -309,37 +320,85 @@ async function handleChat(body) {
   const turns = await store.queryByPk(`SESSION#${sessionId}`, 'TURN#');
   const history = turns.map((t) => ({ role: t.role, content: t.content }));
 
-  // Store the user turn
+  // ── Sentiment Analysis (Comprehend) ──
+  const sentiment = await analyzeSentiment(message);
+
+  // ── PII Detection (Comprehend) ──
+  const piiEntities = await detectPII(message);
+  if (piiEntities.length > 0) {
+    logMetric('CHAT_PII_DETECTED', piiEntities.length, { sessionId, types: piiEntities.map((e) => e.type).join(',') });
+  }
+
+  // Store the user turn (with sentiment metadata)
   const epoch = Date.now();
   const turnCount = turns.length;
   await store.upsertJson(`SESSION#${sessionId}`, `TURN#${epoch}#${turnCount}`, {
     role: 'user',
     content: message,
     timestamp: new Date().toISOString(),
+    sentiment: sentiment.sentiment,
+    sentimentScores: sentiment.scores,
   });
 
-  // Get assistant response (Bedrock or fallback)
-  const assistantMessage = await maybeBedrockChat({
-    passenger: sessionMeta.passenger,
-    disruptionId: sessionMeta.disruptionId,
-    message,
-    options,
-    history,
-  });
+  // ── Check for auto-escalation based on sentiment history ──
+  const userTurnSentiments = turns
+    .filter((t) => t.role === 'user' && t.sentiment)
+    .map((t) => ({ sentiment: t.sentiment, scores: t.sentimentScores || { negative: 0 } }));
+  userTurnSentiments.push({ sentiment: sentiment.sentiment, scores: sentiment.scores });
+
+  const escalationCheck = evaluateEscalationTrigger(userTurnSentiments);
+  if (escalationCheck.shouldEscalate) {
+    logMetric('SENTIMENT_AUTO_ESCALATE', 1, { sessionId, consecutiveNegative: escalationCheck.consecutiveNegative });
+  }
+
+  // ── Route to Knowledge Base or Chat ──
+  let assistantResponse;
+  if (isPolicyQuestion(message)) {
+    // Policy/rights question → Knowledge Base (RAG)
+    const kbResult = await queryKnowledgeBase(message, {
+      tier: sessionMeta.passenger.tier,
+      disruptionType: sessionMeta.disruptionId,
+    });
+    assistantResponse = { text: kbResult.text, source: kbResult.source, citations: kbResult.citations };
+    logMetric('CHAT_KB_ROUTED', 1, { sessionId });
+  } else {
+    // General chat → Bedrock InvokeModel / fallback
+    const chatResult = await maybeBedrockChat({
+      passenger: sessionMeta.passenger,
+      disruptionId: sessionMeta.disruptionId,
+      message,
+      options,
+      history,
+    });
+    assistantResponse = { text: chatResult.text, source: chatResult.source, citations: [] };
+  }
 
   // Store the assistant turn
   await store.upsertJson(`SESSION#${sessionId}`, `TURN#${Date.now()}#${turnCount + 1}`, {
     role: 'assistant',
-    content: assistantMessage,
+    content: assistantResponse.text,
     timestamp: new Date().toISOString(),
+    source: assistantResponse.source,
   });
 
-  logMetric('CHAT_TURN', 1, { sessionId });
+  logMetric('CHAT_TURN', 1, { sessionId, source: assistantResponse.source, sentiment: sentiment.sentiment });
 
   return respond(200, {
     sessionId,
-    assistant: assistantMessage,
+    assistant: assistantResponse.text,
     options: options.slice(0, 4),
+    sentiment: {
+      current: sentiment.sentiment,
+      scores: sentiment.scores,
+    },
+    source: assistantResponse.source,
+    citations: assistantResponse.citations || [],
+    autoEscalation: escalationCheck.shouldEscalate ? {
+      triggered: true,
+      reason: escalationCheck.reason,
+      consecutiveNegative: escalationCheck.consecutiveNegative,
+    } : null,
+    piiDetected: piiEntities.length > 0,
   });
 }
 
@@ -496,6 +555,21 @@ async function handleEscalate(body) {
       channel: notificationDoc.primaryChannel,
       status: notificationDoc.status,
     } : null,
+    // Sentiment analysis summary
+    sentimentSummary: (() => {
+      const userTurns = turns.filter((t) => t.role === 'user' && t.sentiment);
+      if (userTurns.length === 0) return { available: false };
+      const negCount = userTurns.filter((t) => t.sentiment === 'NEGATIVE').length;
+      const posCount = userTurns.filter((t) => t.sentiment === 'POSITIVE').length;
+      return {
+        available: true,
+        totalUserMessages: userTurns.length,
+        positiveCount: posCount,
+        negativeCount: negCount,
+        trend: negCount > posCount ? 'DECLINING' : posCount > negCount ? 'POSITIVE' : 'NEUTRAL',
+        lastSentiment: userTurns[userTurns.length - 1]?.sentiment || 'UNKNOWN',
+      };
+    })(),
     // Escalation metadata
     escalationReason: reason || 'Customer requested agent assistance',
     escalatedAt: new Date().toISOString(),

@@ -31,6 +31,11 @@ const escalationPanel = document.getElementById('escalationPanel');
 const escalationContent = document.getElementById('escalationContent');
 const metricsPanel = document.getElementById('metricsPanel');
 const metricsLog = document.getElementById('metricsLog');
+const sentimentBar = document.getElementById('sentimentBar');
+const sentimentBadge = document.getElementById('sentimentBadge');
+const sentimentScores = document.getElementById('sentimentScores');
+const autoEscalationAlert = document.getElementById('autoEscalationAlert');
+const autoEscalationDetail = document.getElementById('autoEscalationDetail');
 
 // ── Helpers ───────────────────────────────────────────────
 
@@ -38,10 +43,52 @@ function setStatus(text) {
   statusText.textContent = text;
 }
 
-function addMessage(role, text) {
+function addMessage(role, text, meta) {
   const div = document.createElement('div');
   div.className = `msg ${role}`;
-  div.textContent = text;
+
+  // ── Source badge for assistant messages ──
+  if (role === 'assistant' && meta && meta.source) {
+    const badge = document.createElement('div');
+    const src = meta.source;
+    if (src === 'knowledge-base') {
+      badge.className = 'msg-source-badge source-kb';
+      badge.textContent = '📚 Knowledge Base';
+    } else if (src === 'bedrock') {
+      badge.className = 'msg-source-badge source-bedrock';
+      badge.textContent = '🤖 Bedrock AI';
+    } else {
+      badge.className = 'msg-source-badge source-fallback';
+      badge.textContent = '💬 Fallback';
+    }
+    div.appendChild(badge);
+  }
+
+  // ── Message body ──
+  const body = document.createElement('div');
+  body.style.whiteSpace = 'pre-wrap';
+  body.textContent = text;
+  div.appendChild(body);
+
+  // ── Citation footnotes (KB responses) ──
+  if (role === 'assistant' && meta && meta.citations && meta.citations.length > 0) {
+    const citDiv = document.createElement('div');
+    citDiv.className = 'msg-citations';
+    citDiv.innerHTML = '<div class="citation-label">📎 Sources:</div>' +
+      meta.citations.map((c, i) =>
+        `<span class="citation-item">[${i + 1}] ${typeof c === 'string' ? c : (c.title || c.uri || c.text || JSON.stringify(c))}</span>`
+      ).join('');
+    div.appendChild(citDiv);
+  }
+
+  // ── PII detection warning on user messages ──
+  if (role === 'user' && meta && meta.piiDetected) {
+    const pii = document.createElement('div');
+    pii.className = 'msg-pii-warning';
+    pii.textContent = '🔒 Sensitive data detected';
+    div.appendChild(pii);
+  }
+
   chatMessages.appendChild(div);
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
@@ -243,13 +290,52 @@ async function createDisruption() {
       message: 'Show me the best options and tradeoffs.',
     });
 
-    addMessage('assistant', chatData.assistant);
+    addMessage('assistant', chatData.assistant, {
+      source: chatData.source,
+      citations: chatData.citations,
+    });
+    handleChatMeta(chatData);
     if (chatData.options && chatData.options.length > 0) {
       renderOptions(chatData.options);
     }
   } catch (err) {
     btnDisruption.disabled = false;
     console.error('createDisruption error:', err);
+  }
+}
+
+// ── Sentiment & AI metadata handler ──────────────────────
+
+function handleChatMeta(data) {
+  // Sentiment indicator
+  if (data.sentiment && data.sentiment.current) {
+    sentimentBar.classList.add('visible');
+    const s = data.sentiment.current;
+    sentimentBadge.textContent = s;
+    sentimentBadge.className = `sentiment-badge ${s}`;
+    if (data.sentiment.scores) {
+      const sc = data.sentiment.scores;
+      const parts = [];
+      if (sc.positive) parts.push(`pos:${(sc.positive * 100).toFixed(0)}%`);
+      if (sc.negative) parts.push(`neg:${(sc.negative * 100).toFixed(0)}%`);
+      if (sc.neutral) parts.push(`neu:${(sc.neutral * 100).toFixed(0)}%`);
+      sentimentScores.textContent = parts.join(' · ');
+    }
+    addMetric('sentiment', `${s} ${sentimentScores.textContent}`);
+  }
+
+  // Auto-escalation alert
+  if (data.autoEscalation && data.autoEscalation.triggered) {
+    autoEscalationAlert.classList.add('visible');
+    autoEscalationDetail.textContent =
+      `${data.autoEscalation.consecutiveNegative} consecutive negative messages detected — ${data.autoEscalation.reason || 'auto-routing to agent'}`;
+    addMessage('system', '🚨 Auto-escalation triggered: consecutive negative sentiment detected. Consider speaking with an agent.');
+    addMetric('SENTIMENT_AUTO_ESCALATE', `consecutive=${data.autoEscalation.consecutiveNegative}`);
+  }
+
+  // Source metric
+  if (data.source) {
+    addMetric('chat_source', data.source);
   }
 }
 
@@ -262,7 +348,26 @@ async function sendChat() {
 
   try {
     const data = await apiCall('/chat', { sessionId, message });
-    addMessage('assistant', data.assistant);
+
+    // PII: retroactively mark the user message
+    if (data.piiDetected) {
+      const userMsgs = chatMessages.querySelectorAll('.msg.user');
+      const lastUserMsg = userMsgs[userMsgs.length - 1];
+      if (lastUserMsg && !lastUserMsg.querySelector('.msg-pii-warning')) {
+        const pii = document.createElement('div');
+        pii.className = 'msg-pii-warning';
+        pii.textContent = '🔒 Sensitive data detected';
+        lastUserMsg.appendChild(pii);
+      }
+      addMetric('PII_DETECTED', 'in user message');
+    }
+
+    addMessage('assistant', data.assistant, {
+      source: data.source,
+      citations: data.citations,
+    });
+    handleChatMeta(data);
+
     if (data.options && data.options.length > 0) {
       renderOptions(data.options);
     }
