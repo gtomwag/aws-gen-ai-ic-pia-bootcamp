@@ -445,6 +445,131 @@
     .metrics-panel .metric-line { margin-bottom: 2px; }
     .metrics-panel .metric-line .metric-name { color: #9ece6a; }
     .metrics-panel .metric-line .metric-val { color: #e0af68; }
+
+    /* ── Source Badge on Assistant Messages ─────────────── */
+    .msg-source-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      margin-bottom: 6px;
+    }
+    .msg-source-badge.source-kb {
+      background: #1e3a2f;
+      color: #73daca;
+      border: 1px solid #73daca44;
+    }
+    .msg-source-badge.source-bedrock {
+      background: #1e2a3a;
+      color: #7aa2f7;
+      border: 1px solid #7aa2f744;
+    }
+    .msg-source-badge.source-fallback {
+      background: #2a2a1e;
+      color: #e0af68;
+      border: 1px solid #e0af6844;
+    }
+
+    /* ── Citation Footnotes ─────────────────────────────── */
+    .msg-citations {
+      margin-top: 8px;
+      padding-top: 6px;
+      border-top: 1px solid #2d2f3e;
+      font-size: 11px;
+    }
+    .msg-citations .citation-label {
+      color: #565f89;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .msg-citations .citation-item {
+      color: #73daca;
+      cursor: pointer;
+      display: block;
+      padding: 2px 0;
+      text-decoration: none;
+    }
+    .msg-citations .citation-item:hover {
+      text-decoration: underline;
+      color: #9ece6a;
+    }
+
+    /* ── PII Warning (inline on user messages) ──────────── */
+    .msg-pii-warning {
+      display: inline-block;
+      margin-top: 6px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: #3a1e2a;
+      color: #f7768e;
+      font-size: 10px;
+      font-weight: 600;
+      border: 1px solid #f7768e44;
+    }
+
+    /* ── Sentiment Indicator Bar ────────────────────────── */
+    .sentiment-bar {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 14px;
+      background: #1e2030;
+      border: 1px solid #2d2f3e;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      font-size: 12px;
+      color: #9aa5ce;
+    }
+    .sentiment-bar.visible { display: flex; }
+    .sentiment-bar .sentiment-label { font-weight: 600; color: #7aa2f7; }
+    .sentiment-badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .sentiment-badge.POSITIVE { background: #1e3a2f; color: #9ece6a; border: 1px solid #9ece6a44; }
+    .sentiment-badge.NEGATIVE { background: #3a1e2a; color: #f7768e; border: 1px solid #f7768e44; }
+    .sentiment-badge.NEUTRAL  { background: #1e2030; color: #9aa5ce; border: 1px solid #9aa5ce44; }
+    .sentiment-badge.MIXED    { background: #2a2a1e; color: #e0af68; border: 1px solid #e0af6844; }
+    .sentiment-scores {
+      font-size: 10px;
+      color: #565f89;
+    }
+
+    /* ── Auto-Escalation Alert Banner ───────────────────── */
+    .auto-escalation-alert {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: linear-gradient(135deg, #3a1e2a 0%, #2a1a1a 100%);
+      border: 2px solid #f7768e;
+      border-radius: 10px;
+      margin-bottom: 8px;
+      animation: alertPulse 2s ease-in-out infinite;
+    }
+    .auto-escalation-alert.visible { display: flex; }
+    .auto-escalation-alert .alert-icon { font-size: 20px; }
+    .auto-escalation-alert .alert-text {
+      font-size: 13px;
+      font-weight: 600;
+      color: #f7768e;
+    }
+    .auto-escalation-alert .alert-detail {
+      font-size: 11px;
+      color: #9aa5ce;
+      margin-top: 2px;
+    }
+    @keyframes alertPulse {
+      0%, 100% { border-color: #f7768e; }
+      50% { border-color: #f7768e88; }
+    }
   </style>
 </head>
 <body>
@@ -491,6 +616,22 @@
         <div class="stat">🥇 <strong id="mGold">0</strong> Gold</div>
         <div class="stat">⚠ <strong id="mConnRisk">0</strong> at connection risk</div>
         <div class="stat">📱 <strong id="mProactive">0</strong> proactive eligible</div>
+      </div>
+
+      <!-- Sentiment Indicator -->
+      <div class="sentiment-bar" id="sentimentBar">
+        <span class="sentiment-label">Sentiment:</span>
+        <span class="sentiment-badge NEUTRAL" id="sentimentBadge">NEUTRAL</span>
+        <span class="sentiment-scores" id="sentimentScores"></span>
+      </div>
+
+      <!-- Auto-Escalation Alert -->
+      <div class="auto-escalation-alert" id="autoEscalationAlert">
+        <span class="alert-icon">🚨</span>
+        <div>
+          <div class="alert-text">Auto-Escalation Triggered</div>
+          <div class="alert-detail" id="autoEscalationDetail">Consecutive negative sentiment detected — routing to agent.</div>
+        </div>
       </div>
 
       <div class="actions">

@@ -31,20 +31,20 @@ Each row = one "shot" in the 7-minute demo recording.
 
 | # | Time | Screen | Action | Expected Outcome | Voiceover Focus |
 |---|---|---|---|---|---|
-| 16 | 3:45–4:00 | Browser: chat input | Type: `Which option has the fewest stops?` | Response from **Bedrock chat** referencing actual options | "General question → Bedrock AI with session context" |
-| 17 | 4:00–4:15 | Browser: chat | Read response | Bedrock compares Alice's options intelligently | "Bedrock knows her specific flights" |
-| 18 | 4:15–4:30 | Browser: chat input | Type: `What are my EU261 rights for this cancellation?` | Response from **Knowledge Base** with compensation details | "Policy question → auto-routed to Knowledge Base (RAG)" |
-| 19 | 4:30–4:40 | Browser: chat | Read response — note EU261 specifics (€250–€600, distance-based) | Accurate policy info from KB docs, not model hallucination | "Grounded in our curated policy documents" |
-| 20 | 4:40–4:50 | Browser: chat input | Type: `Am I entitled to a hotel and meals during the delay?` | KB response with EU261 duty-of-care (2h/3h/4h thresholds) | "Another KB hit — meals, hotel, transport rights" |
-| 21 | 4:50–5:00 | Browser: chat input | Type: `What about my personal data? Is this GDPR compliant?` | KB response with GDPR rights, retention periods | "Even GDPR — any knowledge domain can be added" |
+| 16 | 3:45–4:00 | Browser: chat input | Type: `Which option has the fewest stops?` | Response from **Bedrock chat** with 🤖 **Bedrock AI** source badge (blue) on message | "General question → Bedrock AI with session context" |
+| 17 | 4:00–4:15 | Browser: chat | Read response, point at blue source badge | Bedrock compares Alice's options intelligently; badge confirms Bedrock path | "Blue badge = general Bedrock AI with her specific flights" |
+| 18 | 4:15–4:30 | Browser: chat input | Type: `What are my EU261 rights for this cancellation?` | Response from **Knowledge Base** with 📚 **Knowledge Base** source badge (green) + citation footnotes below | "Policy question → auto-routed to Knowledge Base (RAG)" |
+| 19 | 4:30–4:40 | Browser: chat | Read response — point at green badge + citation footnotes (EU261 €250–€600) | Green badge + numbered citations prove RAG grounding, not hallucination | "Green badge = KB-sourced. Citations prove document grounding" |
+| 20 | 4:40–4:50 | Browser: chat input | Type: `Am I entitled to a hotel and meals during the delay?` | KB response with green badge + citations (EU261 duty-of-care thresholds) | "Another KB hit — green badge, citations for meals, hotel, transport" |
+| 21 | 4:50–5:00 | Browser: chat input | Type: `What about my personal data? Is this GDPR compliant?` | KB response with green badge + citations (GDPR rights, retention) | "Even GDPR — green badge, citations. Any knowledge domain can be added" |
 
 ## Act 4 — Sentiment Analysis & Auto-Escalation (5:00–5:30)
 
 | # | Time | Screen | Action | Expected Outcome | Voiceover Focus |
 |---|---|---|---|---|---|
-| 22 | 5:00–5:10 | Browser: chat input | Type: `This is unacceptable, I've been waiting for hours` | Response continues normally; Comprehend detects NEGATIVE sentiment | "Amazon Comprehend detects negative sentiment in real time" |
-| 23 | 5:10–5:20 | Browser: chat input | Type: `I'm extremely frustrated, this is the worst experience ever` | 2nd consecutive NEGATIVE → auto-escalation triggers | "2 consecutive negative → auto-escalation fires" |
-| 24 | 5:20–5:30 | Browser: metrics panel | Point at `SENTIMENT_AUTO_ESCALATE` metric | Metric visible with sessionId, consecutiveNegative count | "System proactively routes frustrated passengers — no human judgment needed" |
+| 22 | 5:00–5:10 | Browser: chat input | Type: `This is unacceptable, I've been waiting for hours` | Response continues normally; **Sentiment Bar** appears in side panel showing **NEGATIVE** with confidence percentages | "Amazon Comprehend detects negative sentiment — look at the Sentiment Bar" |
+| 23 | 5:10–5:20 | Browser: chat input | Type: `I'm extremely frustrated, this is the worst experience ever` | 2nd consecutive NEGATIVE → pulsing red 🚨 **Auto-Escalation Alert** banner appears at top of side panel | "2 consecutive negative → red alert banner fires. No human judgment needed" |
+| 24 | 5:20–5:30 | Browser: side panel | Point at Sentiment Bar scores + Auto-Escalation Alert banner | Sentiment Bar shows NEGATIVE percentages; red 🚨 banner visible with pulsing animation | "System proactively routes frustrated passengers — visible right in the UI" |
 
 ## Act 5 — Escalation with Full AI Context (5:30–6:00)
 
@@ -59,6 +59,6 @@ Each row = one "shot" in the 7-minute demo recording.
 | # | Time | Screen | Action | Expected Outcome | Voiceover Focus |
 |---|---|---|---|---|---|
 | 28 | 6:00–6:15 | Browser: metrics panel | Scroll through full metrics log | All metrics visible: CHAT_KB_ROUTED, CHAT_TURN (source), SENTIMENT_AUTO_ESCALATE, CHAT_PII_DETECTED | "Rich telemetry — KB routing %, sentiment trends, PII detection" |
-| 29 | 6:15–6:30 | Browser: metrics | Point at `CHAT_KB_ROUTED` and `CHAT_TURN source=knowledge-base` entries | KB vs Bedrock routing visible | "Track what % of questions need RAG vs general chat" |
+| 29 | 6:15–6:30 | Browser: chat + side panel | Point at UI indicators: source badges (📚/🤖), citations, Sentiment Bar, Auto-Escalation Alert | All 5 visual AI indicators visible simultaneously in the UI | "Every AI service is surfaced visually — badges, citations, sentiment, escalation, PII" |
 | 30 | 6:30–6:45 | Architecture doc or closing slide | Switch to architecture doc or summary | Target architecture + 5 AI services visible | "5 AWS AI services, single SAM stack, feature-flagged" |
 | 31 | 6:45–7:00 | Closing slide | Show next steps | Viewer understands production path | "Path to production: real data, Step Functions, expanded KB, full observability" |

@@ -109,27 +109,35 @@
 
 **Action:** Type in chat: `Which option has the fewest stops?`
 
-> "This is a general rebooking question. The system routes it to **Amazon Bedrock** (Claude) which has context about Alice's specific options and compares them intelligently. Notice the response references her actual available flights."
+> "This is a general rebooking question. The system routes it to **Amazon Bedrock** (Claude) which has context about Alice's specific options and compares them intelligently.
+>
+> **Look at the UI** — notice the 🤖 **Bedrock AI** source badge (blue) on the assistant's message. This tells us the response came from the general Bedrock chat path, not the Knowledge Base."
 
 **Action:** Now type: `What are my EU261 rights for this cancellation?`
 
 > "This is a **policy question**. The system detects keywords like 'EU261' and 'rights' and automatically routes to the **Bedrock Knowledge Base** — our RAG pipeline. Instead of the AI guessing, it retrieves information from our curated policy documents: EU Regulation 261/2004, airline compensation policies, and passenger rights FAQs.
 >
-> Notice the response includes specific compensation amounts — €250 to €600 depending on distance — and mentions extraordinary circumstances. This comes directly from the knowledge base documents, not from the model's training data."
+> **Look at two things in the UI:**
+> 1. The source badge changed to 📚 **Knowledge Base** (green) — immediately tells the user this answer is grounded in curated documents
+> 2. Below the response, you can see **citation footnotes** — numbered references to the specific KB documents the answer was retrieved from
+>
+> The response includes specific compensation amounts — €250 to €600 depending on distance — and mentions extraordinary circumstances. This comes directly from the knowledge base documents, not from the model's training data."
 
 **Action:** Type: `Am I entitled to a hotel and meals during the delay?`
 
-> "Another policy question — routed to the Knowledge Base again. It correctly explains the EU261 duty-of-care provisions: meals after 2 hours for short-haul, hotel for overnight delays, transport included. This is grounded in our actual policy documents."
+> "Another policy question — routed to the Knowledge Base again. Notice the 📚 **Knowledge Base** badge and citation footnotes appear once more. It correctly explains the EU261 duty-of-care provisions: meals after 2 hours for short-haul, hotel for overnight delays, transport included. This is grounded in our actual policy documents."
 
 **Action:** Type: `What about my personal data? Is this GDPR compliant?`
 
-> "Even data privacy questions route through the Knowledge Base. The system retrieves our GDPR data handling policy and explains retention periods, data subject rights, and how to request erasure. This demonstrates that _any_ curated knowledge domain can be added to the KB."
+> "Even data privacy questions route through the Knowledge Base. The 📚 badge and citations confirm it. The system retrieves our GDPR data handling policy and explains retention periods, data subject rights, and how to request erasure. This demonstrates that _any_ curated knowledge domain can be added to the KB."
 
 **Key demo talking points:**
 - The routing is **automatic** — no user action needed to pick KB vs chat
+- **Source badges** make the routing visible: 📚 Knowledge Base (green), 🤖 Bedrock AI (blue), 💬 Fallback (amber)
+- **Citation footnotes** appear below KB responses, showing which documents were used — proof of RAG grounding
 - Policy keywords like `rights`, `compensation`, `EU261`, `refund`, `hotel`, `meal`, `GDPR`, `privacy` trigger KB routing
 - General rebooking questions go to Bedrock chat with full session context
-- When KB is disabled or unavailable, the system has built-in **policy fallbacks** so it never returns "I don't know"
+- When KB is disabled or unavailable, the system has built-in **policy fallbacks** (💬 badge) so it never returns "I don't know"
 
 ---
 
@@ -143,13 +151,16 @@
 
 **Action:** Type: `This is unacceptable, I've been waiting for hours`
 
-> "Behind the scenes, Amazon Comprehend detected **NEGATIVE** sentiment with high confidence. The sentiment score is tracked per message."
+> "**Look at the side panel** — the **Sentiment Indicator Bar** has appeared, showing **NEGATIVE** with the confidence scores broken down: Positive, Negative, Neutral, Mixed percentages. Amazon Comprehend detected this in real time."
 
 **Action:** Type: `I'm extremely frustrated, this is the worst airline experience ever`
 
-> "Two consecutive negative messages with high confidence. The system's auto-escalation logic has now triggered — it automatically flags this session for agent escalation. No human had to make that judgment call.
+> "Two consecutive negative messages with high confidence. Now look at what just happened in the UI:
 >
-> In the metrics panel, you can see `SENTIMENT_AUTO_ESCALATE` fired. This means the system proactively routes frustrated passengers to human agents before they have to ask."
+> 1. The **Sentiment Bar** updated again — still NEGATIVE with even higher confidence
+> 2. A pulsing red 🚨 **Auto-Escalation Alert** banner appeared at the top of the side panel — this is the system automatically flagging the session for human agent intervention
+>
+> No human had to make that judgment call. The auto-escalation rule fired: 2+ consecutive NEGATIVE messages with >70% confidence. In the metrics panel, you can also see `SENTIMENT_AUTO_ESCALATE` logged."
 
 ---
 
@@ -190,11 +201,18 @@
 > - `notification_prepared` — proactive outreach
 > - `CHAT_KB_ROUTED` — tracks when a question was sent to the Knowledge Base
 > - `CHAT_TURN` with `source: knowledge-base` vs `source: bedrock` — shows which AI path answered
-> - `CHAT_PII_DETECTED` — flagged if sensitive data appeared in chat
+> - `CHAT_PII_DETECTED` — flagged if sensitive data appeared in chat (also visible as a 🔒 badge on the user's message in the UI)
 > - `SENTIMENT_AUTO_ESCALATE` — triggered when consecutive negative sentiment exceeded the threshold
 > - `option_selected`, `booking_confirmed`, `escalated`
 >
-> In production, these feed CloudWatch dashboards. You could build KPIs like: 'What % of chat turns are KB-answered vs Bedrock vs fallback?' or 'How often does sentiment auto-escalation fire?'"
+> Notice how the UI surfaces these insights directly:
+> - **Source badges** (📚/🤖/💬) on each assistant message
+> - **Citation footnotes** below KB-sourced responses
+> - **Sentiment indicator bar** in the side panel with real-time confidence scores
+> - **Auto-escalation alert** (pulsing red 🚨 banner) when the threshold is exceeded
+> - **PII detection badge** (🔒) on user messages containing sensitive data
+>
+> In production, the backend metrics feed CloudWatch dashboards. You could build KPIs like: 'What % of chat turns are KB-answered vs Bedrock vs fallback?' or 'How often does sentiment auto-escalation fire?'"
 
 ---
 

@@ -237,6 +237,13 @@ Expected: GDPR rights (access, rectify, delete), 90-day chat retention, data pro
 - Check the API response JSON for `source` field: `"knowledge-base"` vs `"bedrock"` vs `"fallback"`
 - Check metrics log for `CHAT_KB_ROUTED` entries
 
+**What to see in the UI:**
+- 🤖 **Bedrock AI** source badge (blue) on general chat responses (e.g., "Which option has the fewest stops?")
+- 📚 **Knowledge Base** source badge (green) on policy responses (e.g., EU261 rights, hotel/meals, GDPR)
+- **Citation footnotes** appear below every KB-sourced response — numbered references to the specific policy documents used
+- 💬 **Fallback** source badge (amber) when AI services are disabled — system still answers from built-in rules
+- Badges switch automatically as routing changes — no user action required
+
 **Key talking points:**
 - Automatic routing — no user action needed to select KB vs chat
 - RAG prevents hallucination on policy questions
@@ -299,6 +306,13 @@ Expected: Escalation packet includes `sentimentSummary` with the emotional traje
 - Metrics panel shows `SENTIMENT_AUTO_ESCALATE` event
 - Escalation packet includes sentiment context for the human agent
 
+**What to see in the UI:**
+- **Sentiment Indicator Bar** appears in the side panel after each chat message — shows POSITIVE, NEGATIVE, NEUTRAL, or MIXED with confidence percentage breakdown
+- Bar color changes: green (POSITIVE), red (NEGATIVE), gray (NEUTRAL), yellow (MIXED)
+- After 2+ consecutive NEGATIVE messages with >70% confidence, a pulsing red 🚨 **Auto-Escalation Alert** banner appears at the top of the side panel
+- Alert text says: "Auto-Escalation Triggered — Session flagged for human agent" with the specific reason
+- The alert remains visible until the session changes
+
 **Key talking points:**
 - Real-time emotion tracking per message via Amazon Comprehend
 - Auto-escalation rule: 2+ consecutive NEGATIVE with >0.7 confidence
@@ -329,6 +343,12 @@ Expected: Response field `piiDetected: true`. Backend metric: `CHAT_PII_DETECTED
 - `CHAT_PII_DETECTED` metric in the metrics log
 - Demonstrates Comprehend's PII entity detection (CREDIT_DEBIT_NUMBER, EMAIL_ADDRESS, etc.)
 
+**What to see in the UI:**
+- A 🔒 **PII Detected** warning badge appears on the **user's own message** that contained sensitive data
+- The badge is a small amber tag below the message text, alerting that personal information was identified
+- The chat still functions normally — PII is flagged for awareness, not blocked (blocking would be handled by Bedrock Guardrails when enabled)
+- Combined with the Sentiment Bar and source badges, this gives a complete picture of AI services in action
+
 **Key talking points:**
 - Compliance-first design — sensitive data is identified immediately
 - In production: could auto-redact PII from stored transcripts, trigger compliance alerts
@@ -349,3 +369,13 @@ For the most impressive demo, run through this sequence in a single session:
 7. **Escalate** → full packet with sentiment trajectory + policy notes
 
 This shows all 5 AI services working together in one coherent flow.
+
+**All 5 UI indicators visible in this combined flow:**
+| UI Element | When It Appears | What It Shows |
+|---|---|---|
+| 🤖 **Bedrock AI** badge (blue) | Step 2 — general chat | Response came from Bedrock Claude with session context |
+| 📚 **Knowledge Base** badge (green) | Steps 3–4 — policy chat | Response came from RAG pipeline with curated documents |
+| **Citation footnotes** | Steps 3–4 — below KB responses | Numbered references to specific policy documents used |
+| **Sentiment Indicator Bar** | Steps 5–6 — side panel | NEGATIVE sentiment with confidence scores after frustrated messages |
+| 🚨 **Auto-Escalation Alert** | Step 6 — side panel top | Pulsing red banner: "Session flagged for human agent" |
+| 🔒 **PII Detected** badge | If PII is typed | Amber badge on user message identifying sensitive data |
