@@ -20,13 +20,24 @@ graph LR
         B["API Gateway REST"]
         C["Lambda Function<br>Node.js 18<br>handler.js"]
         D["DynamoDB<br>Single Table pk/sk"]
-        E["Amazon Bedrock<br>Optional - Claude 3 Haiku"]
+    end
+
+    subgraph "AWS AI Services (Feature-Flagged)"
+        E["Amazon Bedrock<br>Claude 3 Haiku<br>(USE_BEDROCK)"]
+        KB["Bedrock Knowledge Base<br>RAG — EU261, Policy, GDPR<br>(USE_KNOWLEDGE_BASE)"]
+        BG["Bedrock Guardrails<br>PII filter, content safety<br>(USE_GUARDRAILS)"]
+        CO["Amazon Comprehend<br>Sentiment + PII detection<br>(USE_COMPREHEND)"]
+        TR["Amazon Translate<br>Multi-language notifications<br>(USE_TRANSLATE)"]
     end
 
     A -->|"HTTP POST/GET"| B
     B --> C
     C -->|"Read/Write"| D
-    C -.->|"Optional"| E
+    C -.->|"Chat"| E
+    C -.->|"Policy Q&A"| KB
+    E -.->|"Safety"| BG
+    C -.->|"Sentiment / PII"| CO
+    C -.->|"Translate"| TR
 ```
 
 > Full Mermaid source: [diagrams/poc-architecture.mmd](diagrams/poc-architecture.mmd)
@@ -35,11 +46,15 @@ graph LR
 
 | Component | Technology | Role |
 |---|---|---|
-| **Web UI** | Static HTML/JS/CSS | Simulated airline mobile app — notification center, chat, option cards, booking, escalation |
+| **Web UI** | Static HTML/JS/CSS | Simulated airline mobile app — notification center, chat, option cards, booking, escalation. Displays AI service indicators: source badges, citations, sentiment bar, PII warnings, auto-escalation alerts |
 | **API Gateway** | AWS API Gateway (REST) | HTTP routing with CORS |
 | **Lambda** | Node.js 18, single function | All business logic: disruption creation, passenger assessment, option generation, chat, booking, escalation |
 | **DynamoDB** | Single-table design (pk/sk) | Stores disruptions, sessions, manifests, options, bookings, escalations, notifications |
-| **Bedrock** | Claude 3 Haiku (optional) | Natural-language chat assistant; deterministic fallback when disabled |
+| **Bedrock (Chat)** | Claude 3 Haiku | Natural-language chat assistant for option comparison and rebooking help; deterministic fallback when disabled |
+| **Bedrock Knowledge Base** | RetrieveAndGenerate (RAG) | Policy-aware answers grounded in EU261 regulation, airline policy, GDPR, and FAQ documents. Auto-routed via keyword detection (30+ triggers) |
+| **Bedrock Guardrails** | Content filtering | PII filtering, denied topics, and content safety applied to all Bedrock model output |
+| **Amazon Comprehend** | Sentiment + PII detection | Real-time sentiment analysis per chat message; PII entity detection (credit cards, emails, SSNs); auto-escalation trigger (2+ consecutive NEGATIVE with >70% confidence) |
+| **Amazon Translate** | Multi-language | Notification translation to 75+ languages; language detection for incoming messages |
 | **Local server** | `server-local.js` (Node http) | Runs Lambda handler locally without Docker/SAM |
 
 ### 2.3 API Endpoints
@@ -61,9 +76,12 @@ graph LR
 2. **Passenger Impact Assessment**: Manifest summary stored with tier breakdown (Platinum/Gold/Silver/General), connection-at-risk count, proactive-eligible count.
 3. **Option Generation**: Rule-based generator creates 4–6 ranked options per passenger, with premium perks for Platinum/Gold. Tight connections (<45 min) are filtered.
 4. **Proactive Notification**: Notification copy generated with tier-appropriate messaging, channel selection (push/sms/email), stored in DynamoDB.
-5. **Chat**: Optional Bedrock-powered conversation; deterministic fallback shows option summary.
-6. **Selection + Confirmation**: Selected option stored; confirmation returns mock PNR with itinerary summary.
-7. **Escalation**: Full context packet built (passenger summary, disruption summary, options, selections, transcript, AI recommendation, policy notes).
+5. **Chat**: AI-powered conversation via two pathways — general rebooking questions route to Bedrock Claude, policy/rights questions (detected via 30+ keyword triggers) route to the Bedrock Knowledge Base (RAG). Responses include source attribution (`bedrock`, `knowledge-base`, or `fallback`) and citation footnotes for KB answers. When Bedrock Guardrails are enabled, all model output is filtered for PII and content safety.
+6. **Sentiment & PII Analysis**: Each chat message is analyzed by Amazon Comprehend for sentiment (POSITIVE/NEGATIVE/NEUTRAL/MIXED with confidence scores) and PII entities. Two consecutive NEGATIVE messages with >70% confidence trigger automatic escalation. PII detection flags sensitive data without blocking.
+7. **Selection + Confirmation**: Selected option stored; confirmation returns mock PNR with itinerary summary.
+8. **Escalation**: Full context packet built (passenger summary, disruption summary, options, selections, transcript, AI recommendation, sentiment trajectory, policy notes).
+
+> **Feature flags**: All AI services are independently toggleable via environment variables (`USE_BEDROCK`, `USE_KNOWLEDGE_BASE`, `USE_GUARDRAILS`, `USE_COMPREHEND`, `USE_TRANSLATE`). When disabled, deterministic fallbacks ensure full functionality. See [ai-services-guide.md](ai-services-guide.md) for configuration details.
 
 ---
 
@@ -113,7 +131,11 @@ graph TB
 |---|---|---|
 | Orchestration | Single Lambda, sequential | Step Functions state machine per disruption |
 | Event bus | Direct API calls | EventBridge for decoupled event routing |
-| AI | Optional Bedrock chat | Bedrock Agents with Guardrails + Knowledge Bases |
+| AI Chat | Bedrock Claude 3 Haiku with context-aware prompts | Bedrock Agents with tool-use orchestration |
+| AI Knowledge | Bedrock Knowledge Base (RAG) with EU261, airline policy, GDPR, FAQ docs | Expanded KB with real airline SOPs, training manuals, full regulatory library |
+| AI Safety | Bedrock Guardrails (PII filter, content safety) | Enhanced guardrails with custom denied topics per airline |
+| AI Sentiment | Amazon Comprehend sentiment + PII detection with auto-escalation | Same + predictive escalation models, sentiment trend dashboards |
+| AI Translation | Amazon Translate (75+ languages) for notifications | Same + real-time chat translation for multilingual passengers |
 | Data feeds | Synthetic | Real ops feed (flight status API), PSS/GDS (Amadeus/Sabre) |
 | Notifications | Simulated | APNS/FCM push, Twilio SMS, SES email |
 | Auth | None (POC) | Cognito user pools + API key management |
