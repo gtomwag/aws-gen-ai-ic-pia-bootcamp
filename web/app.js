@@ -9,6 +9,9 @@ let allOptions = []; // unfiltered copy
 let showRecommendedOnly = false;
 let currentSort = 'time';
 let metricsEntries = [];
+let latestOptionsMessage = null;
+let showingSuggestedOnly = false;
+let suggestedOptionId = null;
 
 // ── DOM refs ──────────────────────────────────────────────
 const chatMessages = document.getElementById('chatMessages');
@@ -36,16 +39,407 @@ const sentimentBadge = document.getElementById('sentimentBadge');
 const sentimentScores = document.getElementById('sentimentScores');
 const autoEscalationAlert = document.getElementById('autoEscalationAlert');
 const autoEscalationDetail = document.getElementById('autoEscalationDetail');
+const lockScreen = document.getElementById('lockScreen');
+const appScreen = document.getElementById('appScreen');
+const pushNotificationCard = document.getElementById('pushNotificationCard');
+const lockNotifTitle = document.getElementById('lockNotifTitle');
+const lockNotifBody = document.getElementById('lockNotifBody');
+const lockNotifTime = document.getElementById('lockNotifTime');
+const flowStep1 = document.getElementById('flowStep1');
+const flowStep2 = document.getElementById('flowStep2');
+const flowStep3 = document.getElementById('flowStep3');
+const typingIndicator = document.getElementById('typingIndicator');
+const quickReplies = document.getElementById('quickReplies');
+const quickReplyButtons = quickReplies ? Array.from(quickReplies.querySelectorAll('button')) : [];
 
 // ── Helpers ───────────────────────────────────────────────
+
+function messageTimeLabel() {
+  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function shortThinkingPause(ms = 700) {
+  setTypingIndicator(true);
+  await wait(ms);
+  setTypingIndicator(false);
+}
+
+function setActiveFlowStep(step) {
+  const steps = [flowStep1, flowStep2, flowStep3];
+  steps.forEach((el, i) => {
+    if (el) {
+      el.classList.toggle('active', i + 1 === step);
+    }
+  });
+}
+
+function setMobileScreen(screen) {
+  if (!lockScreen || !appScreen) return;
+  lockScreen.classList.toggle('visible', screen === 'lock');
+  appScreen.classList.toggle('visible', screen === 'app');
+}
+
+function updateLockNotificationPreview({ title, body, time }) {
+  if (lockNotifTitle && title) lockNotifTitle.textContent = title;
+  if (lockNotifBody && body) lockNotifBody.textContent = body;
+  if (lockNotifTime && time) lockNotifTime.textContent = time;
+}
+
+function simulatePushNotification() {
+  updateLockNotificationPreview({
+    title: 'Flight UA891 canceled',
+    body: 'Tap to open your rebooking assistant and review alternatives.',
+    time: 'now',
+  });
+
+  if (pushNotificationCard) {
+    pushNotificationCard.classList.add('visible');
+  }
+
+  setMobileScreen('lock');
+  setActiveFlowStep(1);
+  setTypingIndicator(false);
+  setQuickReplySuggestions(getDefaultQuickReplySuggestions());
+  setQuickRepliesEnabled(false);
+  setStatus('Notification sent');
+}
+
+async function openFromNotification() {
+  setMobileScreen('app');
+  setActiveFlowStep(2);
+  if (pushNotificationCard) {
+    pushNotificationCard.classList.remove('visible');
+  }
+
+  if (!sessionId) {
+    await createDisruption();
+  }
+
+  setActiveFlowStep(3);
+}
 
 function setStatus(text) {
   statusText.textContent = text;
 }
 
+function setTypingIndicator(isVisible, text) {
+  if (!typingIndicator) return;
+  typingIndicator.textContent = text || '🤖 AI assistant is typing...';
+  typingIndicator.classList.toggle('visible', isVisible);
+}
+
+function setQuickRepliesEnabled(enabled) {
+  if (!quickReplyButtons.length) return;
+  quickReplyButtons.forEach((button) => {
+    if (button.style.display !== 'none') {
+      button.disabled = !enabled;
+    }
+  });
+}
+
+function setQuickReplySuggestions(suggestions) {
+  if (!quickReplyButtons.length) return;
+
+  quickReplyButtons.forEach((button, index) => {
+    const suggestion = suggestions[index];
+    if (!suggestion) {
+      button.style.display = 'none';
+      button.disabled = true;
+      button.dataset.action = 'chat';
+      button.dataset.value = '';
+      return;
+    }
+
+    button.style.display = '';
+    button.textContent = suggestion.label;
+    button.dataset.action = suggestion.action || 'chat';
+    button.dataset.value = suggestion.value || '';
+    button.disabled = !sessionId;
+  });
+}
+
+function getDefaultQuickReplySuggestions() {
+  return [
+    { label: 'Show other options', action: 'chat', value: 'Can you show me other rebooking options?' },
+    { label: 'Best for Platinum', action: 'chat', value: 'What is the best option for me as a Platinum customer?' },
+    { label: 'Compare options', action: 'chat', value: 'Explain the tradeoffs between top 2 options.' },
+    { label: 'Talk to a human', action: 'escalate', value: '' },
+  ];
+}
+
+function getOptionSelectionSuggestions(options) {
+  return [
+    { label: 'Show other options', action: 'chat', value: 'Can you show me additional rebooking options?' },
+    { label: 'Compare top options', action: 'chat', value: 'Please compare the top options for timing, comfort, and cost.' },
+    { label: 'Best comfort option', action: 'chat', value: 'Which option is best for comfort and least disruption?' },
+    { label: 'Talk to a human', action: 'escalate', value: '' },
+  ];
+}
+
+function getSuggestedFollowupSuggestions() {
+  return [
+    { label: 'See more choices', action: 'show-more', value: '' },
+    { label: 'Why this is best', action: 'chat', value: 'Why is this suggested booking the best option for me?' },
+    { label: 'Talk to a human', action: 'escalate', value: '' },
+    { label: 'Confirm booking', action: 'confirm', value: '' },
+  ];
+}
+
+function updateQuickRepliesForContext(assistantText) {
+  const text = (assistantText || '').toLowerCase();
+
+  if (text.includes('more choices')) {
+    setQuickReplySuggestions(getSuggestedFollowupSuggestions());
+    return;
+  }
+
+  if (selectedOptionId && (text.includes('confirm') || text.includes('book'))) {
+    setQuickReplySuggestions([
+      { label: 'Confirm booking', action: 'confirm', value: '' },
+      { label: 'Show other options', action: 'chat', value: 'Show me one more alternative before I confirm.' },
+      { label: 'What is included?', action: 'chat', value: 'What is included in this rebooking option?' },
+      { label: 'Talk to a human', action: 'escalate', value: '' },
+    ]);
+    return;
+  }
+
+  if (selectedOptionId) {
+    setQuickReplySuggestions([
+      { label: 'Confirm booking', action: 'confirm', value: '' },
+      { label: 'Show other options', action: 'chat', value: 'Do you have an even better route for me?' },
+      { label: 'Compare options', action: 'chat', value: 'Compare my selected option with the next best option.' },
+      { label: 'Talk to a human', action: 'escalate', value: '' },
+    ]);
+    return;
+  }
+
+  if (currentOptions.length > 0) {
+    setQuickReplySuggestions(getOptionSelectionSuggestions(currentOptions));
+    return;
+  }
+
+  setQuickReplySuggestions(getDefaultQuickReplySuggestions());
+}
+
+function sendQuickReply(text) {
+  if (!sessionId) {
+    addMessage('system', 'Start the disruption session first to use quick replies.');
+    return;
+  }
+  chatInput.value = text;
+  sendChat();
+}
+
+function handleQuickReplyClick(button) {
+  if (!button || button.disabled) return;
+
+  const action = button.dataset.action || 'chat';
+  const value = button.dataset.value || '';
+
+  if (action === 'confirm') {
+    confirmSelection();
+    return;
+  }
+
+  if (action === 'escalate') {
+    escalate();
+    return;
+  }
+
+  if (action === 'show-more') {
+    showMoreChoices();
+    return;
+  }
+
+  if (value) {
+    sendQuickReply(value);
+  }
+}
+
+function formatOptionCostText(delta) {
+  if (delta === undefined || delta === 0) return '$0 fare difference';
+  if (delta > 0) return `+$${delta}`;
+  return `-$${Math.abs(delta)}`;
+}
+
+function toNumberOrFallback(value, fallback) {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : fallback;
+}
+
+function chooseSuggestedOption(options) {
+  if (!options || options.length === 0) return null;
+
+  const sorted = [...options].sort((a, b) => {
+    const rankDelta = toNumberOrFallback(a.rank, Number.MAX_SAFE_INTEGER) - toNumberOrFallback(b.rank, Number.MAX_SAFE_INTEGER);
+    if (rankDelta !== 0) return rankDelta;
+
+    const compatDelta = toNumberOrFallback(b.compatibility, -1) - toNumberOrFallback(a.compatibility, -1);
+    if (compatDelta !== 0) return compatDelta;
+
+    const confidenceDelta = toNumberOrFallback(b.confidence, -1) - toNumberOrFallback(a.confidence, -1);
+    if (confidenceDelta !== 0) return confidenceDelta;
+
+    const stopsDelta = toNumberOrFallback(a.stops, Number.MAX_SAFE_INTEGER) - toNumberOrFallback(b.stops, Number.MAX_SAFE_INTEGER);
+    if (stopsDelta !== 0) return stopsDelta;
+
+    return toNumberOrFallback(a.costDelta, Number.MAX_SAFE_INTEGER) - toNumberOrFallback(b.costDelta, Number.MAX_SAFE_INTEGER);
+  });
+
+  return sorted[0];
+}
+
+function buildSimpleOptionDescription(option) {
+  const stops = option.stops || 0;
+  const costDelta = option.costDelta || 0;
+
+  const stopSummary = stops === 0
+    ? 'Nonstop for the smoothest trip.'
+    : stops === 1
+      ? 'One stop with a balanced schedule.'
+      : `${stops} stops with added flexibility.`;
+
+  const costSummary = costDelta > 0
+    ? `Small fare increase of $${costDelta}.`
+    : costDelta < 0
+      ? `Saves $${Math.abs(costDelta)} versus your original fare.`
+      : 'No fare difference.';
+
+  const cabinSummary = option.class ? `Keeps you in ${option.class}.` : 'Cabin details available.';
+
+  return `${stopSummary} ${costSummary} ${cabinSummary}`;
+}
+
+function buildSuggestedReasonLine(option) {
+  const stops = option.stops || 0;
+  const stopPart = stops === 0 ? 'nonstop for the smoothest trip' : `${stops} stop${stops > 1 ? 's' : ''} with reliable connections`;
+
+  const costDelta = option.costDelta || 0;
+  const costPart = costDelta === 0
+    ? 'no fare difference'
+    : costDelta > 0
+      ? `a small fare increase of $${costDelta}`
+      : `a savings of $${Math.abs(costDelta)}`;
+
+  const cabin = option.class || 'your current cabin';
+  const cabinPart = `we keep you in ${cabin}`;
+
+  return `This new booking is ${stopPart}, ${costPart}, and ${cabinPart}.`;
+}
+
+function clearOptionsMessage() {
+  if (latestOptionsMessage && latestOptionsMessage.parentNode) {
+    latestOptionsMessage.parentNode.removeChild(latestOptionsMessage);
+  }
+  latestOptionsMessage = null;
+}
+
+function showMoreChoices() {
+  if (!currentOptions || currentOptions.length === 0) return;
+  showingSuggestedOnly = false;
+  addMessage('assistant', 'Absolutely — here are more choices for you to review.');
+  renderOptionsInChat(currentOptions, {
+    introText: 'Additional options are below. Tap any option to select it:',
+    highlightedOptionId: selectedOptionId || suggestedOptionId,
+  });
+}
+
+function highlightSelectedChatOptionCards() {
+  chatMessages.querySelectorAll('.chat-option-card').forEach((card) => {
+    card.classList.toggle('selected', card.dataset.optionId === selectedOptionId);
+  });
+}
+
+function renderOptionsInChat(options, config = {}) {
+  clearOptionsMessage();
+
+  if (!options || options.length === 0) return;
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'msg assistant';
+
+  const metaRow = document.createElement('div');
+  metaRow.className = 'msg-meta';
+  const sender = document.createElement('span');
+  sender.className = 'sender';
+  sender.textContent = 'AI Assistant';
+  const time = document.createElement('span');
+  time.textContent = messageTimeLabel();
+  metaRow.appendChild(sender);
+  metaRow.appendChild(time);
+  wrapper.appendChild(metaRow);
+
+  const intro = document.createElement('div');
+  intro.textContent = config.introText || 'Here are your best rebooking options. Tap one to choose it:';
+  wrapper.appendChild(intro);
+
+  if (config.titleText) {
+    const title = document.createElement('div');
+    title.className = 'chat-options-title';
+    title.textContent = config.titleText;
+    wrapper.appendChild(title);
+  }
+
+  const list = document.createElement('div');
+  list.className = 'chat-options-list';
+
+  options.forEach((o) => {
+    const isSuggested = config.suggestedOptionId && o.optionId === config.suggestedOptionId;
+    const isHighlighted = config.highlightedOptionId && o.optionId === config.highlightedOptionId;
+    const card = document.createElement('div');
+    card.className = `chat-option-card ${(selectedOptionId === o.optionId || isHighlighted) ? 'selected' : ''}`;
+    card.dataset.optionId = o.optionId;
+    card.onclick = () => selectOption(o.optionId);
+
+    const titleWithBadge = isSuggested
+      ? `Option ${o.optionId}<span class="chat-option-badge">Suggested booking</span>`
+      : `Option ${o.optionId}`;
+
+    card.innerHTML = `
+      <div class="chat-option-top">
+        <span class="chat-option-id">${titleWithBadge}</span>
+        <span class="chat-option-time">${o.depart} → ${o.arrive}</span>
+      </div>
+      <div class="chat-option-route">${o.routing}</div>
+      <div class="chat-option-meta">
+        <span>${o.class || 'Economy'}</span>
+        <span>${formatOptionCostText(o.costDelta)}</span>
+        <span>${o.stops} stop(s)</span>
+      </div>
+      <div class="chat-option-notes">${o.notes || 'Tap to select this itinerary.'}</div>
+    `;
+    list.appendChild(card);
+  });
+
+  wrapper.appendChild(list);
+  chatMessages.appendChild(wrapper);
+  requestAnimationFrame(() => {
+    wrapper.classList.add('msg-visible');
+  });
+  latestOptionsMessage = wrapper;
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
 function addMessage(role, text, meta) {
   const div = document.createElement('div');
   div.className = `msg ${role}`;
+
+  if (role === 'assistant' || role === 'user') {
+    const metaRow = document.createElement('div');
+    metaRow.className = 'msg-meta';
+    const sender = document.createElement('span');
+    sender.className = 'sender';
+    sender.textContent = role === 'assistant' ? 'AI Assistant' : 'You';
+    const time = document.createElement('span');
+    time.textContent = messageTimeLabel();
+    metaRow.appendChild(sender);
+    metaRow.appendChild(time);
+    div.appendChild(metaRow);
+  }
 
   // ── Source badge for assistant messages ──
   if (role === 'assistant' && meta && meta.source) {
@@ -90,7 +484,14 @@ function addMessage(role, text, meta) {
   }
 
   chatMessages.appendChild(div);
+  requestAnimationFrame(() => {
+    div.classList.add('msg-visible');
+  });
   chatMessages.scrollTop = chatMessages.scrollHeight;
+
+  if (role === 'assistant') {
+    updateQuickRepliesForContext(text);
+  }
 }
 
 function addMetric(name, detail) {
@@ -131,6 +532,11 @@ function showNotification(notification, passenger) {
   notificationCenter.classList.add('visible');
 
   const name = passenger.firstName + (passenger.lastName ? ' ' + passenger.lastName : '');
+  updateLockNotificationPreview({
+    title: `Flight ${notification.affectedFlight || passenger.flightNumber || 'update'}`,
+    body: notification.body || 'Tap to open your rebooking assistant and review alternatives.',
+    time: 'now',
+  });
   document.getElementById('notifPassenger').textContent = name;
   document.getElementById('notifFlight').textContent = `✈ ${notification.affectedFlight || passenger.flightNumber || 'N/A'}`;
   document.getElementById('notifCause').textContent = `⚠ ${notification.cause || 'Disruption'}`;
@@ -160,6 +566,27 @@ function formatCostDelta(delta) {
 function renderOptions(options) {
   allOptions = options || [];
   applyFiltersAndSort();
+  if (showingSuggestedOnly) {
+    const suggested = chooseSuggestedOption(currentOptions);
+    if (suggested) {
+      suggestedOptionId = suggested.optionId;
+      const reason = buildSuggestedReasonLine(suggested);
+      addMessage('assistant', `We found the best rebooking option below based on your travel habits. ${reason}`);
+      renderOptionsInChat([suggested], {
+        introText: 'This is our top recommendation right now.',
+        titleText: `Suggested booking: Option ${suggested.optionId}`,
+        suggestedOptionId,
+        highlightedOptionId: suggestedOptionId,
+      });
+      updateQuickRepliesForContext('more choices');
+      return;
+    }
+  }
+
+  renderOptionsInChat(currentOptions, {
+    highlightedOptionId: selectedOptionId || suggestedOptionId,
+  });
+  updateQuickRepliesForContext('select an option');
 }
 
 function applyFiltersAndSort() {
@@ -228,7 +655,13 @@ function toggleRecommendedFilter() {
 
 async function createDisruption() {
   btnDisruption.disabled = true;
-  addMessage('system', 'Creating disruption event...');
+  setMobileScreen('app');
+  setActiveFlowStep(2);
+  clearOptionsMessage();
+  chatMessages.innerHTML = '';
+  selectedOptionId = null;
+  suggestedOptionId = null;
+  showingSuggestedOnly = true;
   addMetric('disruption_request', 'type=CANCELLATION airport=FRA');
 
   try {
@@ -255,13 +688,17 @@ async function createDisruption() {
     });
 
     sessionId = data.sessionId;
-    addMessage('system', data.message);
     addMetric('disruption_detected', `disruptionId=${data.disruptionId} passengers=${data.manifestSummary?.totalPassengers}`);
 
-    // Show notification center
+    // Show notification data
     if (data.notification) {
       showNotification(data.notification, data.passenger);
       addMetric('notification_prepared', `channel=${data.notification.primaryChannel} tier=${data.passenger.tier}`);
+
+      const cancelNotice = `Hi ${data.passenger.firstName} — we see you're a ${data.passenger.tier} customer. Your flight ${data.notification.affectedFlight || data.passenger.flightNumber || ''} was canceled due to ${data.notification.cause || 'operational disruption'}. I’ve prepared your best rebooking options below.`;
+      addMessage('assistant', cancelNotice, { source: 'bedrock' });
+    } else {
+      addMessage('assistant', 'Hi Alice — as a Platinum customer, I’ve prioritized your best rebooking options below.', { source: 'bedrock' });
     }
 
     // Show manifest summary
@@ -275,30 +712,28 @@ async function createDisruption() {
     btnSend.disabled = false;
     btnConfirm.disabled = false;
     btnEscalate.disabled = false;
+    setQuickRepliesEnabled(true);
     sortFilterRow.classList.add('visible');
 
-    // Render options directly from disruption response
+    // Staged conversational flow: think, then return options
     if (data.options && data.options.length > 0) {
+      await wait(450);
+      setTypingIndicator(true, '🤖 Reviewing routes and prioritizing your best rebooking options...');
+      await wait(2800);
+      setTypingIndicator(false);
+      await wait(180);
+      addMessage('assistant', 'Thanks for waiting — I found the best rebooking options for you. Please tap one to continue.');
+      await wait(260);
       renderOptions(data.options);
       addMetric('options_generated', `count=${data.options.length}`);
+
+      await wait(1100);
+      addMessage('assistant', 'Would you like to see more choices, or talk to a human agent?');
     }
 
-    // Auto-chat to get assistant response
-    addMessage('user', 'Show me the best options and tradeoffs.');
-    const chatData = await apiCall('/chat', {
-      sessionId,
-      message: 'Show me the best options and tradeoffs.',
-    });
-
-    addMessage('assistant', chatData.assistant, {
-      source: chatData.source,
-      citations: chatData.citations,
-    });
-    handleChatMeta(chatData);
-    if (chatData.options && chatData.options.length > 0) {
-      renderOptions(chatData.options);
-    }
+    setActiveFlowStep(3);
   } catch (err) {
+    setTypingIndicator(false);
     btnDisruption.disabled = false;
     console.error('createDisruption error:', err);
   }
@@ -345,6 +780,7 @@ async function sendChat() {
 
   chatInput.value = '';
   addMessage('user', message);
+  setTypingIndicator(true);
 
   try {
     const data = await apiCall('/chat', { sessionId, message });
@@ -362,6 +798,8 @@ async function sendChat() {
       addMetric('PII_DETECTED', 'in user message');
     }
 
+    await shortThinkingPause(520);
+
     addMessage('assistant', data.assistant, {
       source: data.source,
       citations: data.citations,
@@ -373,6 +811,8 @@ async function sendChat() {
     }
   } catch (err) {
     console.error('sendChat error:', err);
+  } finally {
+    setTypingIndicator(false);
   }
 }
 
@@ -380,10 +820,14 @@ async function selectOption(optionId) {
   if (!sessionId) return;
 
   try {
+    await shortThinkingPause(380);
     const data = await apiCall('/select-option', { sessionId, optionId });
+    showingSuggestedOnly = false;
     selectedOptionId = optionId;
     applyFiltersAndSort();
-    addMessage('system', `Selected Option ${optionId}: ${data.selected.routing}`);
+    highlightSelectedChatOptionCards();
+    addMessage('assistant', `Great choice — Option ${optionId} is selected: ${data.selected.routing}. If you'd like, I can confirm this booking now.`);
+    updateQuickRepliesForContext('confirm booking now');
     addMetric('option_selected', `optionId=${optionId}`);
   } catch (err) {
     console.error('selectOption error:', err);
@@ -426,6 +870,10 @@ async function confirmSelection() {
     btnConfirm.disabled = true;
     chatInput.disabled = true;
     btnSend.disabled = true;
+    setQuickReplySuggestions([
+      { label: 'Booking confirmed', action: 'chat', value: '' },
+    ]);
+    setQuickRepliesEnabled(false);
   } catch (err) {
     console.error('confirmSelection error:', err);
   }
@@ -490,3 +938,6 @@ async function escalate() {
 chatInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') sendChat();
 });
+
+setQuickReplySuggestions(getDefaultQuickReplySuggestions());
+simulatePushNotification();
