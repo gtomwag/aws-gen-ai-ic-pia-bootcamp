@@ -1,0 +1,86 @@
+graph TB
+    subgraph "Passenger Touchpoints"
+        M["Mobile App<br>(Push / In-App)"]
+        W["Web Portal"]
+        S["SMS Gateway"]
+        EM["Email Service"]
+        K["Airport Kiosk"]
+    end
+
+    subgraph "API Layer"
+        AG["API Gateway<br>+ WAF + Throttling"]
+        CF["CloudFront CDN"]
+    end
+
+    subgraph "Orchestration"
+        SF["AWS Step Functions<br>Disruption Workflow"]
+        EB["Amazon EventBridge<br>Event Bus"]
+    end
+
+    subgraph "AI / ML Layer"
+        BA["Bedrock Agents<br>(Orchestrator)"]
+        BM["Bedrock Models<br>Claude 3.5 Sonnet"]
+        BG["Bedrock Guardrails<br>PII filtering, tone"]
+        KB["Bedrock Knowledge Base<br>Policy docs, EU261"]
+    end
+
+    subgraph "Core Services (Lambda)"
+        L1["Disruption Detector<br>Lambda"]
+        L2["Impact Assessor<br>Lambda"]
+        L3["Option Generator<br>Lambda"]
+        L4["Notification Engine<br>Lambda"]
+        L5["Booking Confirmer<br>Lambda"]
+        L6["Escalation Manager<br>Lambda"]
+        L7["Metrics Aggregator<br>Lambda"]
+    end
+
+    subgraph "Data Layer"
+        DDB["DynamoDB<br>Single Table Design"]
+        S3["S3<br>Audit Logs + Reports"]
+        ES["OpenSearch<br>(Metrics / Analytics)"]
+    end
+
+    subgraph "External Integrations (Future)"
+        OPS["Ops Feed<br>(Flight Status API)"]
+        PSS["PSS / GDS<br>(Amadeus, Sabre)"]
+        LOY["Loyalty System"]
+        APNS["APNS / FCM<br>Push Notifications"]
+    end
+
+    subgraph "Observability"
+        CW["CloudWatch<br>Logs + Metrics + Alarms"]
+        XR["X-Ray<br>Distributed Tracing"]
+        CT["CloudTrail<br>Audit"]
+        QS["QuickSight<br>Dashboards"]
+    end
+
+    subgraph "Security"
+        COG["Cognito<br>Auth"]
+        KMS["KMS<br>Encryption"]
+        IAM["IAM<br>Least Privilege"]
+    end
+
+    M & W --> CF --> AG
+    S & EM & K --> AG
+    AG --> COG
+    AG --> SF
+
+    SF --> EB
+    EB --> L1 & L2 & L3 & L4 & L5 & L6 & L7
+
+    L1 --> OPS
+    L2 --> DDB
+    L3 --> BA
+    BA --> BM & BG & KB
+    L3 --> PSS
+    L4 --> APNS & S & EM
+    L5 --> PSS & LOY
+    L6 --> DDB & S3
+    L7 --> ES & CW
+
+    L1 & L2 & L3 & L4 & L5 & L6 --> DDB
+    DDB --> KMS
+    CW --> QS
+    AG & SF & L1 & L2 & L3 --> XR
+    AG --> CT
+    SF --> IAM

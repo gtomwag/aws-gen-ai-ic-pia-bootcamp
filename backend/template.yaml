@@ -69,6 +69,11 @@ Resources:
           Properties:
             Path: /escalate
             Method: post
+        GetNotification:
+          Type: Api
+          Properties:
+            Path: /notification
+            Method: get
 
   DisruptionTable:
     Type: AWS::DynamoDB::Table

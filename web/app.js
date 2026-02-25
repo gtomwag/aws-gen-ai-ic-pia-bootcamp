@@ -5,6 +5,10 @@ const API_BASE_URL = 'http://127.0.0.1:3000';
 let sessionId = null;
 let selectedOptionId = null;
 let currentOptions = [];
+let allOptions = []; // unfiltered copy
+let showRecommendedOnly = false;
+let currentSort = 'time';
+let metricsEntries = [];
 
 // ── DOM refs ──────────────────────────────────────────────
 const chatMessages = document.getElementById('chatMessages');
@@ -17,7 +21,16 @@ const optionsList = document.getElementById('optionsList');
 const bookingPanel = document.getElementById('bookingPanel');
 const pnrCode = document.getElementById('pnrCode');
 const bookingDetails = document.getElementById('bookingDetails');
+const bookingItinerary = document.getElementById('bookingItinerary');
+const offlineNote = document.getElementById('offlineNote');
 const statusText = document.getElementById('statusText');
+const notificationCenter = document.getElementById('notificationCenter');
+const manifestBar = document.getElementById('manifestBar');
+const sortFilterRow = document.getElementById('sortFilterRow');
+const escalationPanel = document.getElementById('escalationPanel');
+const escalationContent = document.getElementById('escalationContent');
+const metricsPanel = document.getElementById('metricsPanel');
+const metricsLog = document.getElementById('metricsLog');
 
 // ── Helpers ───────────────────────────────────────────────
 
@@ -33,11 +46,22 @@ function addMessage(role, text) {
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
+function addMetric(name, detail) {
+  const ts = new Date().toISOString().slice(11, 19);
+  metricsEntries.push({ ts, name, detail });
+  metricsPanel.classList.add('visible');
+  metricsLog.innerHTML = metricsEntries.map((m) =>
+    `<div class="metric-line"><span class="metric-name">METRIC: ${m.name}</span> | <span class="metric-val">${m.detail || ''}</span> <span style="color:#3b3f54">[${m.ts}]</span></div>`
+  ).join('');
+  metricsLog.scrollTop = metricsLog.scrollHeight;
+}
+
 async function apiCall(path, body) {
   setStatus(`Calling ${path}...`);
   try {
+    const isGet = !body && (path.includes('?') || path === '/health' || path.startsWith('/notification') || (path === '/disruption' && !body));
     const res = await fetch(`${API_BASE_URL}${path}`, {
-      method: body ? 'POST' : 'GET',
+      method: isGet ? 'GET' : 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: body ? JSON.stringify(body) : undefined,
     });
@@ -54,29 +78,103 @@ async function apiCall(path, body) {
   }
 }
 
+// ── Notification Center ───────────────────────────────────
+
+function showNotification(notification, passenger) {
+  notificationCenter.classList.add('visible');
+
+  const name = passenger.firstName + (passenger.lastName ? ' ' + passenger.lastName : '');
+  document.getElementById('notifPassenger').textContent = name;
+  document.getElementById('notifFlight').textContent = `✈ ${notification.affectedFlight || passenger.flightNumber || 'N/A'}`;
+  document.getElementById('notifCause').textContent = `⚠ ${notification.cause || 'Disruption'}`;
+  document.getElementById('notifTierBadge').innerHTML = `<span class="tier-badge ${passenger.tier}">${passenger.tier}</span>`;
+  document.getElementById('notifCopy').textContent = notification.body || '';
+  document.getElementById('notifChannel').textContent = `Channel: ${notification.primaryChannel || 'push'} | Sent at: ${notification.notificationSentAt || 'N/A'}`;
+}
+
+function showManifestSummary(summary) {
+  if (!summary) return;
+  manifestBar.classList.add('visible');
+  document.getElementById('mTotal').textContent = summary.totalPassengers;
+  document.getElementById('mPlatinum').textContent = summary.tierBreakdown.Platinum;
+  document.getElementById('mGold').textContent = summary.tierBreakdown.Gold;
+  document.getElementById('mConnRisk').textContent = summary.connectionAtRisk;
+  document.getElementById('mProactive').textContent = summary.proactiveEligible;
+}
+
+// ── Option rendering with rank, class, cost, rationale ────
+
+function formatCostDelta(delta) {
+  if (delta === 0 || delta === undefined) return { text: '$0', cls: 'cost-delta-zero' };
+  if (delta > 0) return { text: `+$${delta}`, cls: 'cost-delta-positive' };
+  return { text: `-$${Math.abs(delta)}`, cls: 'cost-delta-negative' };
+}
+
 function renderOptions(options) {
-  currentOptions = options || [];
+  allOptions = options || [];
+  applyFiltersAndSort();
+}
+
+function applyFiltersAndSort() {
+  let opts = [...allOptions];
+
+  if (showRecommendedOnly) {
+    opts = opts.filter((o) => o.compatibility >= 0.85 || o.confidence >= 0.85);
+  }
+
+  if (currentSort === 'time') {
+    opts.sort((a, b) => a.depart.localeCompare(b.depart));
+  } else if (currentSort === 'cost') {
+    opts.sort((a, b) => (a.costDelta || 0) - (b.costDelta || 0));
+  }
+
+  currentOptions = opts;
+
   if (currentOptions.length === 0) {
-    optionsList.innerHTML = '<p style="color:#565f89; font-size:13px;">No options available.</p>';
+    optionsList.innerHTML = '<p style="color:#565f89; font-size:13px;">No matching options.</p>';
     return;
   }
 
   optionsList.innerHTML = currentOptions
-    .map(
-      (o) => `
+    .map((o) => {
+      const cost = formatCostDelta(o.costDelta);
+      const perks = (o.premiumPerks && o.premiumPerks.length > 0)
+        ? `<div class="opt-perks">✨ ${o.premiumPerks.join(' · ')}</div>`
+        : '';
+      return `
     <div class="option-card ${selectedOptionId === o.optionId ? 'selected' : ''}"
          id="opt-${o.optionId}"
          onclick="selectOption('${o.optionId}')">
       <div class="opt-header">
-        <span class="opt-id">Option ${o.optionId}</span>
+        <span class="opt-id">#${o.rank || o.optionId} Option ${o.optionId}</span>
         <span class="opt-time">${o.depart} → ${o.arrive}</span>
       </div>
       <div class="opt-route">${o.routing}</div>
-      <div class="opt-notes">${o.stops} stop(s) · ${o.notes}</div>
+      <div class="opt-meta">
+        <span>${o.class || 'Economy'}</span>
+        <span class="${cost.cls}">${cost.text}</span>
+        <span>${o.stops} stop(s)</span>
+      </div>
+      ${o.rationale ? `<div class="opt-rationale">${o.rationale}</div>` : ''}
+      ${perks}
+      <div class="opt-notes">${o.notes}</div>
     </div>
-  `
-    )
+  `;
+    })
     .join('');
+}
+
+function sortOptions(by) {
+  currentSort = by;
+  document.getElementById('sortTime').classList.toggle('active', by === 'time');
+  document.getElementById('sortCost').classList.toggle('active', by === 'cost');
+  applyFiltersAndSort();
+}
+
+function toggleRecommendedFilter() {
+  showRecommendedOnly = !showRecommendedOnly;
+  document.getElementById('filterRecommended').classList.toggle('active', showRecommendedOnly);
+  applyFiltersAndSort();
 }
 
 // ── Actions ───────────────────────────────────────────────
@@ -84,33 +182,61 @@ function renderOptions(options) {
 async function createDisruption() {
   btnDisruption.disabled = true;
   addMessage('system', 'Creating disruption event...');
+  addMetric('disruption_request', 'type=CANCELLATION airport=FRA');
 
   try {
     const data = await apiCall('/disruption', {
       type: 'CANCELLATION',
-      reason: 'Mechanical issue – aircraft grounded',
-      airport: 'ORD',
+      reason: 'Severe weather – thunderstorm at FRA, runway closure',
+      airport: 'FRA',
+      passengerCount: 200,
       passenger: {
         firstName: 'Alice',
-        tier: 'Gold',
-        origin: 'ORD',
-        destination: 'SFO',
-        flightNumber: 'UA1234',
+        lastName: 'Anderson',
+        tier: 'Platinum',
+        origin: 'FRA',
+        destination: 'JFK',
+        flightNumber: 'UA891',
         date: '2026-02-25',
+        hasApp: true,
+        consentForProactive: true,
+        passengerId: 'PAX-0001',
         constraints: ['arrive_before_21_00'],
+        specialRequirements: null,
+        connectionRisk: null,
       },
     });
 
     sessionId = data.sessionId;
     addMessage('system', data.message);
+    addMetric('disruption_detected', `disruptionId=${data.disruptionId} passengers=${data.manifestSummary?.totalPassengers}`);
+
+    // Show notification center
+    if (data.notification) {
+      showNotification(data.notification, data.passenger);
+      addMetric('notification_prepared', `channel=${data.notification.primaryChannel} tier=${data.passenger.tier}`);
+    }
+
+    // Show manifest summary
+    if (data.manifestSummary) {
+      showManifestSummary(data.manifestSummary);
+      addMetric('passengers_assessed', `total=${data.manifestSummary.totalPassengers} platinum=${data.manifestSummary.tierBreakdown.Platinum}`);
+    }
 
     // Enable controls
     chatInput.disabled = false;
     btnSend.disabled = false;
     btnConfirm.disabled = false;
     btnEscalate.disabled = false;
+    sortFilterRow.classList.add('visible');
 
-    // Auto-chat to get options
+    // Render options directly from disruption response
+    if (data.options && data.options.length > 0) {
+      renderOptions(data.options);
+      addMetric('options_generated', `count=${data.options.length}`);
+    }
+
+    // Auto-chat to get assistant response
     addMessage('user', 'Show me the best options and tradeoffs.');
     const chatData = await apiCall('/chat', {
       sessionId,
@@ -118,7 +244,9 @@ async function createDisruption() {
     });
 
     addMessage('assistant', chatData.assistant);
-    renderOptions(chatData.options);
+    if (chatData.options && chatData.options.length > 0) {
+      renderOptions(chatData.options);
+    }
   } catch (err) {
     btnDisruption.disabled = false;
     console.error('createDisruption error:', err);
@@ -149,8 +277,9 @@ async function selectOption(optionId) {
   try {
     const data = await apiCall('/select-option', { sessionId, optionId });
     selectedOptionId = optionId;
-    renderOptions(currentOptions);
+    applyFiltersAndSort();
     addMessage('system', `Selected Option ${optionId}: ${data.selected.routing}`);
+    addMetric('option_selected', `optionId=${optionId}`);
   } catch (err) {
     console.error('selectOption error:', err);
   }
@@ -165,9 +294,28 @@ async function confirmSelection() {
 
     bookingPanel.classList.add('visible');
     pnrCode.textContent = b.pnr;
-    bookingDetails.textContent = `Status: ${b.status} | Booked: ${b.bookedAt} | Flight: ${b.selected.routing}`;
+    bookingDetails.textContent = `Status: ${b.status} | Booked: ${b.bookedAt}`;
+
+    // Enhanced itinerary
+    if (b.itinerarySummary) {
+      const it = b.itinerarySummary;
+      bookingItinerary.innerHTML = `
+        <strong>New Itinerary</strong><br>
+        Passenger: ${it.passenger} (${it.tier})<br>
+        Flights: ${(it.flights || []).join(' → ')}<br>
+        Class: ${it.class} | Depart: ${it.departure} | Arrive: ${it.arrival}
+      `;
+    } else {
+      bookingItinerary.textContent = `Flight: ${b.selected.routing}`;
+    }
+
+    // Offline note
+    if (b.offlineNote) {
+      offlineNote.textContent = `📱 ${b.offlineNote}`;
+    }
 
     addMessage('system', `✅ Booking confirmed! PNR: ${b.pnr}`);
+    addMetric('booking_confirmed', `pnr=${b.pnr}`);
 
     // Disable further actions
     btnConfirm.disabled = true;
@@ -184,7 +332,47 @@ async function escalate() {
   try {
     const data = await apiCall('/escalate', { sessionId, reason: 'Customer requested live agent' });
     addMessage('system', '📞 Escalated to agent. Handoff packet created.');
-    console.log('Escalation packet:', data.packet);
+    addMetric('escalated', `priority=${data.packet.priority} tier=${data.packet.passengerSummary?.tier}`);
+
+    // Show escalation panel
+    const p = data.packet;
+    escalationPanel.classList.add('visible');
+
+    let html = '';
+
+    // Priority badge
+    html += `<div class="esc-section"><h4>Priority</h4><span class="esc-priority ${p.priority || 'NORMAL'}">${p.priority || 'NORMAL'}</span></div>`;
+
+    // Passenger summary
+    if (p.passengerSummary) {
+      html += `<div class="esc-section"><h4>Passenger</h4><p>${p.passengerSummary.name} | ${p.passengerSummary.tier} | ${p.passengerSummary.origin}→${p.passengerSummary.destination} | ${p.passengerSummary.flightNumber}</p></div>`;
+    }
+
+    // Disruption summary
+    if (p.disruptionSummary) {
+      html += `<div class="esc-section"><h4>Disruption</h4><p>${p.disruptionSummary.type}: ${p.disruptionSummary.reason}</p></div>`;
+    }
+
+    // Options presented
+    if (p.optionsPresented && p.optionsPresented.length > 0) {
+      const optList = p.optionsPresented.map((o) => `${o.optionId}: ${o.routing} (${o.depart}→${o.arrive}) ${o.class}`).join('\n');
+      html += `<div class="esc-section"><h4>Options Presented (${p.optionsPresented.length})</h4><pre>${optList}</pre></div>`;
+    }
+
+    // Selection
+    html += `<div class="esc-section"><h4>Selection</h4><p>${p.selectionHistory?.declined ? 'No option selected' : `Option ${p.selectionHistory?.selectedOption?.optionId || '?'} selected`}</p></div>`;
+
+    // AI Recommendation
+    if (p.aiRecommendation) {
+      html += `<div class="esc-section"><h4>AI Recommendation</h4><p>${p.aiRecommendation}</p></div>`;
+    }
+
+    // Policy notes
+    if (p.policyNotes) {
+      html += `<div class="esc-section"><h4>Policy Notes</h4><pre>${p.policyNotes.eu261}\n${p.policyNotes.gdpr}\n${p.policyNotes.consentStatus}</pre></div>`;
+    }
+
+    escalationContent.innerHTML = html;
 
     btnEscalate.disabled = true;
   } catch (err) {
