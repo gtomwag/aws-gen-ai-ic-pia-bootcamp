@@ -15,6 +15,9 @@
     "@aws-sdk/client-dynamodb": "^3.400.0",
     "@aws-sdk/lib-dynamodb": "^3.400.0",
     "@aws-sdk/client-bedrock-runtime": "^3.400.0",
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.400.0",
+    "@aws-sdk/client-comprehend": "^3.400.0",
+    "@aws-sdk/client-translate": "^3.400.0",
     "uuid": "^9.0.0"
   },
   "engines": {

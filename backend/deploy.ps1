@@ -25,11 +25,18 @@ if (Test-Path $EnvFile) {
 }
 
 # ── Defaults ───────────────────────────────────────────────
-$AwsRegion     = if ($env:AWS_REGION)       { $env:AWS_REGION }       else { "us-east-1" }
-$StackName     = if ($env:SAM_STACK_NAME)   { $env:SAM_STACK_NAME }   else { "genai-disruption-poc" }
-$UseBedrock    = if ($env:USE_BEDROCK)      { $env:USE_BEDROCK }      else { "false" }
-$BedrockModel  = if ($env:BEDROCK_MODEL_ID) { $env:BEDROCK_MODEL_ID } else { "anthropic.claude-3-haiku-20240307-v1:0" }
-$S3Bucket      = $env:S3_BUCKET
+$AwsRegion        = if ($env:AWS_REGION)          { $env:AWS_REGION }          else { "us-east-1" }
+$StackName        = if ($env:SAM_STACK_NAME)      { $env:SAM_STACK_NAME }      else { "genai-disruption-poc" }
+$UseBedrock       = if ($env:USE_BEDROCK)         { $env:USE_BEDROCK }         else { "false" }
+$BedrockModel     = if ($env:BEDROCK_MODEL_ID)    { $env:BEDROCK_MODEL_ID }    else { "anthropic.claude-3-haiku-20240307-v1:0" }
+$UseKnowledgeBase = if ($env:USE_KNOWLEDGE_BASE)  { $env:USE_KNOWLEDGE_BASE }  else { "false" }
+$KnowledgeBaseId  = if ($env:KNOWLEDGE_BASE_ID)   { $env:KNOWLEDGE_BASE_ID }   else { "" }
+$UseGuardrails    = if ($env:USE_GUARDRAILS)      { $env:USE_GUARDRAILS }      else { "false" }
+$GuardrailId      = if ($env:GUARDRAIL_ID)        { $env:GUARDRAIL_ID }        else { "" }
+$GuardrailVersion = if ($env:GUARDRAIL_VERSION)   { $env:GUARDRAIL_VERSION }   else { "DRAFT" }
+$UseComprehend    = if ($env:USE_COMPREHEND)      { $env:USE_COMPREHEND }      else { "false" }
+$UseTranslate     = if ($env:USE_TRANSLATE)       { $env:USE_TRANSLATE }       else { "false" }
+$S3Bucket         = $env:S3_BUCKET
 
 # If a profile is set, propagate it
 if ($env:AWS_PROFILE) {
@@ -43,6 +50,10 @@ Write-Host "=========================================="
 Write-Host "  Stack:   $StackName"
 Write-Host "  Region:  $AwsRegion"
 Write-Host "  Bedrock: $UseBedrock"
+Write-Host "  KB/RAG:  $UseKnowledgeBase"
+Write-Host "  Guards:  $UseGuardrails"
+Write-Host "  Compre:  $UseComprehend"
+Write-Host "  Transl:  $UseTranslate"
 Write-Host "=========================================="
 Write-Host ""
 
@@ -63,7 +74,14 @@ try {
         "--no-confirm-changeset",
         "--parameter-overrides",
         "ParameterKey=UseBedrock,ParameterValue=$UseBedrock",
-        "ParameterKey=BedrockModelId,ParameterValue=$BedrockModel"
+        "ParameterKey=BedrockModelId,ParameterValue=$BedrockModel",
+        "ParameterKey=UseKnowledgeBase,ParameterValue=$UseKnowledgeBase",
+        "ParameterKey=KnowledgeBaseId,ParameterValue=$KnowledgeBaseId",
+        "ParameterKey=UseGuardrails,ParameterValue=$UseGuardrails",
+        "ParameterKey=GuardrailId,ParameterValue=$GuardrailId",
+        "ParameterKey=GuardrailVersion,ParameterValue=$GuardrailVersion",
+        "ParameterKey=UseComprehend,ParameterValue=$UseComprehend",
+        "ParameterKey=UseTranslate,ParameterValue=$UseTranslate"
     )
 
     if ($S3Bucket) {
