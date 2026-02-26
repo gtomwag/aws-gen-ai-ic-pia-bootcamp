@@ -252,17 +252,33 @@ async function handleDisruption(body) {
   };
 
   // Store session meta
-  await store.upsertJson(`SESSION#${sessionId}`, 'META', {
+  console.log('=== STORING SESSION ===');
+  console.log('SessionId:', sessionId);
+  console.log('SessionKey:', `SESSION#${sessionId}`);
+  
+  const metaData = {
     sessionId,
     disruptionId,
     passenger: enrichedPassenger,
     status: 'ACTIVE',
     createdAt: new Date().toISOString(),
-  });
+  };
+  
+  await store.upsertJson(`SESSION#${sessionId}`, 'META', metaData);
+  console.log('✓ Session META stored');
+  
+  // Verify it was stored by immediately reading it back
+  const verifyMeta = await store.getItem(`SESSION#${sessionId}`, 'META');
+  console.log('✓ Verification read - META exists:', !!verifyMeta);
+  if (!verifyMeta) {
+    console.error('ERROR: Session META was NOT stored!');
+  }
 
   // Generate and store options (PRD: option generation with tiering)
   const options = generateCandidateOptions(enrichedPassenger, disruption);
   await store.upsertJson(`SESSION#${sessionId}`, 'OPTIONS', { options });
+  console.log('✓ Session OPTIONS stored');
+
 
   // Generate proactive notification (PRD: proactive notification)
   let notification = generateNotificationCopy(enrichedPassenger, disruption, options.length);
@@ -597,8 +613,15 @@ async function handleDashboard(event) {
     switch(timeRange) {
       case '1h':
         cutoffTime = now - (60 * 60 * 1000);
-        break;
+        pnr,
       case '24h':
+      console.log('=== CONFIRMING BOOKING ===');
+      console.log('SessionId:', sessionId);
+      console.log('PNR:', pnr);
+      console.log('Selected option:', selected.optionId);
+  
+      const booking = {
+        pnr,
         cutoffTime = now - (24 * 60 * 60 * 1000);
         break;
       case '7d':
@@ -617,6 +640,14 @@ async function handleDashboard(event) {
     let escalationCount = 0;
     let escalationsByTier = { Platinum: 0, Gold: 0, Silver: 0, General: 0 };
     let escalationsByReason = {};
+      console.log('✓ BOOKING stored');
+  
+      // Verify booking was stored
+      const verifyBooking = await store.getItem(`SESSION#${sessionId}`, 'BOOKING');
+      console.log('✓ Verification read - BOOKING exists:', !!verifyBooking);
+      if (!verifyBooking) {
+        console.error('ERROR: BOOKING was NOT stored!');
+      }
     
     for (const session of allSessions) {
       if (session.sk === 'ESCALATION') {
@@ -721,13 +752,11 @@ async function handleDashboard(event) {
  * Generate a rule-based AI recommendation for escalation agents.
  */
 function generateEscalationRecommendation(passenger, options, selection, reason) {
-  const lines = [];
-
   if (passenger.tier === 'Platinum') {
-    lines.push('PRIORITY: High-value Platinum member. Ensure premium resolution.');
-  }
-
-  if (!selection) {
+  console.log('=== CONFIRMING BOOKING ===');
+  console.log('SessionId:', sessionId);
+  console.log('PNR:', pnr);
+  console.log('Selected option:', selected.optionId);
     lines.push('Passenger has NOT selected any option. Re-present options with additional flexibility.');
     if (options && options.length > 0) {
       lines.push(`${options.length} options were shown but none accepted.`);
@@ -749,6 +778,14 @@ function generateEscalationRecommendation(passenger, options, selection, reason)
   }
 
   lines.push('Recommended: Offer goodwill gesture (miles/voucher) per tier policy.');
+  console.log('✓ BOOKING stored');
+  
+  // Verify booking was stored
+  const verifyBooking = await store.getItem(`SESSION#${sessionId}`, 'BOOKING');
+  console.log('✓ Verification read - BOOKING exists:', !!verifyBooking);
+  if (!verifyBooking) {
+    console.error('ERROR: BOOKING was NOT stored!');
+  }
 
   return lines.join(' ');
 }
@@ -926,25 +963,52 @@ async function handleDashboard(event) {
 async function handleBoardingPass(event) {
   const sessionId = event.queryStringParameters?.sessionId;
   
-  console.log('Boarding pass request for sessionId:', sessionId);
+  console.log('=== BOARDING PASS REQUEST ===');
+  console.log('Received sessionId:', sessionId);
   
   if (!sessionId) {
+    console.error('ERROR: No sessionId in query parameters');
     return respond(400, { error: 'sessionId required' });
   }
 
   try {
     // Get session data
-    const sessionData = await store.getItem(`SESSION#${sessionId}`, 'META');
+    const sessionKey = `SESSION#${sessionId}`;
+    console.log('Looking for session key:', sessionKey);
+    
+    const sessionData = await store.getItem(sessionKey, 'META');
+    console.log('Session META found:', !!sessionData);
+    if (sessionData) {
+      console.log('Session data:', JSON.stringify(sessionData).substring(0, 200));
+    }
+    
     if (!sessionData) {
-      console.log('Session META not found:', sessionId);
-      return respond(404, { error: 'Session not found' });
+      console.error('ERROR: Session META not found for:', sessionKey);
+      
+      // Try to find what sessions DO exist
+      console.log('Attempting to query available sessions...');
+      // Try to find what sessions DO exist - scan for SESSION# prefix
+      console.log('Attempting to query available sessions...');
+      const allSessions = await store.scanByPkPrefix('SESSION#');
+      console.log('Query result: found', allSessions.length, 'sessions in store');
+      if (allSessions.length > 0) {
+        const sessionKeys = allSessions.slice(0, 5).map(s => `${s.pk}/${s.sk}`).join(', ');
+        console.log('Sample sessions:', sessionKeys);
+      }
+      
+      return respond(404, { error: 'Session not found', sessionId, diagnosticInfo: 'Session META record does not exist in store' });
     }
 
     // Get booking data
-    const bookingData = await store.getItem(`SESSION#${sessionId}`, 'BOOKING');
+    const bookingData = await store.getItem(sessionKey, 'BOOKING');
+    console.log('Booking data found:', !!bookingData);
+    if (bookingData) {
+      console.log('Booking data:', JSON.stringify(bookingData).substring(0, 200));
+    }
+    
     if (!bookingData) {
-      console.log('No booking found for session:', sessionId);
-      return respond(404, { error: 'No booking found for this session' });
+      console.error('ERROR: No booking found for session:', sessionKey);
+      return respond(404, { error: 'No booking found for this session', sessionId });
     }
 
     const passenger = sessionData.passenger || {};
@@ -968,7 +1032,7 @@ async function handleBoardingPass(event) {
     const boardingTime = itinerary.departure || '18:30';
     const date = passenger.date || '2026-02-25';
     
-    console.log('Generating PDF for:', passengerName, '| PNR:', pnr, '| Flight:', flightNum, '| Route:', origin, '->', dest, '| Class:', classType, '| Tier:', tier);
+    console.log('✓ PDF Generation for:', passengerName, '| PNR:', pnr);
     
     // Generate simple PDF synchronously
     const pdfBuffer = generateSimpleBoardingPassPDF({
@@ -977,7 +1041,7 @@ async function handleBoardingPass(event) {
       boardingTime, classType, date
     });
 
-    console.log('PDF generated, size:', pdfBuffer.length, 'bytes');
+    console.log('✓ PDF generated, size:', pdfBuffer.length, 'bytes');
 
     return {
       statusCode: 200,
@@ -990,7 +1054,7 @@ async function handleBoardingPass(event) {
       isBase64Encoded: true,
     };
   } catch (error) {
-    console.error('Error generating boarding pass:', error);
+    console.error('ERROR generating boarding pass:', error);
     return respond(500, { error: 'Failed to generate boarding pass', detail: error.message });
   }
 }
