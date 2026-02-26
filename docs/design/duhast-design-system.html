@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DuHast Airlines — Design System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Primary Palette */
+            --charcoal: #1A1F28;
+            --slate: #2C3440;
+            --pearl: #F8F7F4;
+            --silver: #E8E6E1;
+            --graphite: #4A5568;
+            --bronze: #B8936D;
+            --sage: #8B9A7F;
+            --cloud: #FAFAF9;
+            
+            /* Extended Palette */
+            --deep-bronze: #9A7B5D;
+            --light-bronze: #D4B896;
+            --dark-sage: #6B7A61;
+            
+            /* Functional Colors */
+            --success: #5F7A61;
+            --warning: #C9A66B;
+            --error: #9B6B6B;
+            --info: #6B8496;
+            
+            /* Typography */
+            --font-display: 'Cinzel', serif;
+            --font-secondary: 'Cormorant Garamond', serif;
+            --font-body: 'Montserrat', sans-serif;
+            
+            /* Spacing Scale */
+            --space-xs: 0.5rem;
+            --space-sm: 1rem;
+            --space-md: 1.5rem;
+            --space-lg: 2rem;
+            --space-xl: 3rem;
+            --space-2xl: 4rem;
+            --space-3xl: 6rem;
+            
+            /* Border Radius */
+            --radius-sm: 2px;
+            --radius-md: 4px;
+            --radius-lg: 8px;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--cloud);
+            color: var(--charcoal);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Smooth Scroll */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(26, 31, 40, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 2rem;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(184, 147, 109, 0.2);
+        }
+
+        .nav-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-logo-container {
+            display: inline-block;
+            padding: 1rem 1.5rem;
+            border: 1.5px solid var(--bronze);
+            position: relative;
+        }
+
+        .nav-logo-container::before,
+        .nav-logo-container::after {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border: 1.5px solid var(--bronze);
+        }
+
+        .nav-logo-container::before {
+            top: -1.5px;
+            left: -1.5px;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        .nav-logo-container::after {
+            bottom: -1.5px;
+            right: -1.5px;
+            border-left: none;
+            border-top: none;
+        }
+
+        .nav-logo {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            color: var(--pearl);
+            text-transform: uppercase;
+        }
+
+        .nav-tagline {
+            font-size: 0.5rem;
+            letter-spacing: 0.4em;
+            text-transform: uppercase;
+            color: var(--silver);
+            text-align: center;
+            margin-top: 0.3rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+            list-style: none;
+        }
+
+        .nav-link {
+            font-size: 0.85rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--silver);
+            text-decoration: none;
+            transition: color 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            color: var(--bronze);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--charcoal) 0%, var(--slate) 100%);
+            position: relative;
+            overflow: hidden;
+            padding-top: 5rem;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(30deg, transparent 45%, rgba(184, 147, 109, 0.03) 50%, transparent 55%),
+                linear-gradient(-30deg, transparent 45%, rgba(139, 154, 127, 0.03) 50%, transparent 55%);
+            background-size: 100px 100px;
+            animation: shimmer 20s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(0) translateY(0); }
+            100% { transform: translateX(100px) translateY(100px); }
+        }
+
+        .hero-content {
+            text-align: center;
+            z-index: 2;
+            animation: fadeInUp 1.2s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero-logo-container {
+            display: inline-block;
+            padding: 3rem 4rem;
+            border: 2px solid var(--bronze);
+            position: relative;
+            margin-bottom: 3rem;
+        }
+
+        .hero-logo-container::before,
+        .hero-logo-container::after {
+            content: '';
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--bronze);
+        }
+
+        .hero-logo-container::before {
+            top: -2px;
+            left: -2px;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        .hero-logo-container::after {
+            bottom: -2px;
+            right: -2px;
+            border-left: none;
+            border-top: none;
+        }
+
+        .hero-logo {
+            font-family: var(--font-display);
+            font-size: 5rem;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            color: var(--pearl);
+            text-transform: uppercase;
+            line-height: 1;
+        }
+
+        .hero-tagline {
+            font-size: 0.7rem;
+            letter-spacing: 0.5em;
+            text-transform: uppercase;
+            color: var(--silver);
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .hero-subtitle {
+            font-family: var(--font-secondary);
+            font-size: 1.8rem;
+            color: var(--bronze);
+            font-weight: 300;
+            font-style: italic;
+            margin-top: 2rem;
+        }
+
+        /* Section Base */
+        .section {
+            padding: var(--space-3xl) 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: var(--space-3xl);
+        }
+
+        .section-number {
+            font-family: var(--font-display);
+            font-size: 0.9rem;
+            letter-spacing: 0.3em;
+            color: var(--bronze);
+            margin-bottom: var(--space-sm);
+            font-weight: 500;
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 3.5rem;
+            font-weight: 500;
+            color: var(--charcoal);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: var(--space-md);
+        }
+
+        .section-subtitle {
+            font-size: 1.1rem;
+            color: var(--graphite);
+            font-weight: 300;
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.8;
+        }
+
+        /* Color Palette */
+        .color-section {
+            background: var(--pearl);
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .color-card {
+            background: white;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            border: 1px solid var(--silver);
+            transition: all 0.3s ease;
+        }
+
+        .color-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            border-color: var(--bronze);
+        }
+
+        .color-swatch {
+            height: 180px;
+            position: relative;
+        }
+
+        .color-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 1rem;
+            background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
+            color: white;
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .color-info {
+            padding: 1.5rem;
+        }
+
+        .color-name {
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--charcoal);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .color-hex {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            color: var(--bronze);
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+        }
+
+        .color-description {
+            font-size: 0.85rem;
+            color: var(--graphite);
+            line-height: 1.6;
+        }
+
+        /* Typography */
+        .type-section {
+            background: white;
+        }
+
+        .type-showcase {
+            display: grid;
+            gap: var(--space-2xl);
+        }
+
+        .type-family {
+            padding: var(--space-2xl);
+            background: var(--pearl);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--silver);
+        }
+
+        .type-family-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-xl);
+            padding-bottom: var(--space-md);
+            border-bottom: 2px solid var(--bronze);
+        }
+
+        .type-family-name {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            color: var(--charcoal);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .type-family-role {
+            font-size: 0.75rem;
+            color: var(--graphite);
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .type-specimens {
+            display: grid;
+            gap: var(--space-lg);
+        }
+
+        .type-specimen {
+            padding: var(--space-lg) 0;
+            border-bottom: 1px solid var(--silver);
+        }
+
+        .type-specimen:last-child {
+            border-bottom: none;
+        }
+
+        .type-meta {
+            font-size: 0.7rem;
+            color: var(--graphite);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin-bottom: var(--space-sm);
+            font-weight: 600;
+        }
+
+        /* Components */
+        .components-section {
+            background: var(--charcoal);
+            color: var(--pearl);
+        }
+
+        .components-section .section-title {
+            color: var(--pearl);
+        }
+
+        .components-section .section-subtitle {
+            color: var(--silver);
+        }
+
+        .component-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: var(--space-xl);
+        }
+
+        .component-card {
+            background: rgba(248, 247, 244, 0.05);
+            padding: var(--space-xl);
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(184, 147, 109, 0.2);
+        }
+
+        .component-title {
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            margin-bottom: var(--space-md);
+            color: var(--bronze);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        /* Button Component */
+        .btn {
+            display: inline-block;
+            padding: 0.9rem 2rem;
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: var(--bronze);
+            color: var(--charcoal);
+            border: 2px solid var(--bronze);
+        }
+
+        .btn-primary:hover {
+            background: var(--deep-bronze);
+            border-color: var(--deep-bronze);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(184, 147, 109, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--pearl);
+            border: 2px solid var(--pearl);
+        }
+
+        .btn-secondary:hover {
+            background: var(--pearl);
+            color: var(--charcoal);
+        }
+
+        .btn-framed {
+            background: transparent;
+            color: var(--bronze);
+            border: 2px solid var(--bronze);
+            position: relative;
+            padding: 1rem 2.5rem;
+        }
+
+        .btn-framed::before,
+        .btn-framed::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border: 2px solid var(--bronze);
+            transition: all 0.3s ease;
+        }
+
+        .btn-framed::before {
+            top: -2px;
+            left: -2px;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        .btn-framed::after {
+            bottom: -2px;
+            right: -2px;
+            border-left: none;
+            border-top: none;
+        }
+
+        .btn-framed:hover {
+            background: var(--bronze);
+            color: var(--charcoal);
+        }
+
+        .btn-framed:hover::before,
+        .btn-framed:hover::after {
+            width: 15px;
+            height: 15px;
+        }
+
+        /* Card Component */
+        .card {
+            background: white;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            border: 1px solid var(--silver);
+        }
+
+        .card-header {
+            padding: var(--space-lg);
+            background: var(--pearl);
+            border-bottom: 1px solid var(--bronze);
+        }
+
+        .card-title {
+            font-family: var(--font-display);
+            font-size: 1.2rem;
+            color: var(--charcoal);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .card-body {
+            padding: var(--space-lg);
+        }
+
+        /* Input Component */
+        .input-group {
+            margin-bottom: var(--space-md);
+        }
+
+        .input-label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--graphite);
+            margin-bottom: var(--space-xs);
+        }
+
+        .input {
+            width: 100%;
+            padding: 0.9rem 1rem;
+            font-family: var(--font-body);
+            font-size: 0.95rem;
+            background: var(--pearl);
+            border: 1px solid var(--silver);
+            border-radius: var(--radius-sm);
+            transition: all 0.3s ease;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: var(--bronze);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(184, 147, 109, 0.1);
+        }
+
+        /* Badge Component */
+        .badge {
+            display: inline-block;
+            padding: 0.4rem 0.9rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            border-radius: var(--radius-sm);
+        }
+
+        .badge-bronze {
+            background: var(--bronze);
+            color: var(--charcoal);
+        }
+
+        .badge-sage {
+            background: var(--sage);
+            color: white;
+        }
+
+        .badge-outlined {
+            background: transparent;
+            border: 1.5px solid var(--bronze);
+            color: var(--bronze);
+        }
+
+        /* Applications */
+        .applications-section {
+            background: var(--pearl);
+        }
+
+        .app-showcase {
+            display: grid;
+            gap: var(--space-3xl);
+        }
+
+        .app-item {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-2xl);
+            align-items: center;
+        }
+
+        .app-item:nth-child(even) {
+            direction: rtl;
+        }
+
+        .app-item:nth-child(even) > * {
+            direction: ltr;
+        }
+
+        .app-visual {
+            background: white;
+            padding: var(--space-2xl);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--silver);
+        }
+
+        .app-content h3 {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            color: var(--charcoal);
+            margin-bottom: var(--space-md);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .app-content p {
+            font-size: 1rem;
+            color: var(--graphite);
+            line-height: 1.8;
+            margin-bottom: var(--space-md);
+        }
+
+        .app-features {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .app-features li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+            color: var(--graphite);
+            font-size: 0.9rem;
+        }
+
+        .app-features li::before {
+            content: '◆';
+            position: absolute;
+            left: 0;
+            color: var(--bronze);
+            font-size: 0.6rem;
+        }
+
+        /* Boarding Pass Example */
+        .boarding-pass {
+            background: white;
+            border: 2px solid var(--charcoal);
+            position: relative;
+            padding: 0;
+        }
+
+        .boarding-pass::before,
+        .boarding-pass::after {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--bronze);
+        }
+
+        .boarding-pass::before {
+            top: -2px;
+            left: -2px;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        .boarding-pass::after {
+            bottom: -2px;
+            right: -2px;
+            border-left: none;
+            border-top: none;
+        }
+
+        .bp-header {
+            background: var(--charcoal);
+            padding: var(--space-lg);
+            text-align: center;
+        }
+
+        .bp-logo {
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            color: var(--pearl);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .bp-body {
+            padding: var(--space-lg);
+        }
+
+        .bp-route {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-lg);
+            padding-bottom: var(--space-lg);
+            border-bottom: 1px dashed var(--silver);
+        }
+
+        .bp-airport {
+            text-align: center;
+        }
+
+        .bp-code {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            color: var(--charcoal);
+            margin-bottom: 0.3rem;
+        }
+
+        .bp-city {
+            font-size: 0.8rem;
+            color: var(--graphite);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .bp-arrow {
+            color: var(--bronze);
+            font-size: 2rem;
+        }
+
+        .bp-details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-md);
+        }
+
+        .bp-detail {
+            text-align: center;
+        }
+
+        .bp-label {
+            font-size: 0.65rem;
+            color: var(--graphite);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 0.3rem;
+            font-weight: 600;
+        }
+
+        .bp-value {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            color: var(--charcoal);
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .hero-logo {
+                font-size: 3rem;
+            }
+            
+            .hero-logo-container {
+                padding: 2rem 2.5rem;
+            }
+            
+            .section-title {
+                font-size: 2.5rem;
+            }
+            
+            .app-item {
+                grid-template-columns: 1fr;
+            }
+            
+            .component-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+        }
+
+        /* Scroll Animations */
+        .fade-in {
+            opacity: 0;
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        .slide-up {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: slideUp 0.8s ease-out forwards;
+        }
+
+        @keyframes slideUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <div class="nav-logo-container">
+                <div class="nav-logo">DuHast</div>
+                <div class="nav-tagline">Airlines</div>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#colors" class="nav-link">Colors</a></li>
+                <li><a href="#typography" class="nav-link">Typography</a></li>
+                <li><a href="#components" class="nav-link">Components</a></li>
+                <li><a href="#applications" class="nav-link">Applications</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-logo-container">
+                <div class="hero-logo">DuHast</div>
+                <div class="hero-tagline">Airlines</div>
+            </div>
+            <div class="hero-subtitle">European Excellence, Refined</div>
+        </div>
+    </section>
+
+    <!-- Colors -->
+    <section id="colors" class="section color-section">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-number">01</div>
+                <h2 class="section-title">Color Palette</h2>
+                <p class="section-subtitle">A sophisticated palette inspired by art deco elegance and European refinement. Each color serves a precise purpose in our visual hierarchy.</p>
+            </div>
+            
+            <div class="color-grid">
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #1A1F28;">
+                        <div class="color-overlay">Primary Dark</div>
+                    </div>
+                    <div class="color-info">
+                        <h3 class="color-name">Charcoal</h3>
+                        <div class="color-hex">#1A1F28</div>
+                        <p class="color-description">Our primary dark. Deep and authoritative, used for backgrounds, premium touchpoints, and establishing visual weight.</p>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #F8F7F4;">
+                        <div class="color-overlay" style="color: #1A1F28;">Primary Light</div>
+                    </div>
+                    <div class="color-info">
+                        <h3 class="color-name">Pearl</h3>
+                        <div class="color-hex">#F8F7F4</div>
+                        <p class="color-description">Warm off-white providing elegance without harshness. Primary light surface for contrast and clarity.</p>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #B8936D;">
+                        <div class="color-overlay">Signature Accent</div>
+                    </div>
+                    <div class="color-info">
+                        <h3 class="color-name">Bronze</h3>
+                        <div class="color-hex">#B8936D</div>
+                        <p class="color-description">Our signature metallic. Represents prestige and heritage. Used sparingly for maximum impact on key elements and CTAs.</p>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #8B9A7F;">
+                        <div class="color-overlay">Supporting Accent</div>
+                    </div>
+                    <div class="color-info">
+                        <h3 class="color-name">Sage</h3>
+                        <div class="color-hex">#8B9A7F</div>
+                        <p class="color-description">Earthy sophistication. Communicates sustainability and natural elegance. Secondary accent for environmental messaging.</p>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #2C3440;">
+                        <div class="color-overlay">Secondary Dark</div>
+                    </div>
+                    <div class="color-info">
+                        <h3 class="color-name">Slate</h3>
+                        <div class="color-hex">#2C3440</div>
+                        <p class="color-description">Professional and modern. Secondary dark for UI elements, cards, and layered backgrounds.</p>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #E8E6E1;">
+                        <div class="color-overlay" style="color: #1A1F28;">Neutral</div>
+                    </div>
+                    <div class="color-info">
+                        <h3 class="color-name">Silver</h3>
+                        <div class="color-hex">#E8E6E1</div>
+                        <p class="color-description">Sophisticated neutral. Borders, dividers, and subtle backgrounds that maintain visual hierarchy.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Typography -->
+    <section id="typography" class="section type-section">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-number">02</div>
+                <h2 class="section-title">Typography</h2>
+                <p class="section-subtitle">A hierarchical type system built on art deco elegance and geometric precision. Three carefully selected typefaces work in harmony.</p>
+            </div>
+
+            <div class="type-showcase">
+                <!-- Cinzel -->
+                <div class="type-family">
+                    <div class="type-family-header">
+                        <div class="type-family-name">Cinzel</div>
+                        <div class="type-family-role">Display / Logo</div>
+                    </div>
+                    <div class="type-specimens">
+                        <div class="type-specimen">
+                            <div class="type-meta">Heading 1 • Medium • 56px</div>
+                            <div style="font-family: var(--font-display); font-size: 3.5rem; font-weight: 500; color: var(--charcoal); text-transform: uppercase; letter-spacing: 0.08em;">
+                                EXPERIENCE LUXURY
+                            </div>
+                        </div>
+                        <div class="type-specimen">
+                            <div class="type-meta">Heading 2 • Medium • 42px</div>
+                            <div style="font-family: var(--font-display); font-size: 2.625rem; font-weight: 500; color: var(--charcoal); text-transform: uppercase; letter-spacing: 0.08em;">
+                                YOUR JOURNEY BEGINS
+                            </div>
+                        </div>
+                        <div class="type-specimen">
+                            <div class="type-meta">Logo Lockup • Medium • 32px</div>
+                            <div style="font-family: var(--font-display); font-size: 2rem; font-weight: 500; color: var(--charcoal); text-transform: uppercase; letter-spacing: 0.1em;">
+                                DUHAST AIRLINES
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cormorant Garamond -->
+                <div class="type-family">
+                    <div class="type-family-header">
+                        <div class="type-family-name" style="font-family: var(--font-secondary);">Cormorant Garamond</div>
+                        <div class="type-family-role">Editorial / Accent</div>
+                    </div>
+                    <div class="type-specimens">
+                        <div class="type-specimen">
+                            <div class="type-meta">Subheading • Light Italic • 32px</div>
+                            <div style="font-family: var(--font-secondary); font-size: 2rem; font-weight: 300; font-style: italic; color: var(--bronze); line-height: 1.4;">
+                                Where European heritage meets modern comfort
+                            </div>
+                        </div>
+                        <div class="type-specimen">
+                            <div class="type-meta">Quote / Feature • Regular • 24px</div>
+                            <div style="font-family: var(--font-secondary); font-size: 1.5rem; font-weight: 400; color: var(--graphite); line-height: 1.6;">
+                                "Every detail of your journey has been considered with care and precision."
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Montserrat -->
+                <div class="type-family">
+                    <div class="type-family-header">
+                        <div class="type-family-name" style="font-family: var(--font-body); font-weight: 600;">Montserrat</div>
+                        <div class="type-family-role">Body / UI</div>
+                    </div>
+                    <div class="type-specimens">
+                        <div class="type-specimen">
+                            <div class="type-meta">Body Large • Regular • 18px</div>
+                            <div style="font-family: var(--font-body); font-size: 1.125rem; font-weight: 400; color: var(--graphite); line-height: 1.8; max-width: 800px;">
+                                DuHast Airlines operates from Frankfurt, connecting passengers to over 150 destinations worldwide. Our commitment to excellence extends from our premium cabins to our dedicated support for Platinum Card members.
+                            </div>
+                        </div>
+                        <div class="type-specimen">
+                            <div class="type-meta">Body Regular • Regular • 16px</div>
+                            <div style="font-family: var(--font-body); font-size: 1rem; font-weight: 400; color: var(--graphite); line-height: 1.7; max-width: 800px;">
+                                Every touchpoint has been designed with meticulous attention to detail. From booking to landing, your experience reflects our dedication to elegant minimalism and European craftsmanship.
+                            </div>
+                        </div>
+                        <div class="type-specimen">
+                            <div class="type-meta">UI Label • Semibold • 14px</div>
+                            <div style="font-family: var(--font-body); font-size: 0.875rem; font-weight: 600; color: var(--graphite); letter-spacing: 0.1em; text-transform: uppercase;">
+                                DEPARTURE 14:25 • GATE B12 • BOARDING NOW
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Components -->
+    <section id="components" class="section components-section">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-number" style="color: var(--bronze);">03</div>
+                <h2 class="section-title">Components</h2>
+                <p class="section-subtitle">Reusable interface elements that embody the DuHast design language. Each component features the signature framed aesthetic.</p>
+            </div>
+
+            <div class="component-grid">
+                <!-- Buttons -->
+                <div class="component-card">
+                    <h3 class="component-title">Buttons</h3>
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        <button class="btn btn-primary">Book Your Flight</button>
+                        <button class="btn btn-secondary">View Schedule</button>
+                        <button class="btn btn-framed">Premium Lounge</button>
+                    </div>
+                </div>
+
+                <!-- Form Inputs -->
+                <div class="component-card">
+                    <h3 class="component-title">Form Inputs</h3>
+                    <div class="input-group">
+                        <label class="input-label">Booking Reference</label>
+                        <input type="text" class="input" placeholder="Enter 6-digit code" style="background: rgba(248, 247, 244, 0.1); border-color: rgba(184, 147, 109, 0.3); color: var(--pearl);">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Departure City</label>
+                        <input type="text" class="input" placeholder="Frankfurt (FRA)" style="background: rgba(248, 247, 244, 0.1); border-color: rgba(184, 147, 109, 0.3); color: var(--pearl);">
+                    </div>
+                </div>
+
+                <!-- Badges -->
+                <div class="component-card">
+                    <h3 class="component-title">Status Badges</h3>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.8rem;">
+                        <span class="badge badge-bronze">Platinum Member</span>
+                        <span class="badge badge-sage">On Time</span>
+                        <span class="badge badge-outlined">Premium Class</span>
+                        <span class="badge" style="background: var(--success); color: white;">Confirmed</span>
+                        <span class="badge" style="background: var(--warning); color: var(--charcoal);">Boarding</span>
+                    </div>
+                </div>
+
+                <!-- Cards -->
+                <div class="component-card">
+                    <h3 class="component-title">Information Card</h3>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Flight Information</div>
+                        </div>
+                        <div class="card-body">
+                            <p style="color: var(--graphite); font-size: 0.9rem; line-height: 1.6;">
+                                Your flight from Frankfurt to New York departs from Gate B12. Premium lounge access is available.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Applications -->
+    <section id="applications" class="section applications-section">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-number">04</div>
+                <h2 class="section-title">Brand Applications</h2>
+                <p class="section-subtitle">How the framed prestige design language comes to life across customer touchpoints and operational contexts.</p>
+            </div>
+
+            <div class="app-showcase">
+                <!-- Boarding Pass -->
+                <div class="app-item">
+                    <div class="app-visual boarding-pass">
+                        <div class="bp-header">
+                            <div class="bp-logo">DuHast</div>
+                        </div>
+                        <div class="bp-body">
+                            <div class="bp-route">
+                                <div class="bp-airport">
+                                    <div class="bp-code">FRA</div>
+                                    <div class="bp-city">Frankfurt</div>
+                                </div>
+                                <div class="bp-arrow">→</div>
+                                <div class="bp-airport">
+                                    <div class="bp-code">JFK</div>
+                                    <div class="bp-city">New York</div>
+                                </div>
+                            </div>
+                            <div class="bp-details">
+                                <div class="bp-detail">
+                                    <div class="bp-label">Flight</div>
+                                    <div class="bp-value">DH 401</div>
+                                </div>
+                                <div class="bp-detail">
+                                    <div class="bp-label">Gate</div>
+                                    <div class="bp-value">B12</div>
+                                </div>
+                                <div class="bp-detail">
+                                    <div class="bp-label">Seat</div>
+                                    <div class="bp-value">12A</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="app-content">
+                        <h3>Boarding Pass</h3>
+                        <p>Clean, hierarchical design with essential information clearly presented. The framed corner details echo the logo, creating brand recognition at every touchpoint.</p>
+                        <ul class="app-features">
+                            <li>Typography-driven hierarchy</li>
+                            <li>Signature frame corners</li>
+                            <li>Scannable QR integration</li>
+                            <li>Premium material finish</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Mobile App -->
+                <div class="app-item">
+                    <div class="app-visual" style="background: var(--charcoal); padding: 3rem 2rem;">
+                        <div style="text-align: center; color: var(--pearl);">
+                            <div style="font-family: var(--font-display); font-size: 1.5rem; margin-bottom: 2rem; text-transform: uppercase; letter-spacing: 0.1em;">My Flights</div>
+                            <div style="background: rgba(248, 247, 244, 0.08); padding: 1.5rem; border-radius: 8px; border: 1px solid rgba(184, 147, 109, 0.3); margin-bottom: 1rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                    <div style="font-size: 2rem; font-family: var(--font-display);">FRA → JFK</div>
+                                    <span class="badge badge-bronze">On Time</span>
+                                </div>
+                                <div style="font-size: 0.85rem; color: var(--silver);">DH 401 • Departs 14:25</div>
+                            </div>
+                            <button class="btn btn-framed" style="width: 100%; color: var(--pearl); border-color: var(--bronze);">View Details</button>
+                        </div>
+                    </div>
+                    <div class="app-content">
+                        <h3>Mobile Experience</h3>
+                        <p>Dark interface with bronze accents creates a premium feel. Generous spacing and clear typography ensure usability while maintaining sophistication.</p>
+                        <ul class="app-features">
+                            <li>Dark mode by default</li>
+                            <li>Consistent framed elements</li>
+                            <li>Touch-optimized interactions</li>
+                            <li>Real-time flight updates</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Loyalty Card -->
+                <div class="app-item">
+                    <div class="app-visual" style="background: linear-gradient(135deg, var(--charcoal) 0%, var(--slate) 100%); padding: 2.5rem; position: relative;">
+                        <div style="border: 2px solid var(--bronze); padding: 2rem; position: relative;">
+                            <div style="position: absolute; top: -2px; left: -2px; width: 16px; height: 16px; border: 2px solid var(--bronze); border-right: none; border-bottom: none;"></div>
+                            <div style="position: absolute; bottom: -2px; right: -2px; width: 16px; height: 16px; border: 2px solid var(--bronze); border-left: none; border-top: none;"></div>
+                            <div style="text-align: center; color: var(--pearl);">
+                                <div style="font-size: 0.7rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--bronze); margin-bottom: 1rem;">Platinum Member</div>
+                                <div style="font-family: var(--font-display); font-size: 1.8rem; margin-bottom: 2rem; text-transform: uppercase; letter-spacing: 0.1em;">DUHAST</div>
+                                <div style="font-size: 1.2rem; font-family: var(--font-body); letter-spacing: 0.15em; margin-bottom: 0.5rem;">SARAH ANDERSON</div>
+                                <div style="font-size: 0.8rem; color: var(--silver); letter-spacing: 0.2em;">MEMBER SINCE 2019</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="app-content">
+                        <h3>Loyalty Program</h3>
+                        <p>Premium membership cards feature the signature framed design in metallic finishes. Visual hierarchy emphasizes status while maintaining elegance.</p>
+                        <ul class="app-features">
+                            <li>Tiered visual system (Bronze/Silver/Platinum)</li>
+                            <li>Premium materials and finishes</li>
+                            <li>Consistent frame motif</li>
+                            <li>Contactless integration</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</body>
+</html>

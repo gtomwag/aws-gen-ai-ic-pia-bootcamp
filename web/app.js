@@ -12,6 +12,17 @@ let metricsEntries = [];
 let latestOptionsMessage = null;
 let showingSuggestedOnly = false;
 let suggestedOptionId = null;
+let confirmedBooking = null;
+let launchSequenceId = 0;
+
+const LAUNCH_SPLASH_MS = 1050;
+const SPLASH_FADE_MS = 420;
+const HOME_SKELETON_MS = 1650;
+const CHAT_TAKEOVER_ANIM_MS = 760;
+const CHAT_PRE_THINK_MS = 950;
+const CHAT_THINK_MS = 3800;
+const CHAT_BETWEEN_MSG_MS = 440;
+const CHAT_POST_OPTIONS_PROMPT_MS = 1800;
 
 // ── DOM refs ──────────────────────────────────────────────
 const chatMessages = document.getElementById('chatMessages');
@@ -51,6 +62,21 @@ const flowStep3 = document.getElementById('flowStep3');
 const typingIndicator = document.getElementById('typingIndicator');
 const quickReplies = document.getElementById('quickReplies');
 const quickReplyButtons = quickReplies ? Array.from(quickReplies.querySelectorAll('button')) : [];
+const appHome = document.getElementById('appHome');
+const chatTakeover = document.getElementById('chatTakeover');
+const appSplash = document.getElementById('appSplash');
+const walletOverlay = document.getElementById('walletOverlay');
+const walletPassenger = document.getElementById('walletPassenger');
+const walletPnr = document.getElementById('walletPnr');
+const walletFlight = document.getElementById('walletFlight');
+const walletFrom = document.getElementById('walletFrom');
+const walletTo = document.getElementById('walletTo');
+const walletGate = document.getElementById('walletGate');
+const walletSeat = document.getElementById('walletSeat');
+const walletGroup = document.getElementById('walletGroup');
+const walletBoards = document.getElementById('walletBoards');
+const walletStatus = document.getElementById('walletStatus');
+const walletTier = document.getElementById('walletTier');
 
 // ── Helpers ───────────────────────────────────────────────
 
@@ -68,6 +94,12 @@ async function shortThinkingPause(ms = 700) {
   setTypingIndicator(false);
 }
 
+function refreshLucideIcons() {
+  if (window.lucide && typeof window.lucide.createIcons === 'function') {
+    window.lucide.createIcons();
+  }
+}
+
 function setActiveFlowStep(step) {
   const steps = [flowStep1, flowStep2, flowStep3];
   steps.forEach((el, i) => {
@@ -81,6 +113,32 @@ function setMobileScreen(screen) {
   if (!lockScreen || !appScreen) return;
   lockScreen.classList.toggle('visible', screen === 'lock');
   appScreen.classList.toggle('visible', screen === 'app');
+}
+
+function setChatTakeoverVisible(visible) {
+  if (chatTakeover) {
+    chatTakeover.classList.toggle('visible', visible);
+  }
+  if (appHome) {
+    appHome.style.opacity = visible ? '0.15' : '1';
+    appHome.style.transition = 'opacity 260ms ease';
+  }
+}
+
+function setAppSplashVisible(visible) {
+  if (appSplash) {
+    appSplash.classList.toggle('visible', visible);
+  }
+}
+
+function setHomeLoadingState(loading) {
+  if (appHome) {
+    appHome.classList.toggle('loading', loading);
+  }
+}
+
+function isChatTakeoverVisible() {
+  return chatTakeover ? chatTakeover.classList.contains('visible') : false;
 }
 
 function updateLockNotificationPreview({ title, body, time }) {
@@ -101,6 +159,9 @@ function simulatePushNotification() {
   }
 
   setMobileScreen('lock');
+  setAppSplashVisible(false);
+  setHomeLoadingState(false);
+  setChatTakeoverVisible(false);
   setActiveFlowStep(1);
   setTypingIndicator(false);
   setQuickReplySuggestions(getDefaultQuickReplySuggestions());
@@ -109,11 +170,30 @@ function simulatePushNotification() {
 }
 
 async function openFromNotification() {
+  const runId = ++launchSequenceId;
   setMobileScreen('app');
+  setChatTakeoverVisible(false);
+  setHomeLoadingState(true);
+  setAppSplashVisible(true);
   setActiveFlowStep(2);
   if (pushNotificationCard) {
     pushNotificationCard.classList.remove('visible');
   }
+
+  await wait(LAUNCH_SPLASH_MS);
+  if (runId !== launchSequenceId) return;
+
+  setAppSplashVisible(false);
+  await wait(SPLASH_FADE_MS);
+  if (runId !== launchSequenceId) return;
+
+  await wait(HOME_SKELETON_MS);
+  if (runId !== launchSequenceId) return;
+
+  setHomeLoadingState(false);
+  setChatTakeoverVisible(true);
+  await wait(CHAT_TAKEOVER_ANIM_MS);
+  if (runId !== launchSequenceId) return;
 
   if (!sessionId) {
     await createDisruption();
@@ -128,8 +208,9 @@ function setStatus(text) {
 
 function setTypingIndicator(isVisible, text) {
   if (!typingIndicator) return;
-  typingIndicator.textContent = text || '🤖 AI assistant is typing...';
+  typingIndicator.innerHTML = `<i data-lucide="loader-circle" class="icon icon-sm"></i> ${text || 'AI assistant is typing...'}`;
   typingIndicator.classList.toggle('visible', isVisible);
+  refreshLucideIcons();
 }
 
 function setQuickRepliesEnabled(enabled) {
@@ -165,8 +246,7 @@ function setQuickReplySuggestions(suggestions) {
 function getDefaultQuickReplySuggestions() {
   return [
     { label: 'Show other options', action: 'chat', value: 'Can you show me other rebooking options?' },
-    { label: 'Best for Platinum', action: 'chat', value: 'What is the best option for me as a Platinum customer?' },
-    { label: 'Compare options', action: 'chat', value: 'Explain the tradeoffs between top 2 options.' },
+    { label: 'Best for Signature', action: 'chat', value: 'What is the best option for me as a DuHast Signature Platinum customer?' },
     { label: 'Talk to a human', action: 'escalate', value: '' },
   ];
 }
@@ -175,7 +255,6 @@ function getOptionSelectionSuggestions(options) {
   return [
     { label: 'Show other options', action: 'chat', value: 'Can you show me additional rebooking options?' },
     { label: 'Compare top options', action: 'chat', value: 'Please compare the top options for timing, comfort, and cost.' },
-    { label: 'Best comfort option', action: 'chat', value: 'Which option is best for comfort and least disruption?' },
     { label: 'Talk to a human', action: 'escalate', value: '' },
   ];
 }
@@ -201,7 +280,6 @@ function updateQuickRepliesForContext(assistantText) {
     setQuickReplySuggestions([
       { label: 'Confirm booking', action: 'confirm', value: '' },
       { label: 'Show other options', action: 'chat', value: 'Show me one more alternative before I confirm.' },
-      { label: 'What is included?', action: 'chat', value: 'What is included in this rebooking option?' },
       { label: 'Talk to a human', action: 'escalate', value: '' },
     ]);
     return;
@@ -211,7 +289,6 @@ function updateQuickRepliesForContext(assistantText) {
     setQuickReplySuggestions([
       { label: 'Confirm booking', action: 'confirm', value: '' },
       { label: 'Show other options', action: 'chat', value: 'Do you have an even better route for me?' },
-      { label: 'Compare options', action: 'chat', value: 'Compare my selected option with the next best option.' },
       { label: 'Talk to a human', action: 'escalate', value: '' },
     ]);
     return;
@@ -223,6 +300,83 @@ function updateQuickRepliesForContext(assistantText) {
   }
 
   setQuickReplySuggestions(getDefaultQuickReplySuggestions());
+}
+
+async function promptAddToWallet() {
+  await wait(1000);
+  addMessage('assistant', 'Your new itinerary is confirmed. Would you like me to add your boarding pass to your wallet?');
+  setQuickReplySuggestions([
+    { label: 'Add to Wallet', action: 'add-wallet', value: '' },
+    { label: 'No thanks', action: 'skip-wallet', value: '' },
+    { label: 'Talk to a human', action: 'escalate', value: '' },
+  ]);
+  setQuickRepliesEnabled(true);
+}
+
+async function simulateAddToWallet() {
+  await shortThinkingPause(900);
+  addMessage('assistant', 'Done — your boarding pass was added to your wallet. I also sent a backup link by SMS.');
+  addMetric('wallet_added', 'boarding_pass_added=true');
+  openWalletDrawer();
+  setQuickReplySuggestions([
+    { label: 'Show trip details', action: 'chat', value: 'Show my new itinerary details again.' },
+    { label: 'Anything else?', action: 'chat', value: 'What else should I do before departure?' },
+  ]);
+  setQuickRepliesEnabled(true);
+}
+
+function skipAddToWallet() {
+  addMessage('assistant', 'No problem — you can add it anytime from your trip details.');
+  setQuickReplySuggestions([
+    { label: 'Show trip details', action: 'chat', value: 'Show my new itinerary details again.' },
+    { label: 'Anything else?', action: 'chat', value: 'What else should I do before departure?' },
+  ]);
+  setQuickRepliesEnabled(true);
+}
+
+function openWalletDrawer() {
+  if (confirmedBooking) {
+    const itinerary = confirmedBooking.itinerarySummary || {};
+    const flights = itinerary.flights || [];
+    const route = confirmedBooking.selected?.routing || 'FRA→JFK';
+    const routeParts = route.includes('→') ? route.split('→').map((r) => r.trim()) : route.split('-').map((r) => r.trim());
+    const from = routeParts[0] || 'FRA';
+    const to = routeParts[routeParts.length - 1] || 'JFK';
+
+    const departure = itinerary.departure || confirmedBooking.selected?.depart || '';
+    let boardTime = '17:15';
+    if (departure && /^\d{2}:\d{2}/.test(departure)) {
+      const [hh, mm] = departure.split(':').map((value) => Number(value));
+      if (Number.isFinite(hh) && Number.isFinite(mm)) {
+        const total = (hh * 60 + mm - 45 + 24 * 60) % (24 * 60);
+        const boardH = String(Math.floor(total / 60)).padStart(2, '0');
+        const boardM = String(total % 60).padStart(2, '0');
+        boardTime = `${boardH}:${boardM}`;
+      }
+    }
+
+    if (walletPassenger) walletPassenger.textContent = itinerary.passenger || 'Alice Anderson';
+    if (walletPnr) walletPnr.textContent = confirmedBooking.pnr || '------';
+    if (walletFlight) walletFlight.textContent = flights[0] || confirmedBooking.selected?.flightNumber || 'DH891';
+    if (walletFrom) walletFrom.textContent = from;
+    if (walletTo) walletTo.textContent = to;
+    if (walletGate) walletGate.textContent = confirmedBooking.selected?.gate || 'C18';
+    if (walletSeat) walletSeat.textContent = confirmedBooking.selected?.seat || '3A';
+    if (walletGroup) walletGroup.textContent = confirmedBooking.selected?.boardingGroup || '1';
+    if (walletBoards) walletBoards.textContent = boardTime;
+    if (walletStatus) walletStatus.textContent = confirmedBooking.status === 'CONFIRMED' ? 'On Time' : (confirmedBooking.status || 'Confirmed');
+    if (walletTier) walletTier.textContent = 'DuHast Signature Platinum';
+  }
+
+  if (walletOverlay) {
+    walletOverlay.classList.add('visible');
+  }
+}
+
+function closeWalletDrawer() {
+  if (walletOverlay) {
+    walletOverlay.classList.remove('visible');
+  }
 }
 
 function sendQuickReply(text) {
@@ -252,6 +406,16 @@ function handleQuickReplyClick(button) {
 
   if (action === 'show-more') {
     showMoreChoices();
+    return;
+  }
+
+  if (action === 'add-wallet') {
+    simulateAddToWallet();
+    return;
+  }
+
+  if (action === 'skip-wallet') {
+    skipAddToWallet();
     return;
   }
 
@@ -447,13 +611,13 @@ function addMessage(role, text, meta) {
     const src = meta.source;
     if (src === 'knowledge-base') {
       badge.className = 'msg-source-badge source-kb';
-      badge.textContent = '📚 Knowledge Base';
+      badge.textContent = 'Knowledge Base';
     } else if (src === 'bedrock') {
       badge.className = 'msg-source-badge source-bedrock';
-      badge.textContent = '🤖 Bedrock AI';
+      badge.textContent = 'Bedrock AI';
     } else {
       badge.className = 'msg-source-badge source-fallback';
-      badge.textContent = '💬 Fallback';
+      badge.textContent = 'Fallback';
     }
     div.appendChild(badge);
   }
@@ -468,7 +632,7 @@ function addMessage(role, text, meta) {
   if (role === 'assistant' && meta && meta.citations && meta.citations.length > 0) {
     const citDiv = document.createElement('div');
     citDiv.className = 'msg-citations';
-    citDiv.innerHTML = '<div class="citation-label">📎 Sources:</div>' +
+    citDiv.innerHTML = '<div class="citation-label">Sources:</div>' +
       meta.citations.map((c, i) =>
         `<span class="citation-item">[${i + 1}] ${typeof c === 'string' ? c : (c.title || c.uri || c.text || JSON.stringify(c))}</span>`
       ).join('');
@@ -479,7 +643,7 @@ function addMessage(role, text, meta) {
   if (role === 'user' && meta && meta.piiDetected) {
     const pii = document.createElement('div');
     pii.className = 'msg-pii-warning';
-    pii.textContent = '🔒 Sensitive data detected';
+    pii.textContent = 'Sensitive data detected';
     div.appendChild(pii);
   }
 
@@ -492,6 +656,8 @@ function addMessage(role, text, meta) {
   if (role === 'assistant') {
     updateQuickRepliesForContext(text);
   }
+
+  refreshLucideIcons();
 }
 
 function addMetric(name, detail) {
@@ -521,7 +687,7 @@ async function apiCall(path, body) {
     return data;
   } catch (err) {
     setStatus(`Error: ${err.message}`);
-    addMessage('system', `⚠ Error: ${err.message}`);
+    addMessage('system', `Error: ${err.message}`);
     throw err;
   }
 }
@@ -538,8 +704,8 @@ function showNotification(notification, passenger) {
     time: 'now',
   });
   document.getElementById('notifPassenger').textContent = name;
-  document.getElementById('notifFlight').textContent = `✈ ${notification.affectedFlight || passenger.flightNumber || 'N/A'}`;
-  document.getElementById('notifCause').textContent = `⚠ ${notification.cause || 'Disruption'}`;
+  document.getElementById('notifFlight').textContent = `${notification.affectedFlight || passenger.flightNumber || 'N/A'}`;
+  document.getElementById('notifCause').textContent = `${notification.cause || 'Disruption'}`;
   document.getElementById('notifTierBadge').innerHTML = `<span class="tier-badge ${passenger.tier}">${passenger.tier}</span>`;
   document.getElementById('notifCopy').textContent = notification.body || '';
   document.getElementById('notifChannel').textContent = `Channel: ${notification.primaryChannel || 'push'} | Sent at: ${notification.notificationSentAt || 'N/A'}`;
@@ -571,7 +737,7 @@ function renderOptions(options) {
     if (suggested) {
       suggestedOptionId = suggested.optionId;
       const reason = buildSuggestedReasonLine(suggested);
-      addMessage('assistant', `We found the best rebooking option below based on your travel habits. ${reason}`);
+      addMessage('assistant', `Your best rebooking option is prepared below, based on your DuHast travel profile. ${reason}`);
       renderOptionsInChat([suggested], {
         introText: 'This is our top recommendation right now.',
         titleText: `Suggested booking: Option ${suggested.optionId}`,
@@ -613,7 +779,7 @@ function applyFiltersAndSort() {
     .map((o) => {
       const cost = formatCostDelta(o.costDelta);
       const perks = (o.premiumPerks && o.premiumPerks.length > 0)
-        ? `<div class="opt-perks">✨ ${o.premiumPerks.join(' · ')}</div>`
+        ? `<div class="opt-perks">Premium perks: ${o.premiumPerks.join(' · ')}</div>`
         : '';
       return `
     <div class="option-card ${selectedOptionId === o.optionId ? 'selected' : ''}"
@@ -656,6 +822,10 @@ function toggleRecommendedFilter() {
 async function createDisruption() {
   btnDisruption.disabled = true;
   setMobileScreen('app');
+  if (!isChatTakeoverVisible()) {
+    setChatTakeoverVisible(true);
+    await wait(260);
+  }
   setActiveFlowStep(2);
   clearOptionsMessage();
   chatMessages.innerHTML = '';
@@ -695,10 +865,10 @@ async function createDisruption() {
       showNotification(data.notification, data.passenger);
       addMetric('notification_prepared', `channel=${data.notification.primaryChannel} tier=${data.passenger.tier}`);
 
-      const cancelNotice = `Hi ${data.passenger.firstName} — we see you're a ${data.passenger.tier} customer. Your flight ${data.notification.affectedFlight || data.passenger.flightNumber || ''} was canceled due to ${data.notification.cause || 'operational disruption'}. I’ve prepared your best rebooking options below.`;
+      const cancelNotice = `Good afternoon ${data.passenger.firstName}. As a DuHast Signature ${data.passenger.tier} traveler, you are prioritized for premium rebooking support. Your flight ${data.notification.affectedFlight || data.passenger.flightNumber || ''} was canceled due to ${data.notification.cause || 'operational disruption'}. I have prepared your best alternatives below.`;
       addMessage('assistant', cancelNotice, { source: 'bedrock' });
     } else {
-      addMessage('assistant', 'Hi Alice — as a Platinum customer, I’ve prioritized your best rebooking options below.', { source: 'bedrock' });
+      addMessage('assistant', 'Good afternoon Alice. As a DuHast Signature Platinum traveler, I have prioritized your best rebooking options below.', { source: 'bedrock' });
     }
 
     // Show manifest summary
@@ -717,18 +887,18 @@ async function createDisruption() {
 
     // Staged conversational flow: think, then return options
     if (data.options && data.options.length > 0) {
-      await wait(450);
-      setTypingIndicator(true, '🤖 Reviewing routes and prioritizing your best rebooking options...');
-      await wait(2800);
+      await wait(CHAT_PRE_THINK_MS);
+      setTypingIndicator(true, 'Reviewing routes and prioritizing your best rebooking options...');
+      await wait(CHAT_THINK_MS);
       setTypingIndicator(false);
-      await wait(180);
-      addMessage('assistant', 'Thanks for waiting — I found the best rebooking options for you. Please tap one to continue.');
-      await wait(260);
+      await wait(CHAT_BETWEEN_MSG_MS);
+      addMessage('assistant', 'Thank you for your patience. I found the strongest rebooking options for you. Please select one to continue.');
+      await wait(CHAT_BETWEEN_MSG_MS + 140);
       renderOptions(data.options);
       addMetric('options_generated', `count=${data.options.length}`);
 
-      await wait(1100);
-      addMessage('assistant', 'Would you like to see more choices, or talk to a human agent?');
+      await wait(CHAT_POST_OPTIONS_PROMPT_MS);
+      addMessage('assistant', 'Would you like to review more choices, or speak with a DuHast specialist?');
     }
 
     setActiveFlowStep(3);
@@ -764,7 +934,7 @@ function handleChatMeta(data) {
     autoEscalationAlert.classList.add('visible');
     autoEscalationDetail.textContent =
       `${data.autoEscalation.consecutiveNegative} consecutive negative messages detected — ${data.autoEscalation.reason || 'auto-routing to agent'}`;
-    addMessage('system', '🚨 Auto-escalation triggered: consecutive negative sentiment detected. Consider speaking with an agent.');
+    addMessage('system', 'Auto-escalation triggered: consecutive negative sentiment detected. Consider speaking with an agent.');
     addMetric('SENTIMENT_AUTO_ESCALATE', `consecutive=${data.autoEscalation.consecutiveNegative}`);
   }
 
@@ -792,13 +962,13 @@ async function sendChat() {
       if (lastUserMsg && !lastUserMsg.querySelector('.msg-pii-warning')) {
         const pii = document.createElement('div');
         pii.className = 'msg-pii-warning';
-        pii.textContent = '🔒 Sensitive data detected';
+        pii.textContent = 'Sensitive data detected';
         lastUserMsg.appendChild(pii);
       }
       addMetric('PII_DETECTED', 'in user message');
     }
 
-    await shortThinkingPause(520);
+    await shortThinkingPause(820);
 
     addMessage('assistant', data.assistant, {
       source: data.source,
@@ -820,13 +990,13 @@ async function selectOption(optionId) {
   if (!sessionId) return;
 
   try {
-    await shortThinkingPause(380);
+    await shortThinkingPause(650);
     const data = await apiCall('/select-option', { sessionId, optionId });
     showingSuggestedOnly = false;
     selectedOptionId = optionId;
     applyFiltersAndSort();
     highlightSelectedChatOptionCards();
-    addMessage('assistant', `Great choice — Option ${optionId} is selected: ${data.selected.routing}. If you'd like, I can confirm this booking now.`);
+    addMessage('assistant', 'Great choice - this option gets you home the fastest. Would you like to confirm this booking now?');
     updateQuickRepliesForContext('confirm booking now');
     addMetric('option_selected', `optionId=${optionId}`);
   } catch (err) {
@@ -840,6 +1010,7 @@ async function confirmSelection() {
   try {
     const data = await apiCall('/confirm', { sessionId });
     const b = data.booking;
+    confirmedBooking = b;
 
     bookingPanel.classList.add('visible');
     pnrCode.textContent = b.pnr;
@@ -860,20 +1031,18 @@ async function confirmSelection() {
 
     // Offline note
     if (b.offlineNote) {
-      offlineNote.textContent = `📱 ${b.offlineNote}`;
+      offlineNote.textContent = `${b.offlineNote}`;
     }
 
-    addMessage('system', `✅ Booking confirmed! PNR: ${b.pnr}`);
+    addMessage('system', `Booking confirmed. PNR: ${b.pnr}`);
     addMetric('booking_confirmed', `pnr=${b.pnr}`);
 
     // Disable further actions
     btnConfirm.disabled = true;
     chatInput.disabled = true;
     btnSend.disabled = true;
-    setQuickReplySuggestions([
-      { label: 'Booking confirmed', action: 'chat', value: '' },
-    ]);
-    setQuickRepliesEnabled(false);
+
+    await promptAddToWallet();
   } catch (err) {
     console.error('confirmSelection error:', err);
   }
@@ -884,7 +1053,7 @@ async function escalate() {
 
   try {
     const data = await apiCall('/escalate', { sessionId, reason: 'Customer requested live agent' });
-    addMessage('system', '📞 Escalated to agent. Handoff packet created.');
+    addMessage('system', 'Escalated to agent. Handoff packet created.');
     addMetric('escalated', `priority=${data.packet.priority} tier=${data.packet.passengerSummary?.tier}`);
 
     // Show escalation panel
@@ -940,4 +1109,5 @@ chatInput.addEventListener('keydown', (e) => {
 });
 
 setQuickReplySuggestions(getDefaultQuickReplySuggestions());
+refreshLucideIcons();
 simulatePushNotification();
