@@ -794,6 +794,152 @@ async function handleGetDisruptions() {
 }
 
 // ──────────────────────────────────────────────
+// GET /open-rebookings — list disrupted customers with pending rebookings
+// ──────────────────────────────────────────────
+
+async function handleOpenRebookings() {
+  // Find all sessions that have disruption metadata and no booking confirmation
+  const sessions = await store.scanByPkPrefix('SESSION#');
+  
+  // Filter to get sessions that have META and DISRUPTION data
+  const sessionMetas = sessions.filter((s) => s.sk === 'META');
+  
+  const openRebookings = [];
+  
+  for (const meta of sessionMetas) {
+    const sessionId = meta.sessionId;
+    
+    // Check if session has a booking confirmation
+    const booking = await store.getJson(`SESSION#${sessionId}`, 'BOOKING');
+    
+    // We want disruptions that DON'T have bookings (open rebookings)
+    if (!booking && meta.disruption) {
+      const passenger = meta.passenger || {};
+      const disruption = meta.disruption || {};
+      
+      openRebookings.push({
+        sessionId,
+        customerName: `${passenger.firstName || ''} ${passenger.lastName || ''}`.trim() || 'Unknown',
+        passengerTier: passenger.tier || 'General',
+        originCode: passenger.origin || 'N/A',
+        destCode: passenger.destination || 'N/A',
+        departure: disruption.departure || 'N/A',
+        arrival: disruption.arrival || 'N/A',
+        originalScheduledTime: disruption.originalScheduledTime || 'N/A',
+        status: disruption.status || 'DISRUPTED',
+        reason: disruption.reason || 'No reason provided',
+        flightNumber: disruption.flightNumber || 'N/A',
+      });
+    }
+  }
+  
+  logMetric('GET_OPEN_REBOOKINGS', openRebookings.length);
+  return respond(200, { 
+    openRebookingsCount: openRebookings.length,
+    openRebookings 
+  });
+}
+
+// ──────────────────────────────────────────────
+// POST /test-data — Generate sample disrupted bookings for testing
+// ──────────────────────────────────────────────
+
+async function handleGenerateTestData() {
+  const testPassengers = [
+    { firstName: 'Alice', lastName: 'Anderson', tier: 'Platinum', origin: 'FRA', destination: 'JFK' },
+    { firstName: 'Bob', lastName: 'Brown', tier: 'Gold', origin: 'LHR', destination: 'LAX' },
+    { firstName: 'Carol', lastName: 'Chen', tier: 'Silver', origin: 'CDG', destination: 'ORD' },
+    { firstName: 'David', lastName: 'Davis', tier: 'General', origin: 'AMS', destination: 'MIA' },
+    { firstName: 'Eve', lastName: 'Evans', tier: 'Platinum', origin: 'LHR', destination: 'SFO' },
+  ];
+
+  const testDisruptions = [
+    { status: 'CANCELLED', reason: 'Weather - Thunderstorms at origin airport', flightNumber: 'UA891', departure: '14:30', arrival: '22:15', originalScheduledTime: '2026-02-26 14:30' },
+    { status: 'DELAYED', reason: 'Aircraft maintenance required', flightNumber: 'BA447', departure: '16:00', arrival: '00:45', originalScheduledTime: '2026-02-26 16:00' },
+    { status: 'CANCELLED', reason: 'Crew unavailability - Scheduling conflict', flightNumber: 'AF198', departure: '09:15', arrival: '17:45', originalScheduledTime: '2026-02-26 09:15' },
+    { status: 'DELAYED', reason: 'Air traffic control delay', flightNumber: 'KL645', departure: '18:45', arrival: '02:30', originalScheduledTime: '2026-02-26 18:45' },
+    { status: 'CANCELLED', reason: 'Mechanical issue - Engine inspection required', flightNumber: 'LH203', departure: '11:00', arrival: '19:30', originalScheduledTime: '2026-02-26 11:00' },
+  ];
+
+  const created = [];
+
+  for (let i = 0; i < testPassengers.length; i++) {
+    const passenger = testPassengers[i];
+    const disruption = testDisruptions[i % testDisruptions.length];
+    const sessionId = `TEST-${generateId('SES')}`;
+    const disruptionId = `DISR-${generateId('D')}`;
+
+    // Prepare full passenger object for option generation
+    const fullPassenger = {
+      firstName: passenger.firstName,
+      lastName: passenger.lastName,
+      tier: passenger.tier,
+      origin: passenger.origin,
+      destination: passenger.destination,
+      pnr: generatePNR(),
+      flightNumber: disruption.flightNumber,
+      hasApp: true,
+      consentForProactive: true,
+      passengerId: `PAX-TEST-${i}`,
+    };
+
+    // Create disruption record
+    await store.upsertJson(`DISRUPTION#${disruptionId}`, 'META', {
+      disruptionId,
+      type: disruption.status,
+      reason: disruption.reason,
+      createdAt: new Date().toISOString(),
+    });
+
+    // Create session META with disruption info
+    await store.upsertJson(`SESSION#${sessionId}`, 'META', {
+      sessionId,
+      disruptionId,
+      passenger: fullPassenger,
+      disruption: {
+        status: disruption.status,
+        reason: disruption.reason,
+        flightNumber: disruption.flightNumber,
+        departure: disruption.departure,
+        arrival: disruption.arrival,
+        originalScheduledTime: disruption.originalScheduledTime,
+      },
+      status: 'DISRUPTED',
+      createdAt: new Date().toISOString(),
+    });
+
+    // Generate rebooking options for this passenger
+    const options = generateCandidateOptions(fullPassenger, {
+      type: disruption.status,
+      reason: disruption.reason,
+    });
+    await store.upsertJson(`SESSION#${sessionId}`, 'OPTIONS', { options });
+
+    // Create notification
+    await store.upsertJson(`SESSION#${sessionId}`, 'NOTIFICATION', {
+      title: `Flight ${disruption.flightNumber} ${disruption.status}`,
+      body: `Your flight has been ${disruption.status.toLowerCase()}. ${disruption.reason}`,
+      type: disruption.status,
+      timestamp: new Date().toISOString(),
+    });
+
+    created.push({
+      sessionId,
+      customerName: `${passenger.firstName} ${passenger.lastName}`,
+      flightNumber: disruption.flightNumber,
+      status: disruption.status,
+      optionsGenerated: options.length,
+    });
+  }
+
+  logMetric('TEST_DATA_GENERATED', created.length);
+  return respond(200, {
+    message: `Generated ${created.length} test disruption records`,
+    created,
+  });
+}
+
+// ──────────────────────────────────────────────
 // GET /notification?sessionId=... — retrieve notification for a session
 // ──────────────────────────────────────────────
 
@@ -1074,6 +1220,9 @@ exports.handler = async (event) => {
     if (method === 'GET' && path === '/disruption') {
       return await handleGetDisruptions();
     }
+    if (method === 'GET' && path === '/open-rebookings') {
+      return await handleOpenRebookings();
+    }
     if (method === 'GET' && path === '/notification') {
       return await handleGetNotification(event);
     }
@@ -1109,6 +1258,9 @@ exports.handler = async (event) => {
     }
     if (method === 'POST' && path === '/voice/transfer') {
       return await handleVoiceTransfer(body);
+    }
+    if (method === 'POST' && path === '/test-data') {
+      return await handleGenerateTestData();
     }
 
     return respond(404, { error: `Not found: ${method} ${path}` });

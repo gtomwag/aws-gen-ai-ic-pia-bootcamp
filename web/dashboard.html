@@ -544,6 +544,12 @@
         </div>
         <div id="failTiers"></div>
       </div>
+      <!-- Open Rebookings Card -->
+      <div class="kpi-card failed" id="openRebookingsCard" style="cursor: pointer;">
+        <div class="kpi-label">Open Rebookings</div>
+        <div class="kpi-value red" id="openRebookingsCount">—</div>
+        <div style="font-size: 12px; color: var(--ios-text2); margin-top: 8px;">Click to view pending customers →</div>
+      </div>
       <!-- Key Metrics Card -->
       <div class="kpi-card summary">
         <div class="kpi-label">Key Metrics</div>
@@ -1026,14 +1032,515 @@
       });
     });
 
+    // ── Open Rebookings Modal ────────────────────────
+    const openRebookingsCard = document.getElementById('openRebookingsCard');
+    
+    async function showOpenRebookings() {
+      try {
+        const resp = await fetch(`${API_BASE_URL}/open-rebookings`);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        
+        let allRebookings = data.openRebookings;
+        let filteredRebookings = [...allRebookings];
+        let expandedSessionId = null;
+
+        // Create modal
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+          position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+          background: rgba(0,0,0,0.5); z-index: 1000;
+          display: flex; align-items: center; justify-content: center;
+          backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+        `;
+        
+        const modalContent = document.createElement('div');
+        modalContent.style.cssText = `
+          background: var(--ios-card); max-width: 900px; max-height: 700px;
+          border-radius: 12px; overflow: hidden;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+          display: flex; flex-direction: column;
+        `;
+        
+        const header = document.createElement('div');
+        header.style.cssText = `
+          padding: 16px 20px; border-bottom: 1px solid var(--ios-separator);
+          display: flex; justify-content: space-between; align-items: center;
+        `;
+        header.innerHTML = `
+          <div style="font-size:16px;font-weight:600;">Open Rebookings (<span id="rebookingCount">${data.openRebookingsCount}</span>)</div>
+          <button style="background:none;border:none;font-size:20px;cursor:pointer;padding:0;width:24px;height:24px;" id="closeModal">✕</button>
+        `;
+        
+        // Create filters section
+        const filtersContainer = document.createElement('div');
+        filtersContainer.style.cssText = `
+          padding: 12px 20px; border-bottom: 1px solid var(--ios-separator);
+          background: var(--ios-bg);
+          display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px;
+        `;
+        filtersContainer.innerHTML = `
+          <input type="text" id="filterCustomerName" placeholder="Search by name..." style="
+            padding: 8px; border: 1px solid var(--ios-separator); border-radius: 6px;
+            background: var(--ios-card); color: var(--ios-text); font-size: 13px;
+            font-family: inherit;
+          ">
+          <select id="filterStatus" style="
+            padding: 8px; border: 1px solid var(--ios-separator); border-radius: 6px;
+            background: var(--ios-card); color: var(--ios-text); font-size: 13px;
+            font-family: inherit;
+          ">
+            <option value="">All Status</option>
+            <option value="CANCELLED">Cancelled</option>
+            <option value="DELAYED">Delayed</option>
+          </select>
+          <select id="filterTier" style="
+            padding: 8px; border: 1px solid var(--ios-separator); border-radius: 6px;
+            background: var(--ios-card); color: var(--ios-text); font-size: 13px;
+            font-family: inherit;
+          ">
+            <option value="">All Tiers</option>
+            <option value="Platinum">Platinum</option>
+            <option value="Gold">Gold</option>
+            <option value="Silver">Silver</option>
+            <option value="General">General</option>
+          </select>
+          <button id="clearFilters" style="
+            padding: 8px 12px; border: 1px solid var(--ios-separator); border-radius: 6px;
+            background: var(--ios-card); color: var(--ios-text); font-size: 13px;
+            cursor: pointer; font-family: inherit; font-weight: 500;
+          ">Clear Filters</button>
+        `;
+        
+        const listContainer = document.createElement('div');
+        listContainer.style.cssText = `
+          flex: 1; overflow-y: auto; padding: 12px;
+        `;
+        
+        function renderList() {
+          if (filteredRebookings.length === 0) {
+            listContainer.innerHTML = '<div style="padding:20px;text-align:center;color:var(--ios-text2);">No matching rebookings</div>';
+            return;
+          }
+          
+          listContainer.innerHTML = filteredRebookings.map(item => `
+            <div data-session-id="${item.sessionId}" style="
+              background: var(--ios-bg); padding: 12px;
+              margin-bottom: 8px; border-radius: 8px;
+              border-left: 4px solid var(--ios-red);
+              cursor: pointer; transition: all 0.2s;
+            " class="rebooking-row" onmouseover="this.style.backgroundColor='var(--ios-gray6)'" onmouseout="this.style.backgroundColor='var(--ios-bg)'">
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                <div style="font-weight:600;font-size:14px;">${item.customerName}</div>
+                <span style="font-size:12px;background:var(--ios-red);color:white;padding:2px 6px;border-radius:4px;">${item.status}</span>
+              </div>
+              <div style="font-size:13px;color:var(--ios-text2);margin-bottom:4px;">
+                ${item.originCode} → ${item.destCode} • ${item.flightNumber}
+              </div>
+              <div style="font-size:12px;color:var(--ios-text3);margin-bottom:2px;">
+                Scheduled: ${item.originalScheduledTime}
+              </div>
+              <div style="font-size:12px;color:var(--ios-text3);margin-bottom:4px;">
+                Tier: <span style="font-weight:500;">${item.passengerTier}</span>
+              </div>
+              <button class="rebook-now-btn" data-session-id="${item.sessionId}" style="
+                font-size:12px; padding:4px 8px; background:var(--ios-blue); color:white;
+                border:none; border-radius:4px; cursor:pointer; margin-top:4px;
+                font-family: inherit; font-weight: 500;
+              ">Rebook Now →</button>
+            </div>
+          `).join('');
+          
+          // Add click handlers for rows
+          document.querySelectorAll('.rebooking-row').forEach(row => {
+            row.addEventListener('click', (e) => {
+              // Don't trigger if clicking the button
+              if (e.target.classList.contains('rebook-now-btn')) return;
+              
+              const sessionId = row.dataset.sessionId;
+              const item = filteredRebookings.find(r => r.sessionId === sessionId);
+              showCustomerDetails(item);
+            });
+          });
+          
+          // Add click handlers for rebook buttons
+          document.querySelectorAll('.rebook-now-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+              e.stopPropagation();
+              const sessionId = btn.dataset.sessionId;
+              const item = filteredRebookings.find(r => r.sessionId === sessionId);
+              await showRebookingOptions(item);
+            });
+          });
+        }
+        
+        function applyFilters() {
+          const name = document.getElementById('filterCustomerName').value.toLowerCase();
+          const status = document.getElementById('filterStatus').value;
+          const tier = document.getElementById('filterTier').value;
+          
+          filteredRebookings = allRebookings.filter(item => {
+            const nameMatch = item.customerName.toLowerCase().includes(name);
+            const statusMatch = !status || item.status === status;
+            const tierMatch = !tier || item.passengerTier === tier;
+            return nameMatch && statusMatch && tierMatch;
+          });
+          
+          document.getElementById('rebookingCount').textContent = filteredRebookings.length;
+          renderList();
+        }
+        
+        async function showCustomerDetails(item) {
+          const detailsModal = document.createElement('div');
+          detailsModal.className = 'customer-details-modal';
+          detailsModal.style.cssText = `
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7); z-index: 1001;
+            display: flex; align-items: center; justify-content: center;
+          `;
+          
+          const detailsContent = document.createElement('div');
+          detailsContent.style.cssText = `
+            background: var(--ios-card); max-width: 600px; border-radius: 12px;
+            padding: 24px; box-shadow: 0 10px 50px rgba(0,0,0,0.3);
+            max-height: 600px; overflow-y: auto;
+          `;
+          
+          detailsContent.innerHTML = `
+            <div style="display:flex;justify-content:space-between;margin-bottom:20px;">
+              <h2 style="margin:0;font-size:18px;font-weight:600;">${item.customerName}</h2>
+              <button class="close-details-btn" style="
+                background:none;border:none;font-size:20px;cursor:pointer;padding:0;
+              ">✕</button>
+            </div>
+            
+            <div style="background:var(--ios-bg);padding:12px;border-radius:8px;margin-bottom:16px;">
+              <div style="font-size:13px;color:var(--ios-text2);font-weight:600;margin-bottom:8px;">DISRUPTED FLIGHT</div>
+              <div style="font-size:14px;margin-bottom:4px;">
+                <strong>Flight:</strong> ${item.flightNumber}
+              </div>
+              <div style="font-size:14px;margin-bottom:4px;">
+                <strong>Route:</strong> ${item.originCode} → ${item.destCode}
+              </div>
+              <div style="font-size:14px;margin-bottom:4px;">
+                <strong>Scheduled:</strong> ${item.originalScheduledTime}
+              </div>
+              <div style="font-size:14px;">
+                <strong>Status:</strong> <span style="color:var(--ios-red);font-weight:600;">${item.status}</span>
+              </div>
+            </div>
+            
+            <div style="background:var(--ios-bg);padding:12px;border-radius:8px;margin-bottom:16px;">
+              <div style="font-size:13px;color:var(--ios-text2);font-weight:600;margin-bottom:8px;">PASSENGER INFO</div>
+              <div style="font-size:14px;margin-bottom:4px;">
+                <strong>Name:</strong> ${item.customerName}
+              </div>
+              <div style="font-size:14px;margin-bottom:4px;">
+                <strong>Tier:</strong> <span style="font-weight:500;">${item.passengerTier}</span>
+              </div>
+              <div style="font-size:14px;">
+                <strong>Session ID:</strong> <code style="font-family:monospace;font-size:12px;background:var(--ios-card);padding:2px 4px;border-radius:3px;">${item.sessionId}</code>
+              </div>
+            </div>
+            
+            <div style="background:var(--ios-bg);padding:12px;border-radius:8px;margin-bottom:16px;">
+              <div style="font-size:13px;color:var(--ios-text2);font-weight:600;margin-bottom:8px;">DISRUPTION REASON</div>
+              <div style="font-size:14px;color:var(--ios-text);">${item.reason}</div>
+            </div>
+            
+            <div style="display:flex;gap:8px;margin-top:20px;">
+              <button class="initiate-rebooking-btn" style="
+                flex:1; padding:12px; background:var(--ios-blue); color:white;
+                border:none; border-radius:8px; cursor:pointer; font-weight:600;
+                font-family:inherit; font-size:14px;
+              ">Initiate Rebooking</button>
+              <button class="close-details-btn" style="
+                flex:1; padding:12px; background:var(--ios-gray5); color:var(--ios-text);
+                border:none; border-radius:8px; cursor:pointer; font-weight:600;
+                font-family:inherit; font-size:14px;
+              ">Close</button>
+            </div>
+          `;
+          
+          detailsModal.appendChild(detailsContent);
+          document.body.appendChild(detailsModal);
+          
+          // Close button handlers
+          const closeButtons = detailsModal.querySelectorAll('.close-details-btn');
+          closeButtons.forEach(btn => {
+            btn.addEventListener('click', () => detailsModal.remove());
+          });
+          
+          // Initiate rebooking handler
+          const rebookingBtn = detailsModal.querySelector('.initiate-rebooking-btn');
+          rebookingBtn.addEventListener('click', async () => {
+            detailsModal.remove();
+            await showRebookingOptions(item);
+          });
+          
+          // Click outside to close
+          detailsModal.addEventListener('click', (e) => {
+            if (e.target === detailsModal) detailsModal.remove();
+          });
+        }
+        
+        async function showRebookingOptions(item) {
+          // Show loading modal
+          const loadingModal = document.createElement('div');
+          loadingModal.style.cssText = `
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7); z-index: 1002;
+            display: flex; align-items: center; justify-content: center;
+          `;
+          loadingModal.innerHTML = `
+            <div style="background:var(--ios-card);padding:24px;border-radius:12px;text-align:center;">
+              <div style="font-size:16px;margin-bottom:12px;">Loading rebooking options...</div>
+              <div style="color:var(--ios-text2);font-size:14px;">Fetching recommendations for ${item.customerName}</div>
+            </div>
+          `;
+          document.body.appendChild(loadingModal);
+          
+          try {
+            // Fetch options from the session
+            const resp = await fetch(`${API_BASE_URL}/chat`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                sessionId: item.sessionId,
+                message: 'Show me rebooking options'
+              })
+            });
+            
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            const data = await resp.json();
+            
+            loadingModal.remove();
+            
+            // Show options modal
+            displayRebookingOptionsModal(item, data.options || []);
+          } catch (err) {
+            loadingModal.remove();
+            alert('Failed to load rebooking options: ' + err.message);
+          }
+        }
+        
+        function displayRebookingOptionsModal(item, options) {
+          const optionsModal = document.createElement('div');
+          optionsModal.style.cssText = `
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7); z-index: 1002;
+            display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+          `;
+          
+          const optionsContent = document.createElement('div');
+          optionsContent.style.cssText = `
+            background: var(--ios-card); max-width: 900px; width: 100%;
+            border-radius: 12px; overflow: hidden;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.3);
+            max-height: 80vh; display: flex; flex-direction: column;
+          `;
+          
+          const header = `
+            <div style="padding:16px 20px;border-bottom:1px solid var(--ios-separator);display:flex;justify-content:space-between;align-items:center;">
+              <div>
+                <div style="font-size:18px;font-weight:600;">Rebooking Options for ${item.customerName}</div>
+                <div style="font-size:13px;color:var(--ios-text2);margin-top:4px;">${item.originCode} → ${item.destCode} • ${item.flightNumber}</div>
+              </div>
+              <button class="close-options-btn" style="background:none;border:none;font-size:24px;cursor:pointer;padding:0;width:32px;height:32px;">✕</button>
+            </div>
+          `;
+          
+          let optionsHtml = '';
+          if (options && options.length > 0) {
+            optionsHtml = options.map(o => {
+              const cost = o.costDelta === 0 ? '$0' : (o.costDelta > 0 ? `+$${o.costDelta}` : `-$${Math.abs(o.costDelta)}`);
+              const costColor = o.costDelta === 0 ? '#8E8E93' : (o.costDelta > 0 ? '#FF3B30' : '#34C759');
+              const perks = (o.premiumPerks && o.premiumPerks.length > 0) 
+                ? `<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px;">
+                     ${o.premiumPerks.map(p => `<span style="font-size:11px;background:var(--ios-blue);color:white;padding:3px 8px;border-radius:4px;">${p}</span>`).join('')}
+                   </div>`
+                : '';
+              
+              return `
+                <div style="background:var(--ios-bg);padding:16px;margin-bottom:12px;border-radius:8px;border-left:4px solid var(--ios-blue);">
+                  <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;">
+                    <div style="font-size:16px;font-weight:600;">Option ${o.rank || o.optionId}</div>
+                    <span style="font-size:12px;background:var(--ios-gray5);padding:4px 8px;border-radius:4px;">${o.class || 'Economy'}</span>
+                  </div>
+                  
+                  <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+                    <span style="font-size:20px;font-weight:600;">${o.depart}</span>
+                    <span style="font-size:16px;color:var(--ios-text2);">→</span>
+                    <span style="font-size:20px;font-weight:600;">${o.arrive}</span>
+                  </div>
+                  
+                  <div style="font-size:14px;color:var(--ios-text2);margin-bottom:6px;">${o.routing}</div>
+                  
+                  <div style="display:flex;gap:12px;margin-bottom:8px;">
+                    <span style="font-size:13px;color:${costColor};font-weight:600;">${cost}</span>
+                    <span style="font-size:13px;color:var(--ios-text2);">${o.stops} stop${o.stops !== 1 ? 's' : ''}</span>
+                  </div>
+                  
+                  ${o.rationale ? `<div style="font-size:13px;color:var(--ios-text2);font-style:italic;margin-top:8px;">${o.rationale}</div>` : ''}
+                  ${perks}
+                  
+                  <button class="confirm-option-btn" data-option-id="${o.optionId}" style="
+                    margin-top:12px; padding:8px 16px; background:var(--ios-blue); color:white;
+                    border:none; border-radius:6px; cursor:pointer; font-weight:600;
+                    font-family:inherit; font-size:13px;
+                  ">Confirm Rebooking</button>
+                </div>
+              `;
+            }).join('');
+          } else {
+            optionsHtml = '<div style="padding:40px;text-align:center;color:var(--ios-text2);">No rebooking options available</div>';
+          }
+          
+          optionsContent.innerHTML = `
+            ${header}
+            <div style="flex:1;overflow-y:auto;padding:16px;">
+              ${optionsHtml}
+            </div>
+          `;
+          
+          optionsModal.appendChild(optionsContent);
+          document.body.appendChild(optionsModal);
+          
+          // Close handlers
+          const closeBtn = optionsContent.querySelector('.close-options-btn');
+          closeBtn.addEventListener('click', () => optionsModal.remove());
+          
+          optionsModal.addEventListener('click', (e) => {
+            if (e.target === optionsModal) optionsModal.remove();
+          });
+          
+          // Confirm booking handlers
+          const confirmButtons = optionsContent.querySelectorAll('.confirm-option-btn');
+          confirmButtons.forEach(btn => {
+            btn.addEventListener('click', async () => {
+              const optionId = btn.dataset.optionId;
+              btn.disabled = true;
+              btn.textContent = 'Processing...';
+              
+              try {
+                const resp = await fetch(`${API_BASE_URL}/confirm`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    sessionId: item.sessionId,
+                    optionId: optionId
+                  })
+                });
+                
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const data = await resp.json();
+                
+                optionsModal.remove();
+                
+                // Show success message
+                const successModal = document.createElement('div');
+                successModal.style.cssText = `
+                  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                  background: rgba(0,0,0,0.7); z-index: 1003;
+                  display: flex; align-items: center; justify-content: center;
+                `;
+                successModal.innerHTML = `
+                  <div style="background:var(--ios-card);padding:32px;border-radius:12px;text-align:center;max-width:400px;">
+                    <div style="font-size:48px;margin-bottom:16px;">✓</div>
+                    <div style="font-size:18px;font-weight:600;margin-bottom:12px;">Rebooking Confirmed</div>
+                    <div style="font-size:14px;color:var(--ios-text2);margin-bottom:20px;">
+                      ${item.customerName} has been successfully rebooked.
+                    </div>
+                    <button onclick="this.closest('[style*=\\'position: fixed\\']').remove();location.reload();" style="
+                      padding:10px 24px; background:var(--ios-blue); color:white;
+                      border:none; border-radius:8px; cursor:pointer; font-weight:600;
+                      font-family:inherit; font-size:14px;
+                    ">Done</button>
+                  </div>
+                `;
+                document.body.appendChild(successModal);
+                
+                // Refresh the rebooking count
+                setTimeout(() => {
+                  loadOpenRebookingsCount();
+                }, 1000);
+              } catch (err) {
+                btn.disabled = false;
+                btn.textContent = 'Confirm Rebooking';
+                alert('Failed to confirm rebooking: ' + err.message);
+              }
+            });
+          });
+        }
+        
+        modalContent.appendChild(header);
+        modalContent.appendChild(filtersContainer);
+        modalContent.appendChild(listContainer);
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+        
+        // Render initial list
+        renderList();
+        
+        // Filter event listeners
+        const nameInput = filtersContainer.querySelector('#filterCustomerName');
+        const statusSelect = filtersContainer.querySelector('#filterStatus');
+        const tierSelect = filtersContainer.querySelector('#filterTier');
+        const clearBtn = filtersContainer.querySelector('#clearFilters');
+        
+        nameInput.addEventListener('input', applyFilters);
+        statusSelect.addEventListener('change', applyFilters);
+        tierSelect.addEventListener('change', applyFilters);
+        clearBtn.addEventListener('click', () => {
+          nameInput.value = '';
+          statusSelect.value = '';
+          tierSelect.value = '';
+          applyFilters();
+        });
+        
+        // Close handlers
+        const closeBtn = header.querySelector('#closeModal');
+        closeBtn.addEventListener('click', () => modal.remove());
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) modal.remove();
+        });
+      } catch (err) {
+        console.error('Failed to load open rebookings:', err);
+        alert('Failed to load open rebookings');
+      }
+    }
+    
+    if (openRebookingsCard) {
+      openRebookingsCard.addEventListener('click', showOpenRebookings);
+    }
+
     // Style the non-KB preset differently
     document.querySelectorAll('.kb-preset').forEach(btn => {
       if (btn.dataset.q === 'I need a new flight') btn.classList.add('non-kb');
     });
 
     // ── Init ─────────────────────────────────────────
-    document.addEventListener('DOMContentLoaded', loadDashboard);
-    setInterval(loadDashboard, 30000);
+    async function loadOpenRebookingsCount() {
+      try {
+        const resp = await fetch(`${API_BASE_URL}/open-rebookings`);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        const el = document.getElementById('openRebookingsCount');
+        if (el) el.textContent = data.openRebookingsCount;
+      } catch (err) {
+        console.warn('Failed to load open rebookings count:', err);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadDashboard();
+      loadOpenRebookingsCount();
+    });
+    setInterval(() => {
+      loadDashboard();
+      loadOpenRebookingsCount();
+    }, 30000);
   </script>
 </body>
 </html>

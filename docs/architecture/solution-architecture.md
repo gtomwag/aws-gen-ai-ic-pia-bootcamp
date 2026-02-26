@@ -1,8 +1,8 @@
-# Solution Architecture — GenAI Disruption Management
+# DuHast Airlines — Solution Architecture
 
 ## 1. Overview
 
-This document describes the architecture of the GenAI Airline Disruption Management system, covering both the current POC implementation and the target PRD architecture. The POC demonstrates the end-to-end disruption → assessment → rebooking → notification → escalation workflow using AWS serverless services, while the target architecture adds production-grade orchestration, AI agents, and real integrations.
+This document describes the architecture of the DuHast Airlines AI Disruption Management system, covering both the current POC implementation and the target PRD architecture. The POC demonstrates the end-to-end disruption → assessment → rebooking → notification → escalation workflow using AWS serverless services and six AWS AI services, while the target architecture adds production-grade orchestration, AI agents, and real integrations.
 
 ---
 
@@ -28,6 +28,7 @@ graph LR
         BG["Bedrock Guardrails<br>PII filter, content safety<br>(USE_GUARDRAILS)"]
         CO["Amazon Comprehend<br>Sentiment + PII detection<br>(USE_COMPREHEND)"]
         TR["Amazon Translate<br>Multi-language notifications<br>(USE_TRANSLATE)"]
+        VS["Amazon Bedrock<br>Nova Sonic Voice<br>(USE_VOICE)"]
     end
 
     A -->|"HTTP POST/GET"| B
@@ -38,6 +39,8 @@ graph LR
     E -.->|"Safety"| BG
     C -.->|"Sentiment / PII"| CO
     C -.->|"Translate"| TR
+    C -.->|"Voice Sessions"| VS
+    VS -.->|"Reuses Chat/KB"| E
 ```
 
 > Full Mermaid source: [diagrams/poc-architecture.mmd](diagrams/poc-architecture.mmd)
@@ -55,6 +58,7 @@ graph LR
 | **Bedrock Guardrails** | Content filtering | PII filtering, denied topics, and content safety applied to all Bedrock model output |
 | **Amazon Comprehend** | Sentiment + PII detection | Real-time sentiment analysis per chat message; PII entity detection (credit cards, emails, SSNs); auto-escalation trigger (2+ consecutive NEGATIVE with >70% confidence) |
 | **Amazon Translate** | Multi-language | Notification translation to 75+ languages; language detection for incoming messages |
+| **Bedrock Nova Sonic (Voice)** | Voice session orchestration | Voice AI agent with transfer intent detection (5 regex patterns + negation), reuses Bedrock chat and KB pathways for voice queries, session lifecycle management |
 | **Local server** | `server-local.js` (Node http) | Runs Lambda handler locally without Docker/SAM |
 
 ### 2.3 API Endpoints
@@ -81,7 +85,51 @@ graph LR
 7. **Selection + Confirmation**: Selected option stored; confirmation returns mock PNR with itinerary summary.
 8. **Escalation**: Full context packet built (passenger summary, disruption summary, options, selections, transcript, AI recommendation, sentiment trajectory, policy notes).
 
-> **Feature flags**: All AI services are independently toggleable via environment variables (`USE_BEDROCK`, `USE_KNOWLEDGE_BASE`, `USE_GUARDRAILS`, `USE_COMPREHEND`, `USE_TRANSLATE`). When disabled, deterministic fallbacks ensure full functionality. See [ai-services-guide.md](ai-services-guide.md) for configuration details.
+> **Feature flags**: All AI services are independently toggleable via environment variables (`USE_BEDROCK`, `USE_KNOWLEDGE_BASE`, `USE_GUARDRAILS`, `USE_COMPREHEND`, `USE_TRANSLATE`, `USE_VOICE`). When disabled, deterministic fallbacks ensure full functionality. See [ai-services-guide.md](ai-services-guide.md) for configuration details.
+
+### 2.5 AI Service Integration Depth
+
+> **Rubric: Technical Depth** — This section details how the six AWS AI services interconnect rather than operating in isolation.
+
+#### Intelligent Query Routing
+The chat endpoint implements automatic routing logic:
+- `isPolicyQuestion()` in `bedrock.js` evaluates each message against 30+ keyword triggers (eu261, rights, compensation, refund, gdpr, hotel, meal, etc.)
+- Policy questions → Bedrock Knowledge Base (RAG) with citation extraction
+- General questions → Bedrock Claude 3 Haiku with passenger-context-enriched system prompt
+- Voice queries → Same routing via `maybeNovaSonicVoiceReply()`, reusing the text pipelines
+
+#### Parallel Analysis Pipeline
+Every user chat message triggers parallel AI analysis:
+1. **Bedrock/KB** — generates the response (routed by query type)
+2. **Comprehend DetectSentiment** — classifies emotional state with confidence scores
+3. **Comprehend DetectPiiEntities** — flags sensitive data (SSN, credit card, passport)
+4. **Bedrock Guardrails** — filters the AI response for PII, denied topics, content safety
+
+#### Custom Business Logic on AI Output
+- **Auto-escalation rule:** `evaluateEscalationTrigger()` tracks sentiment across the conversation; 2+ consecutive NEGATIVE with >70% confidence → automatic human handoff
+- **Transfer intent detection:** `detectTransferIntent()` uses 5 regex intent patterns with negation handling to detect when a voice user wants a human agent
+- **Source attribution:** Every response tagged with `source` field (bedrock, knowledge-base, fallback) — surfaced as visual badges in the UI
+
+#### Feature-Flagged Architecture
+All 6 AI services operate behind independent feature flags with deterministic fallbacks:
+
+| Service | Flag | Fallback When OFF |
+|---|---|---|
+| Bedrock Chat | `USE_BEDROCK` | Deterministic option summary response |
+| Knowledge Base | `USE_KNOWLEDGE_BASE` | Hardcoded EU261/GDPR/policy summaries via `buildPolicyFallback()` |
+| Guardrails | `USE_GUARDRAILS` | No content filtering applied |
+| Comprehend | `USE_COMPREHEND` | Returns NEUTRAL sentiment, no PII detected |
+| Translate | `USE_TRANSLATE` | Returns original English text |
+| Voice | `USE_VOICE` | Voice endpoints return graceful "unavailable" response |
+
+#### Observability
+Every AI interaction emits structured `METRIC:` logs:
+- `CHAT_KB_ROUTED` — Knowledge Base question detected and routed
+- `CHAT_TURN` with `source` — which AI path answered
+- `SENTIMENT_AUTO_ESCALATE` — auto-escalation fired
+- `CHAT_PII_DETECTED` — PII entity found in message
+- `VOICE_SESSION_STARTED`, `VOICE_RESPONSE_ORCHESTRATED` — voice session metrics
+- `TRANSFER_REQUESTED`, `TRANSFER_STATUS_UPDATED` — human handoff tracking
 
 ---
 
@@ -136,6 +184,7 @@ graph TB
 | AI Safety | Bedrock Guardrails (PII filter, content safety) | Enhanced guardrails with custom denied topics per airline |
 | AI Sentiment | Amazon Comprehend sentiment + PII detection with auto-escalation | Same + predictive escalation models, sentiment trend dashboards |
 | AI Translation | Amazon Translate (75+ languages) for notifications | Same + real-time chat translation for multilingual passengers |
+| Voice AI | Nova Sonic voice with transfer intent detection | Full duplex voice with real-time STT/TTS, expanded NLU |
 | Data feeds | Synthetic | Real ops feed (flight status API), PSS/GDS (Amadeus/Sabre) |
 | Notifications | Simulated | APNS/FCM push, Twilio SMS, SES email |
 | Auth | None (POC) | Cognito user pools + API key management |

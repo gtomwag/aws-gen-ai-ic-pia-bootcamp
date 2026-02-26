@@ -1,14 +1,23 @@
-# 🎬 Demo Storyboard — Shot List
+# 🎬 DuHast Airlines — Demo Storyboard — Shot List
 
 Each row = one "shot" in the 7-minute demo recording.
+
+### Deployed URLs (Live Demo)
+
+| Resource | URL |
+|---|---|
+| **Frontend App** | http://genai-disruption-poc-web-484907484851.s3-website-us-east-1.amazonaws.com |
+| **Dashboard** | http://genai-disruption-poc-web-484907484851.s3-website-us-east-1.amazonaws.com/dashboard.html |
+| **Backend API** | https://njbbl68078.execute-api.us-east-1.amazonaws.com/Prod/ |
+| **Health Check** | https://njbbl68078.execute-api.us-east-1.amazonaws.com/Prod/health |
 
 ## Act 1 — Problem & Setup (0:00–1:00)
 
 | # | Time | Screen | Action | Expected Outcome | Voiceover Focus |
 |---|---|---|---|---|---|
 | 1 | 0:00–0:20 | README or title slide | Show project name, architecture diagram | Viewer understands context | Problem statement: reactive vs proactive |
-| 2 | 0:20–0:45 | README / PRD summary | Scroll through key PRD goals + AI services list | Viewer sees 5 AWS AI services | PRD goals + "Bedrock, Knowledge Bases, Comprehend, Guardrails, Translate" |
-| 3 | 0:45–1:00 | Browser: `web/index.html` | Show initial UI state — empty chat, "Create Disruption" button visible | Clean starting state | "Let's see this in action" |
+| 2 | 0:20–0:45 | README / PRD summary | Scroll through key PRD goals + AI services list | Viewer sees 6 AWS AI services | PRD goals + "Bedrock, Knowledge Bases, Comprehend, Guardrails, Translate, Nova Sonic Voice" |
+| 3 | 0:45–1:00 | Browser: [Deployed App](http://genai-disruption-poc-web-484907484851.s3-website-us-east-1.amazonaws.com) or `web/index.html` (local) | Show initial UI state — empty chat, "Create Disruption" button visible | Clean starting state | "Let's see this in action" |
 
 ## Act 2 — Core Flow: Disrupt → Notify → Rebook (1:00–3:45)
 
@@ -46,19 +55,25 @@ Each row = one "shot" in the 7-minute demo recording.
 | 23 | 5:10–5:20 | Browser: chat input | Type: `I'm extremely frustrated, this is the worst experience ever` | 2nd consecutive NEGATIVE → pulsing red 🚨 **Auto-Escalation Alert** banner appears at top of side panel | "2 consecutive negative → red alert banner fires. No human judgment needed" |
 | 24 | 5:20–5:30 | Browser: side panel | Point at Sentiment Bar scores + Auto-Escalation Alert banner | Sentiment Bar shows NEGATIVE percentages; red 🚨 banner visible with pulsing animation | "System proactively routes frustrated passengers — visible right in the UI" |
 
-## Act 5 — Escalation with Full AI Context (5:30–6:00)
+## Act 4.5 — Voice Agent Demo (5:30–5:50)
 
 | # | Time | Screen | Action | Expected Outcome | Voiceover Focus |
 |---|---|---|---|---|---|
-| 25 | 5:30–5:40 | Browser: escalate button | Click **Escalate** | Escalation panel appears with full context | "Let's see the agent handoff packet" |
-| 26 | 5:40–5:50 | Browser: escalation panel | Point at priority badge, passenger summary, sentiment summary | HIGH priority badge, name, tier, sentiment trajectory visible | "Priority: HIGH — plus emotional context: started neutral, turned negative" |
-| 27 | 5:50–6:00 | Browser: escalation panel | Scroll to AI recommendation + policy notes | Rule-based recommendation + EU261/GDPR notes visible | "AI recommendation + EU261 guidance + GDPR consent — all pre-loaded" |
+| 24.5 | 5:30–5:50 | Browser: voice button | Click **Speak to Agent** voice button | Voice session starts; voice response returned | "6th AI service — Nova Sonic voice reuses KB + Chat pipelines" |
+
+## Act 5 — Escalation with Full AI Context (5:50–6:00)
+
+| # | Time | Screen | Action | Expected Outcome | Voiceover Focus |
+|---|---|---|---|---|---|
+| 25 | 5:50–6:00 | Browser: escalate button | Click **Escalate** | Escalation panel appears with full context | "Let's see the agent handoff packet" |
+| 26 | 6:00–6:10 | Browser: escalation panel | Point at priority badge, passenger summary, sentiment summary | HIGH priority badge, name, tier, sentiment trajectory visible | "Priority: HIGH — plus emotional context: started neutral, turned negative" |
+| 27 | 6:10–6:15 | Browser: escalation panel | Scroll to AI recommendation + policy notes | Rule-based recommendation + EU261/GDPR notes visible | "AI recommendation + EU261 guidance + GDPR consent — all pre-loaded" |
 
 ## Act 6 — Metrics & Wrap-Up (6:00–7:00)
 
 | # | Time | Screen | Action | Expected Outcome | Voiceover Focus |
 |---|---|---|---|---|---|
 | 28 | 6:00–6:15 | Browser: metrics panel | Scroll through full metrics log | All metrics visible: CHAT_KB_ROUTED, CHAT_TURN (source), SENTIMENT_AUTO_ESCALATE, CHAT_PII_DETECTED | "Rich telemetry — KB routing %, sentiment trends, PII detection" |
-| 29 | 6:15–6:30 | Browser: chat + side panel | Point at UI indicators: source badges (📚/🤖), citations, Sentiment Bar, Auto-Escalation Alert | All 5 visual AI indicators visible simultaneously in the UI | "Every AI service is surfaced visually — badges, citations, sentiment, escalation, PII" |
-| 30 | 6:30–6:45 | Architecture doc or closing slide | Switch to architecture doc or summary | Target architecture + 5 AI services visible | "5 AWS AI services, single SAM stack, feature-flagged" |
+| 29 | 6:15–6:30 | Browser: chat + side panel | Point at UI indicators: source badges (📚/🤖), citations, Sentiment Bar, Auto-Escalation Alert | All 7 visual AI indicators visible simultaneously in the UI | "Every AI service is surfaced visually — badges, citations, sentiment, escalation, PII" |
+| 30 | 6:30–6:45 | Architecture doc or closing slide | Switch to architecture doc or summary | Target architecture + 6 AI services visible | "6 AWS AI services, single SAM stack, feature-flagged" |
 | 31 | 6:45–7:00 | Closing slide | Show next steps | Viewer understands production path | "Path to production: real data, Step Functions, expanded KB, full observability" |

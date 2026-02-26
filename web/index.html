@@ -19,8 +19,26 @@
   <link rel="stylesheet" href="css/dark.css" />
 </head>
 <body>
+  <style>
+    .dashboard-link {
+      position: absolute;
+      top: 18px;
+      right: 24px;
+      color: #b8860b;
+      text-decoration: none;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 500;
+      z-index: 100;
+    }
+    .dashboard-link:hover { text-decoration: underline; }
+    @media (max-width: 600px) {
+      .dashboard-link { display: none; }
+    }
+  </style>
   <header>
     <h1>✈ DuHast Disruption Management</h1>
+    <a href="dashboard.html" class="dashboard-link">Dashboard View →</a>
     <div style="display: flex; align-items: center; gap: 16px;">
       <span class="status" id="statusText">Ready</span>
     </div>

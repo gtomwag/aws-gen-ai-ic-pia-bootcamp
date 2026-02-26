@@ -1,15 +1,19 @@
 # 🧪 Sample Demo Scenarios
 
+> **Note:** All scenarios use DuHast Airlines (DH) flight numbers and branding.
+
 These scenarios can be run live against the local dev server or the deployed API. Each modifies the `POST /disruption` request body.
 
-> **API Base URL (local):** `http://127.0.0.1:3000`  
-> **API Base URL (deployed):** `https://njbbl68078.execute-api.us-east-1.amazonaws.com/Prod`
+> **Frontend App (deployed):** http://genai-disruption-poc-web-484907484851.s3-website-us-east-1.amazonaws.com  
+> **Dashboard (deployed):** http://genai-disruption-poc-web-484907484851.s3-website-us-east-1.amazonaws.com/dashboard.html  
+> **API Base URL (deployed):** `https://njbbl68078.execute-api.us-east-1.amazonaws.com/Prod`  
+> **API Base URL (local):** `http://127.0.0.1:3000`
 
 ---
 
 ## Scenario 1: Weather Cancellation at FRA — Platinum Focus
 
-**Story:** Severe thunderstorm causes runway closure at Frankfurt. UA891 FRA→JFK cancelled. 200 passengers affected, including ~16 Platinum members. Alice Anderson (Platinum) is the demo focus passenger.
+**Story:** Severe thunderstorm causes runway closure at Frankfurt. DH891 FRA→JFK cancelled. 200 passengers affected, including ~16 Platinum members. Alice Anderson (Platinum) is the demo focus passenger.
 
 **Request:**
 
@@ -25,7 +29,7 @@ These scenarios can be run live against the local dev server or the deployed API
     "tier": "Platinum",
     "origin": "FRA",
     "destination": "JFK",
-    "flightNumber": "UA891",
+    "flightNumber": "DH891",
     "date": "2026-02-25",
     "hasApp": true,
     "consentForProactive": true,
@@ -53,7 +57,7 @@ These scenarios can be run live against the local dev server or the deployed API
 
 ## Scenario 2: 45-Minute Delay — Connection Risk
 
-**Story:** UA452 ORD→DEN delayed 45 minutes due to ATC flow control. Carlos (Gold tier) has a connecting flight with only 50 minutes connection time — at risk of missing it.
+**Story:** DH452 ORD→DEN delayed 45 minutes due to ATC flow control. Carlos (Gold tier) has a connecting flight with only 50 minutes connection time — at risk of missing it.
 
 **Request (modify in app.js or via curl):**
 
@@ -69,7 +73,7 @@ These scenarios can be run live against the local dev server or the deployed API
     "tier": "Gold",
     "origin": "ORD",
     "destination": "SFO",
-    "flightNumber": "UA452",
+    "flightNumber": "DH452",
     "date": "2026-02-25",
     "hasApp": true,
     "consentForProactive": true,
@@ -77,7 +81,7 @@ These scenarios can be run live against the local dev server or the deployed API
     "constraints": ["arrive_before_21_00"],
     "specialRequirements": null,
     "connectionRisk": {
-      "connectingFlight": "UA1789",
+      "connectingFlight": "DH1789",
       "connectionAirport": "DEN",
       "connectionTime": 50,
       "atRisk": true
@@ -103,14 +107,14 @@ These scenarios can be run live against the local dev server or the deployed API
 ```bash
 curl -X POST http://127.0.0.1:3000/disruption \
   -H "Content-Type: application/json" \
-  -d '{"type":"DELAY","reason":"ATC flow control – 45 minute departure delay","airport":"ORD","passengerCount":150,"passenger":{"firstName":"Carlos","lastName":"Chen","tier":"Gold","origin":"ORD","destination":"SFO","flightNumber":"UA452","date":"2026-02-25","hasApp":true,"consentForProactive":true,"passengerId":"PAX-0042","constraints":["arrive_before_21_00"],"specialRequirements":null,"connectionRisk":{"connectingFlight":"UA1789","connectionAirport":"DEN","connectionTime":50,"atRisk":true}}}'
+  -d '{"type":"DELAY","reason":"ATC flow control \u2013 45 minute departure delay","airport":"ORD","passengerCount":150,"passenger":{"firstName":"Carlos","lastName":"Chen","tier":"Gold","origin":"ORD","destination":"SFO","flightNumber":"DH452","date":"2026-02-25","hasApp":true,"consentForProactive":true,"passengerId":"PAX-0042","constraints":["arrive_before_21_00"],"specialRequirements":null,"connectionRisk":{"connectingFlight":"DH1789","connectionAirport":"DEN","connectionTime":50,"atRisk":true}}}'
 ```
 
 ---
 
 ## Scenario 3: No Viable Options — Forced Escalation
 
-**Story:** UA220 LAX→NRT (Los Angeles to Tokyo Narita) cancelled due to mechanical issue. Only one daily flight on this route; no partner availability. Priya (General tier) has no good automated options — system must escalate.
+**Story:** DH220 LAX→NRT (Los Angeles to Tokyo Narita) cancelled due to mechanical issue. Only one daily flight on this route; no partner availability. Priya (General tier) has no good automated options — system must escalate.
 
 **Request (via curl):**
 
@@ -126,7 +130,7 @@ curl -X POST http://127.0.0.1:3000/disruption \
     "tier": "General",
     "origin": "LAX",
     "destination": "NRT",
-    "flightNumber": "UA220",
+    "flightNumber": "DH220",
     "date": "2026-02-25",
     "hasApp": false,
     "consentForProactive": false,
@@ -161,7 +165,7 @@ curl -X POST http://127.0.0.1:3000/disruption \
 ```bash
 curl -X POST http://127.0.0.1:3000/disruption \
   -H "Content-Type: application/json" \
-  -d '{"type":"CANCELLATION","reason":"Mechanical issue – engine inspection required","airport":"LAX","passengerCount":280,"passenger":{"firstName":"Priya","lastName":"Patel","tier":"General","origin":"LAX","destination":"NRT","flightNumber":"UA220","date":"2026-02-25","hasApp":false,"consentForProactive":false,"passengerId":"PAX-0199","constraints":[],"specialRequirements":"Wheelchair assistance","connectionRisk":null}}'
+  -d '{"type":"CANCELLATION","reason":"Mechanical issue \u2013 engine inspection required","airport":"LAX","passengerCount":280,"passenger":{"firstName":"Priya","lastName":"Patel","tier":"General","origin":"LAX","destination":"NRT","flightNumber":"DH220","date":"2026-02-25","hasApp":false,"consentForProactive":false,"passengerId":"PAX-0199","constraints":[],"specialRequirements":"Wheelchair assistance","connectionRisk":null}}'
 ```
 
 After creating the disruption (note the `sessionId` from the response), escalate:
@@ -368,9 +372,9 @@ For the most impressive demo, run through this sequence in a single session:
 6. **Frustrated chat**: "Worst experience ever, I want a supervisor" → auto-escalation triggers + KB routing (contains "supervisor")
 7. **Escalate** → full packet with sentiment trajectory + policy notes
 
-This shows all 5 AI services working together in one coherent flow.
+This shows all 6 AI services working together in one coherent flow.
 
-**All 5 UI indicators visible in this combined flow:**
+**All 7 UI indicators visible in this combined flow:**
 | UI Element | When It Appears | What It Shows |
 |---|---|---|
 | 🤖 **Bedrock AI** badge (blue) | Step 2 — general chat | Response came from Bedrock Claude with session context |

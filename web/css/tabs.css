@@ -1,8 +1,10 @@
 /* ── Bottom Tab Bar ────────────────────────────────── */
 .tab-bar {
   display: none;
-  height: 83px;
-  padding-bottom: 34px;
+  /* Use max() so the bar always has >= 20 px breathing room below icons,
+     even when env(safe-area-inset-bottom) reports 0 (Safari toolbar visible). */
+  height: calc(49px + max(var(--safe-bottom, 34px), 20px));
+  padding-bottom: max(var(--safe-bottom, 34px), 20px);
   background: rgba(248,247,244,0.92);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
