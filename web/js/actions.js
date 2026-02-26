@@ -15,8 +15,8 @@ async function createDisruption() {
       airport: 'FRA',
       passengerCount: 200,
       passenger: {
-        firstName: 'Alice',
-        lastName: 'Anderson',
+        firstName: 'Mark',
+        lastName: 'Scout',
         tier: 'Platinum',
         origin: 'FRA',
         destination: 'JFK',
@@ -191,7 +191,7 @@ async function confirmSelection() {
     // Enhanced itinerary
     if (b.itinerarySummary) {
       const it = b.itinerarySummary;
-      document.getElementById('itinPassenger').textContent = it.passenger || 'Alice Anderson';
+      document.getElementById('itinPassenger').textContent = it.passenger || 'Mark Scout';
       const itinTier = document.getElementById('itinTier');
       itinTier.textContent = it.tier || 'Platinum';
       itinTier.className = `tier-badge ${it.tier || 'Platinum'}`;
