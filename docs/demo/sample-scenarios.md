@@ -4,8 +4,10 @@
 
 These scenarios can be run live against the local dev server or the deployed API. Each modifies the `POST /disruption` request body.
 
-> **API Base URL (local):** `http://127.0.0.1:3000`  
-> **API Base URL (deployed):** `https://njbbl68078.execute-api.us-east-1.amazonaws.com/Prod`
+> **Frontend App (deployed):** http://genai-disruption-poc-web-484907484851.s3-website-us-east-1.amazonaws.com  
+> **Dashboard (deployed):** http://genai-disruption-poc-web-484907484851.s3-website-us-east-1.amazonaws.com/dashboard.html  
+> **API Base URL (deployed):** `https://njbbl68078.execute-api.us-east-1.amazonaws.com/Prod`  
+> **API Base URL (local):** `http://127.0.0.1:3000`
 
 ---
 

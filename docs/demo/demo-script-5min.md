@@ -5,6 +5,15 @@
 > **Setup:** Local dev server running (`node backend/server-local.js`), browser open to `web/index.html`  
 > **AI Services:** For full AI demo, set `USE_BEDROCK=true`, `USE_KNOWLEDGE_BASE=true`, `USE_COMPREHEND=true` in `.env`
 
+### Deployed URLs (Live Demo)
+
+| Resource | URL |
+|---|---|
+| **Frontend App** | http://genai-disruption-poc-web-484907484851.s3-website-us-east-1.amazonaws.com |
+| **Dashboard** | http://genai-disruption-poc-web-484907484851.s3-website-us-east-1.amazonaws.com/dashboard.html |
+| **Backend API** | https://njbbl68078.execute-api.us-east-1.amazonaws.com/Prod/ |
+| **Health Check** | https://njbbl68078.execute-api.us-east-1.amazonaws.com/Prod/health |
+
 ---
 
 ## Minute 0:00 – 0:45 | Problem Statement & PRD Goals
@@ -261,6 +270,15 @@
 
 ## Setup Checklist Before Recording
 
+**Option A — Use Deployed App (recommended for demos):**
+- [ ] Open http://genai-disruption-poc-web-484907484851.s3-website-us-east-1.amazonaws.com in browser
+- [ ] Verify backend: https://njbbl68078.execute-api.us-east-1.amazonaws.com/Prod/health
+- [ ] Screen recording tool ready (OBS / Loom / QuickTime)
+- [ ] Microphone tested
+- [ ] Browser window sized at 1280×800 or similar
+- [ ] No sensitive tabs/notifications visible
+
+**Option B — Local Dev Server:**
 - [ ] `node backend/server-local.js` running (port 3000)
 - [ ] Browser open to `web/index.html`
 - [ ] Screen recording tool ready (OBS / Loom / QuickTime)

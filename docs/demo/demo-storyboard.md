@@ -2,13 +2,22 @@
 
 Each row = one "shot" in the 7-minute demo recording.
 
+### Deployed URLs (Live Demo)
+
+| Resource | URL |
+|---|---|
+| **Frontend App** | http://genai-disruption-poc-web-484907484851.s3-website-us-east-1.amazonaws.com |
+| **Dashboard** | http://genai-disruption-poc-web-484907484851.s3-website-us-east-1.amazonaws.com/dashboard.html |
+| **Backend API** | https://njbbl68078.execute-api.us-east-1.amazonaws.com/Prod/ |
+| **Health Check** | https://njbbl68078.execute-api.us-east-1.amazonaws.com/Prod/health |
+
 ## Act 1 — Problem & Setup (0:00–1:00)
 
 | # | Time | Screen | Action | Expected Outcome | Voiceover Focus |
 |---|---|---|---|---|---|
 | 1 | 0:00–0:20 | README or title slide | Show project name, architecture diagram | Viewer understands context | Problem statement: reactive vs proactive |
 | 2 | 0:20–0:45 | README / PRD summary | Scroll through key PRD goals + AI services list | Viewer sees 6 AWS AI services | PRD goals + "Bedrock, Knowledge Bases, Comprehend, Guardrails, Translate, Nova Sonic Voice" |
-| 3 | 0:45–1:00 | Browser: `web/index.html` | Show initial UI state — empty chat, "Create Disruption" button visible | Clean starting state | "Let's see this in action" |
+| 3 | 0:45–1:00 | Browser: [Deployed App](http://genai-disruption-poc-web-484907484851.s3-website-us-east-1.amazonaws.com) or `web/index.html` (local) | Show initial UI state — empty chat, "Create Disruption" button visible | Clean starting state | "Let's see this in action" |
 
 ## Act 2 — Core Flow: Disrupt → Notify → Rebook (1:00–3:45)
 
