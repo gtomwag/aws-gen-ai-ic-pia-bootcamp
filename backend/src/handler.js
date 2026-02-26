@@ -934,14 +934,14 @@ async function handleBoardingPass(event) {
 
   try {
     // Get session data
-    const sessionData = store.getItem({ pk: `SESSION#${sessionId}`, sk: 'META' });
+    const sessionData = await store.getItem(`SESSION#${sessionId}`, 'META');
     if (!sessionData) {
       console.log('Session not found:', sessionId);
       return respond(404, { error: 'Session not found' });
     }
 
     // Get booking data
-    const bookingData = store.getItem({ pk: `SESSION#${sessionId}`, sk: 'BOOKING' });
+    const bookingData = await store.getItem(`SESSION#${sessionId}`, 'BOOKING');
     if (!bookingData) {
       console.log('No booking found for session:', sessionId);
       return respond(404, { error: 'No booking found for this session' });
@@ -968,7 +968,7 @@ async function handleBoardingPass(event) {
     const boardingTime = itinerary.departure || '18:30';
     const date = passenger.date || '2026-02-25';
     
-    console.log('Generating PDF for:', passengerName);
+    console.log('Generating PDF for:', passengerName, '| PNR:', pnr, '| Flight:', flightNum, '| Route:', origin, '->', dest, '| Class:', classType, '| Tier:', tier);
     
     // Generate simple PDF synchronously
     const pdfBuffer = generateSimpleBoardingPassPDF({
