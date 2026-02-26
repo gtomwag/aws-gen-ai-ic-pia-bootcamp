@@ -264,3 +264,106 @@ async function escalate() {
     console.error('escalate error:', err);
   }
 }
+
+function getSpeechRecognitionCtor() {
+  return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+}
+
+async function ensureVoiceSession() {
+  if (!sessionId) {
+    addMessage('system', 'Create a disruption first, then tap the phone icon to start voice support.');
+    return null;
+  }
+
+  if (voiceSessionId) {
+    return voiceSessionId;
+  }
+
+  try {
+    const startData = await apiCall('/voice/session/start', {
+      sessionId,
+      locale: navigator.language || 'en-US',
+    });
+
+    voiceSessionId = startData.voiceSessionId;
+    voiceTurnSequence = 1;
+    addMetric('voice_session_started_ui', `voiceSessionId=${voiceSessionId}`);
+    addMessage('system', '📞 Voice session started. Listening...');
+    return voiceSessionId;
+  } catch (err) {
+    if (err?.message && err.message.includes('Active voice session already exists')) {
+      addMessage('system', 'An active voice session already exists. Please try again in a moment.');
+      return null;
+    }
+    throw err;
+  }
+}
+
+async function handleVoiceTranscript(transcript) {
+  const cleaned = (transcript || '').trim();
+  if (!cleaned || !voiceSessionId) return;
+
+  addMessage('user', `🎙️ ${cleaned}`);
+
+  const voiceData = await apiCall('/voice/turn', {
+    voiceSessionId,
+    transcriptText: cleaned,
+    sequence: voiceTurnSequence,
+  });
+  voiceTurnSequence += 1;
+
+  if (voiceData.transferIntentDetected) {
+    addMessage('system', 'Transfer intent detected. Requesting a human agent...');
+    const transferData = await apiCall('/voice/transfer', {
+      voiceSessionId,
+      reason: 'Voice transfer intent detected',
+      trigger: 'intent_detected',
+    });
+    addMessage('system', `📞 ${transferData.statusMessage}`);
+    addMetric('voice_transfer_requested_ui', `status=${transferData.status}`);
+    return;
+  }
+
+  if (voiceData.responseText) {
+    addMessage('assistant', voiceData.responseText, {
+      source: voiceData.source,
+      citations: voiceData.citations,
+    });
+    addMetric('voice_response_rendered_ui', `source=${voiceData.source || 'fallback'}`);
+  }
+}
+
+async function startVoiceConversation() {
+  const activeSessionId = await ensureVoiceSession();
+  if (!activeSessionId) return;
+
+  btnVoiceAgent.classList.add('active');
+  setStatus('Calling agent...');
+
+  try {
+    const transferData = await apiCall('/voice/transfer', {
+      voiceSessionId: activeSessionId,
+      reason: 'Agent call requested from phone button',
+      trigger: 'user_explicit',
+    });
+
+    voiceTransferRequestId = transferData.transferRequestId || null;
+    addMessage('system', `📞 ${transferData.statusMessage}`);
+    addMetric('voice_phone_call_requested_ui', `status=${transferData.status}`);
+
+    addMessage('system', 'Agent handoff is being processed in-app.');
+
+    if (voiceTransferRequestId) {
+      const statusData = await apiCall(`/voice/transfer-status?voiceSessionId=${activeSessionId}&transferRequestId=${voiceTransferRequestId}`);
+      if (statusData?.statusMessage) {
+        addMessage('system', `📡 ${statusData.statusMessage}`);
+      }
+      addMetric('voice_transfer_status_ui', `status=${statusData.status}`);
+    }
+  } catch (err) {
+    console.error('startVoiceConversation error:', err);
+  } finally {
+    btnVoiceAgent.classList.remove('active');
+    setStatus('Ready');
+  }
+}

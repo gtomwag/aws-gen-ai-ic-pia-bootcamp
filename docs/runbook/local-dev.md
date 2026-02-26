@@ -42,6 +42,10 @@ You should see:
     POST /confirm
     POST /escalate
     GET  /notification
+    POST /voice/session/start
+    POST /voice/turn
+    POST /voice/transfer
+    GET  /voice/transfer-status
 ```
 
 ```bash
@@ -84,6 +88,8 @@ sam local start-api
 | `TABLE_NAME` | `disruption-table` | DynamoDB table name |
 | `DYNAMODB_ENDPOINT` | (none) | Override DynamoDB endpoint for local container |
 | `PORT` | `3000` | Local server port |
+| `USE_VOICE` | `"true"` in local server | Enable voice session routes |
+| `VOICE_TRANSPORT` | `simulated-stream` | Voice transport mode for web clients |
 
 ---
 

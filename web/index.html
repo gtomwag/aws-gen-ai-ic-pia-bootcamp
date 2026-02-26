@@ -126,6 +126,7 @@
       <div class="ios-nav-bar">
         <span class="nav-title">Assistant<span class="chat-nav-sentiment NEUTRAL" id="sentimentDot"></span></span>
         <div class="nav-right">
+          <button class="nav-icon-btn" id="btnVoiceAgent" aria-label="Call Agent" title="Call Agent">📞</button>
           <button class="nav-back" id="btnEscalate" style="position:static;transform:none;color:var(--ios-red);font-size:14px;font-weight:600;" aria-label="Escalate to agent" disabled>Escalate</button>
         </div>
       </div>
@@ -237,6 +238,10 @@
       <button class="tab-item" data-tab="chat" aria-label="Chat tab">
         <span class="tab-icon">💬<span class="tab-badge" id="tabBadgeChat"></span></span>
         <span class="tab-label">Chat</span>
+      </button>
+      <button class="tab-item" id="btnVoiceTab" aria-label="Call agent">
+        <span class="tab-icon">📞</span>
+        <span class="tab-label">Call</span>
       </button>
       <button class="tab-item" data-tab="options" aria-label="Flights tab">
         <span class="tab-icon">✈️<span class="tab-badge" id="tabBadgeOptions"></span></span>

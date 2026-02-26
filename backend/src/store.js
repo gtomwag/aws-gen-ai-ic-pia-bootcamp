@@ -118,4 +118,51 @@ async function scanByPkPrefix(pkPrefix) {
   return result.Items || [];
 }
 
-module.exports = { putItem, getItem, queryByPk, upsertJson, getJson, scanByPkPrefix };
+async function upsertVoiceSession(sessionId, voiceSession) {
+  return upsertJson(`SESSION#${sessionId}`, 'VOICE_SESSION', voiceSession);
+}
+
+async function getVoiceSessionBySessionId(sessionId) {
+  return getJson(`SESSION#${sessionId}`, 'VOICE_SESSION');
+}
+
+async function getVoiceSession(voiceSessionId) {
+  return getJson(`VOICE#${voiceSessionId}`, 'META');
+}
+
+async function upsertVoiceSessionMeta(voiceSessionId, meta) {
+  return upsertJson(`VOICE#${voiceSessionId}`, 'META', meta);
+}
+
+async function appendVoiceUtterance(voiceSessionId, sequence, payload) {
+  return upsertJson(`VOICE#${voiceSessionId}`, `UTTERANCE#${String(sequence).padStart(6, '0')}`, payload);
+}
+
+async function appendVoiceResponse(voiceSessionId, sequence, payload) {
+  return upsertJson(`VOICE#${voiceSessionId}`, `RESPONSE#${String(sequence).padStart(6, '0')}`, payload);
+}
+
+async function upsertTransferRequest(voiceSessionId, transferRequestId, payload) {
+  return upsertJson(`VOICE#${voiceSessionId}`, `TRANSFER#${transferRequestId}`, payload);
+}
+
+async function getTransferRequest(voiceSessionId, transferRequestId) {
+  return getJson(`VOICE#${voiceSessionId}`, `TRANSFER#${transferRequestId}`);
+}
+
+module.exports = {
+  putItem,
+  getItem,
+  queryByPk,
+  upsertJson,
+  getJson,
+  scanByPkPrefix,
+  upsertVoiceSession,
+  getVoiceSessionBySessionId,
+  getVoiceSession,
+  upsertVoiceSessionMeta,
+  appendVoiceUtterance,
+  appendVoiceResponse,
+  upsertTransferRequest,
+  getTransferRequest,
+};

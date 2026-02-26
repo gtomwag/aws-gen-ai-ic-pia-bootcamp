@@ -3,13 +3,24 @@
 # Dependencies
 node_modules/
 .aws-sam/
+dist/
+build/
+coverage/
+*.log
 
 # Environment
 .env
+.env*
 
 # OS files
 .DS_Store
 Thumbs.db
+*.tmp
+*.swp
+
+# Editor
+.vscode/
+.idea/
 
 # SAM build artifacts
 packaged.yaml

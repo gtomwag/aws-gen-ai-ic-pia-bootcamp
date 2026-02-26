@@ -15,6 +15,32 @@
 .chat-nav-sentiment.NEUTRAL { background: var(--ios-gray3); }
 .chat-nav-sentiment.MIXED { background: var(--ios-orange); }
 
+.nav-icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--ios-gray4);
+  background: var(--ios-gray6);
+  color: var(--ios-blue);
+  font-size: 16px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+}
+
+.nav-icon-btn:active {
+  transform: scale(0.96);
+  opacity: 0.8;
+}
+
+.nav-icon-btn.active {
+  background: var(--ios-blue);
+  color: #fff;
+  border-color: var(--ios-blue);
+}
+
 .auto-escalation-banner {
   display: none;
   align-items: center;

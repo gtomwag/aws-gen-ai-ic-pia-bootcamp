@@ -13,6 +13,8 @@ const PORT = process.env.PORT || 3000;
 // Force in-memory store for local dev
 process.env.USE_LOCAL_STORE = 'true';
 process.env.USE_BEDROCK = process.env.USE_BEDROCK || 'false';
+process.env.USE_VOICE = process.env.USE_VOICE || 'true';
+process.env.VOICE_TRANSPORT = process.env.VOICE_TRANSPORT || 'simulated-stream';
 
 const server = http.createServer(async (req, res) => {
   // ── Static file serving for web/ assets ──
@@ -72,6 +74,10 @@ server.listen(PORT, () => {
   console.log('    POST /select-option');
   console.log('    POST /confirm');
   console.log('    POST /escalate');
+  console.log('    POST /voice/session/start');
+  console.log('    POST /voice/turn');
+  console.log('    POST /voice/transfer');
+  console.log('    GET  /voice/transfer-status');
   console.log('    GET  /dashboard');
   console.log('');
   console.log('  AI Capabilities:');
@@ -80,6 +86,8 @@ server.listen(PORT, () => {
   console.log(`    Guardrails:        ${process.env.USE_GUARDRAILS === 'true' ? '✅ ON' : '⬚ OFF'}`);
   console.log(`    Comprehend:        ${process.env.USE_COMPREHEND === 'true' ? '✅ ON' : '⬚ OFF (neutral)'}`);
   console.log(`    Translate:         ${process.env.USE_TRANSLATE === 'true' ? '✅ ON' : '⬚ OFF (English)'}`);
+  console.log(`    Voice Sessions:    ${process.env.USE_VOICE === 'true' ? '✅ ON' : '⬚ OFF'}`);
+  console.log(`    Voice Transport:   ${process.env.VOICE_TRANSPORT}`);
   console.log('');
   console.log('  📊 Dashboard: http://127.0.0.1:' + PORT + '/dashboard.html');
   console.log('');
