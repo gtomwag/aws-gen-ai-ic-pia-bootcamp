@@ -2,17 +2,21 @@ const { maybeNovaSonicVoiceReply } = require('./bedrock');
 const { TRANSFER_STATUS, VOICE_SESSION_STATUS, generateId, logMetric } = require('./util');
 
 const TRANSFER_INTENT_PATTERNS = [
-  /human agent/i,
-  /live agent/i,
-  /speak to (a )?person/i,
-  /representative/i,
-  /transfer me/i,
-  /escalate/i,
+  /\b(?:transfer|escalate|connect|route|handoff|hand off|put me through)\b.{0,40}\b(?:human|live|agent|person|representative|someone)\b/i,
+  /\b(?:human|live)\s+agent\b/i,
+  /\bspeak to\s+(?:a\s+)?(?:human|live\s+agent|person|representative|someone)\b/i,
+];
+
+const TRANSFER_NEGATION_PATTERNS = [
+  /\b(?:do not|don't|dont|no|not now|keep)\b.{0,24}\b(?:transfer|escalate|agent|representative|human)\b/i,
 ];
 
 function detectTransferIntent(text = '') {
   const normalized = String(text || '').trim();
   if (!normalized) return false;
+  if (TRANSFER_NEGATION_PATTERNS.some((pattern) => pattern.test(normalized))) {
+    return false;
+  }
   return TRANSFER_INTENT_PATTERNS.some((pattern) => pattern.test(normalized));
 }
 
