@@ -98,9 +98,9 @@ document.getElementById('ctaViewOptions').addEventListener('click', () => {
 });
 document.getElementById('ctaChatAssistant').addEventListener('click', () => slideIntoChat());
 
-// Lock screen notification card tap
+// Lock screen notification card tap → go straight to flight updates (detail)
 document.getElementById('lockNotifCard').addEventListener('click', () => {
-  launchLoadingThenHome({ autoOpenChat: true });
+  showScreen('screenDetail');
 });
 
 homeViewUpdate.addEventListener('click', () => showScreen('screenDetail'));
