@@ -2,575 +2,20 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GenAI Disruption Management</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #0f1117;
-      color: #e4e4e7;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* Header */
-    header {
-      background: #1a1b26;
-      border-bottom: 1px solid #2d2f3e;
-      padding: 16px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    header h1 {
-      font-size: 18px;
-      color: #7aa2f7;
-    }
-    header .status {
-      font-size: 12px;
-      color: #565f89;
-    }
-
-    /* Main layout */
-    .container {
-      display: flex;
-      flex: 1;
-      max-width: 1200px;
-      width: 100%;
-      margin: 0 auto;
-      padding: 16px;
-      gap: 16px;
-      overflow: hidden;
-    }
-
-    /* Chat panel */
-    .chat-panel {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      background: #1a1b26;
-      border-radius: 12px;
-      border: 1px solid #2d2f3e;
-      overflow: hidden;
-    }
-    .chat-messages {
-      flex: 1;
-      overflow-y: auto;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .msg {
-      max-width: 80%;
-      padding: 10px 14px;
-      border-radius: 12px;
-      font-size: 14px;
-      line-height: 1.5;
-      white-space: pre-wrap;
-    }
-    .msg.user {
-      align-self: flex-end;
-      background: #364fc7;
-      color: #fff;
-      border-bottom-right-radius: 4px;
-    }
-    .msg.assistant {
-      align-self: flex-start;
-      background: #24283b;
-      color: #c0caf5;
-      border-bottom-left-radius: 4px;
-    }
-    .msg.system {
-      align-self: center;
-      background: #1e2030;
-      color: #565f89;
-      font-size: 12px;
-      border-radius: 8px;
-    }
-
-    /* Chat input */
-    .chat-input {
-      display: flex;
-      gap: 8px;
-      padding: 12px;
-      border-top: 1px solid #2d2f3e;
-      background: #16161e;
-    }
-    .chat-input input {
-      flex: 1;
-      padding: 10px 14px;
-      border: 1px solid #2d2f3e;
-      border-radius: 8px;
-      background: #1a1b26;
-      color: #e4e4e7;
-      font-size: 14px;
-      outline: none;
-    }
-    .chat-input input:focus { border-color: #7aa2f7; }
-
-    /* Side panel */
-    .side-panel {
-      width: 360px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    /* Buttons */
-    button {
-      padding: 10px 18px;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-    button:hover { filter: brightness(1.1); }
-    button:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    .btn-primary { background: #7aa2f7; color: #1a1b26; }
-    .btn-success { background: #9ece6a; color: #1a1b26; }
-    .btn-warning { background: #e0af68; color: #1a1b26; }
-    .btn-danger  { background: #f7768e; color: #1a1b26; }
-    .btn-send    { background: #7aa2f7; color: #1a1b26; min-width: 70px; }
-
-    /* Action buttons row */
-    .actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    /* Options panel */
-    .options-panel {
-      background: #1a1b26;
-      border: 1px solid #2d2f3e;
-      border-radius: 12px;
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      max-height: 400px;
-      overflow-y: auto;
-    }
-    .options-panel h3 {
-      font-size: 14px;
-      color: #7aa2f7;
-      margin-bottom: 4px;
-    }
-    .option-card {
-      background: #24283b;
-      border: 2px solid #2d2f3e;
-      border-radius: 8px;
-      padding: 10px 12px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-    .option-card:hover { border-color: #7aa2f7; }
-    .option-card.selected { border-color: #9ece6a; background: #1e2a1e; }
-    .option-card .opt-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 4px;
-    }
-    .option-card .opt-id {
-      font-weight: 700;
-      color: #7aa2f7;
-      font-size: 15px;
-    }
-    .option-card .opt-time {
-      font-size: 12px;
-      color: #9ece6a;
-    }
-    .option-card .opt-route {
-      font-size: 13px;
-      color: #c0caf5;
-    }
-    .option-card .opt-notes {
-      font-size: 12px;
-      color: #565f89;
-      margin-top: 4px;
-    }
-
-    /* Booking result */
-    .booking-panel {
-      background: #1a2e1a;
-      border: 2px solid #9ece6a;
-      border-radius: 12px;
-      padding: 16px;
-      display: none;
-    }
-    .booking-panel.visible { display: block; }
-    .booking-panel h3 { color: #9ece6a; margin-bottom: 8px; }
-    .booking-panel .pnr {
-      font-size: 24px;
-      font-weight: 700;
-      color: #9ece6a;
-      letter-spacing: 2px;
-    }
-    .booking-panel .details {
-      font-size: 13px;
-      color: #a9b665;
-      margin-top: 8px;
-    }
-
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: #16161e; }
-    ::-webkit-scrollbar-thumb { background: #2d2f3e; border-radius: 3px; }
-
-    /* Notification Center */
-    .notification-center {
-      background: linear-gradient(135deg, #1a1b26 0%, #24283b 100%);
-      border: 1px solid #7aa2f7;
-      border-radius: 12px;
-      padding: 0;
-      margin-bottom: 12px;
-      display: none;
-      overflow: hidden;
-    }
-    .notification-center.visible { display: block; }
-    .notification-center .notif-header {
-      background: #2d2f3e;
-      padding: 10px 14px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      font-weight: 700;
-      color: #7aa2f7;
-    }
-    .notification-center .notif-body {
-      padding: 12px 14px;
-    }
-    .notif-passenger {
-      font-size: 15px;
-      font-weight: 600;
-      color: #c0caf5;
-      margin-bottom: 4px;
-    }
-    .notif-flight {
-      font-size: 13px;
-      color: #e0af68;
-      margin-bottom: 4px;
-    }
-    .notif-cause {
-      font-size: 13px;
-      color: #f7768e;
-      margin-bottom: 8px;
-    }
-    .tier-badge {
-      display: inline-block;
-      padding: 2px 10px;
-      border-radius: 12px;
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .tier-badge.Platinum { background: #a9a1e1; color: #1a1b26; }
-    .tier-badge.Gold { background: #e0af68; color: #1a1b26; }
-    .tier-badge.Silver { background: #9aa5ce; color: #1a1b26; }
-    .tier-badge.General { background: #565f89; color: #e4e4e7; }
-    .notif-cta {
-      display: flex;
-      gap: 8px;
-      margin-top: 8px;
-    }
-    .notif-cta button {
-      padding: 6px 14px;
-      font-size: 12px;
-    }
-    .notif-copy {
-      font-size: 12px;
-      color: #9aa5ce;
-      line-height: 1.5;
-      margin-top: 8px;
-      padding: 8px;
-      background: #16161e;
-      border-radius: 6px;
-      white-space: pre-wrap;
-    }
-    .notif-channel {
-      font-size: 11px;
-      color: #565f89;
-      margin-top: 4px;
-    }
-
-    /* Manifest summary bar */
-    .manifest-bar {
-      display: none;
-      background: #1e2030;
-      border: 1px solid #2d2f3e;
-      border-radius: 8px;
-      padding: 8px 12px;
-      margin-bottom: 12px;
-      font-size: 12px;
-      color: #9aa5ce;
-    }
-    .manifest-bar.visible { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
-    .manifest-bar .stat {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .manifest-bar .stat strong { color: #7aa2f7; }
-
-    /* Sort/filter row */
-    .sort-filter-row {
-      display: none;
-      gap: 6px;
-      margin-bottom: 8px;
-      flex-wrap: wrap;
-    }
-    .sort-filter-row.visible { display: flex; }
-    .sort-filter-row button {
-      padding: 4px 10px;
-      font-size: 11px;
-      border-radius: 6px;
-      background: #24283b;
-      color: #9aa5ce;
-      border: 1px solid #2d2f3e;
-    }
-    .sort-filter-row button.active {
-      background: #7aa2f7;
-      color: #1a1b26;
-      border-color: #7aa2f7;
-    }
-
-    /* Enhanced option cards */
-    .option-card .opt-meta {
-      display: flex;
-      gap: 8px;
-      margin-top: 4px;
-      flex-wrap: wrap;
-    }
-    .option-card .opt-meta span {
-      font-size: 11px;
-      padding: 1px 6px;
-      border-radius: 4px;
-      background: #1e2030;
-      color: #9aa5ce;
-    }
-    .option-card .opt-meta .cost-delta-positive { color: #f7768e; }
-    .option-card .opt-meta .cost-delta-negative { color: #9ece6a; }
-    .option-card .opt-meta .cost-delta-zero { color: #9aa5ce; }
-    .option-card .opt-rationale {
-      font-size: 11px;
-      color: #7aa2f7;
-      margin-top: 4px;
-      font-style: italic;
-    }
-    .option-card .opt-perks {
-      font-size: 11px;
-      color: #a9a1e1;
-      margin-top: 4px;
-    }
-
-    /* Enhanced Booking Panel */
-    .booking-panel .itinerary {
-      margin-top: 8px;
-      font-size: 13px;
-      color: #c0caf5;
-      line-height: 1.6;
-    }
-    .booking-panel .offline-note {
-      margin-top: 8px;
-      padding: 6px 10px;
-      background: #1e2a1e;
-      border-radius: 6px;
-      font-size: 11px;
-      color: #9ece6a;
-    }
-
-    /* Escalation Panel */
-    .escalation-panel {
-      background: #1a1b26;
-      border: 2px solid #f7768e;
-      border-radius: 12px;
-      padding: 16px;
-      display: none;
-      max-height: 300px;
-      overflow-y: auto;
-    }
-    .escalation-panel.visible { display: block; }
-    .escalation-panel h3 { color: #f7768e; margin-bottom: 8px; font-size: 14px; }
-    .escalation-panel .esc-section {
-      margin-bottom: 8px;
-    }
-    .escalation-panel .esc-section h4 {
-      font-size: 12px;
-      color: #e0af68;
-      margin-bottom: 4px;
-    }
-    .escalation-panel .esc-section p,
-    .escalation-panel .esc-section pre {
-      font-size: 12px;
-      color: #9aa5ce;
-      line-height: 1.4;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-    .escalation-panel .esc-priority {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 700;
-    }
-    .esc-priority.HIGH { background: #f7768e; color: #1a1b26; }
-    .esc-priority.MEDIUM { background: #e0af68; color: #1a1b26; }
-    .esc-priority.NORMAL { background: #565f89; color: #e4e4e7; }
-
-    /* Metrics log panel */
-    .metrics-panel {
-      background: #16161e;
-      border: 1px solid #2d2f3e;
-      border-radius: 8px;
-      padding: 8px 12px;
-      margin-top: 12px;
-      max-height: 120px;
-      overflow-y: auto;
-      font-family: 'Courier New', monospace;
-      font-size: 11px;
-      color: #565f89;
-      display: none;
-    }
-    .metrics-panel.visible { display: block; }
-    .metrics-panel .metric-line { margin-bottom: 2px; }
-    .metrics-panel .metric-line .metric-name { color: #9ece6a; }
-    .metrics-panel .metric-line .metric-val { color: #e0af68; }
-
-    /* ── Source Badge on Assistant Messages ─────────────── */
-    .msg-source-badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 10px;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.3px;
-      margin-bottom: 6px;
-    }
-    .msg-source-badge.source-kb {
-      background: #1e3a2f;
-      color: #73daca;
-      border: 1px solid #73daca44;
-    }
-    .msg-source-badge.source-bedrock {
-      background: #1e2a3a;
-      color: #7aa2f7;
-      border: 1px solid #7aa2f744;
-    }
-    .msg-source-badge.source-fallback {
-      background: #2a2a1e;
-      color: #e0af68;
-      border: 1px solid #e0af6844;
-    }
-
-    /* ── Citation Footnotes ─────────────────────────────── */
-    .msg-citations {
-      margin-top: 8px;
-      padding-top: 6px;
-      border-top: 1px solid #2d2f3e;
-      font-size: 11px;
-    }
-    .msg-citations .citation-label {
-      color: #565f89;
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-    .msg-citations .citation-item {
-      color: #73daca;
-      cursor: pointer;
-      display: block;
-      padding: 2px 0;
-      text-decoration: none;
-    }
-    .msg-citations .citation-item:hover {
-      text-decoration: underline;
-      color: #9ece6a;
-    }
-
-    /* ── PII Warning (inline on user messages) ──────────── */
-    .msg-pii-warning {
-      display: inline-block;
-      margin-top: 6px;
-      padding: 2px 8px;
-      border-radius: 6px;
-      background: #3a1e2a;
-      color: #f7768e;
-      font-size: 10px;
-      font-weight: 600;
-      border: 1px solid #f7768e44;
-    }
-
-    /* ── Sentiment Indicator Bar ────────────────────────── */
-    .sentiment-bar {
-      display: none;
-      align-items: center;
-      gap: 10px;
-      padding: 6px 14px;
-      background: #1e2030;
-      border: 1px solid #2d2f3e;
-      border-radius: 8px;
-      margin-bottom: 8px;
-      font-size: 12px;
-      color: #9aa5ce;
-    }
-    .sentiment-bar.visible { display: flex; }
-    .sentiment-bar .sentiment-label { font-weight: 600; color: #7aa2f7; }
-    .sentiment-badge {
-      display: inline-block;
-      padding: 2px 10px;
-      border-radius: 10px;
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .sentiment-badge.POSITIVE { background: #1e3a2f; color: #9ece6a; border: 1px solid #9ece6a44; }
-    .sentiment-badge.NEGATIVE { background: #3a1e2a; color: #f7768e; border: 1px solid #f7768e44; }
-    .sentiment-badge.NEUTRAL  { background: #1e2030; color: #9aa5ce; border: 1px solid #9aa5ce44; }
-    .sentiment-badge.MIXED    { background: #2a2a1e; color: #e0af68; border: 1px solid #e0af6844; }
-    .sentiment-scores {
-      font-size: 10px;
-      color: #565f89;
-    }
-
-    /* ── Auto-Escalation Alert Banner ───────────────────── */
-    .auto-escalation-alert {
-      display: none;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 14px;
-      background: linear-gradient(135deg, #3a1e2a 0%, #2a1a1a 100%);
-      border: 2px solid #f7768e;
-      border-radius: 10px;
-      margin-bottom: 8px;
-      animation: alertPulse 2s ease-in-out infinite;
-    }
-    .auto-escalation-alert.visible { display: flex; }
-    .auto-escalation-alert .alert-icon { font-size: 20px; }
-    .auto-escalation-alert .alert-text {
-      font-size: 13px;
-      font-weight: 600;
-      color: #f7768e;
-    }
-    .auto-escalation-alert .alert-detail {
-      font-size: 11px;
-      color: #9aa5ce;
-      margin-top: 2px;
-    }
-    @keyframes alertPulse {
-      0%, 100% { border-color: #f7768e; }
-      50% { border-color: #f7768e88; }
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <title>FlyAssist</title>
+  <link rel="stylesheet" href="css/tokens.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/lock.css" />
+  <link rel="stylesheet" href="css/detail.css" />
+  <link rel="stylesheet" href="css/options.css" />
+  <link rel="stylesheet" href="css/chat.css" />
+  <link rel="stylesheet" href="css/booking.css" />
+  <link rel="stylesheet" href="css/overlays.css" />
+  <link rel="stylesheet" href="css/tabs.css" />
+  <link rel="stylesheet" href="css/dark.css" />
 </head>
 <body>
   <header>
@@ -581,100 +26,232 @@
     </div>
   </header>
 
-  <div class="container">
-    <!-- Chat Panel -->
-    <div class="chat-panel">
-      <div class="chat-messages" id="chatMessages">
-        <div class="msg system">Welcome! Click "Create Disruption" to begin a rebooking session.</div>
-      </div>
-      <div class="chat-input">
-        <input type="text" id="chatInput" placeholder="Type a message..." disabled />
-        <button class="btn-send" id="btnSend" onclick="sendChat()" disabled>Send</button>
-      </div>
-    </div>
+  <div class="app-shell">
 
-    <!-- Side Panel -->
-    <div class="side-panel">
-      <!-- Notification Center -->
-      <div class="notification-center" id="notificationCenter">
-        <div class="notif-header">🔔 Proactive Notification (Simulated Push)</div>
-        <div class="notif-body">
-          <div class="notif-passenger" id="notifPassenger"></div>
-          <div class="notif-flight" id="notifFlight"></div>
-          <div class="notif-cause" id="notifCause"></div>
-          <div id="notifTierBadge"></div>
-          <div class="notif-copy" id="notifCopy"></div>
-          <div class="notif-channel" id="notifChannel"></div>
-          <div class="notif-cta">
-            <button class="btn-primary" onclick="document.getElementById('optionsPanel').scrollIntoView({behavior:'smooth'})">View Options</button>
-            <button class="btn-warning" onclick="escalate()">Speak to Agent</button>
+    <!-- ══════ Screen 1: Lock Screen ══════ -->
+    <div class="screen active" id="screenLock">
+      <div style="flex:1; display:flex; flex-direction:column;">
+        <div style="padding-top: 20px;">
+          <div class="lock-time" id="lockTime">9:41</div>
+          <div class="lock-date" id="lockDate">Tuesday, February 25</div>
+        </div>
+        <div class="lock-notification-area">
+          <div class="lock-notif-card" id="lockNotifCard" aria-label="Flight notification — tap to view details">
+            <div class="lock-notif-header">
+              <div class="lock-notif-icon">✈️</div>
+              <div class="lock-notif-app">FlyAssist</div>
+              <div class="lock-notif-time">now</div>
+            </div>
+            <div class="lock-notif-title" id="lockNotifTitle">Flight Update</div>
+            <div class="lock-notif-body" id="lockNotifBody">Your flight status has changed.</div>
           </div>
         </div>
-      </div>
-
-      <!-- Manifest Summary -->
-      <div class="manifest-bar" id="manifestBar">
-        <div class="stat"><strong id="mTotal">0</strong> passengers</div>
-        <div class="stat">🏆 <strong id="mPlatinum">0</strong> Platinum</div>
-        <div class="stat">🥇 <strong id="mGold">0</strong> Gold</div>
-        <div class="stat">⚠ <strong id="mConnRisk">0</strong> at connection risk</div>
-        <div class="stat">📱 <strong id="mProactive">0</strong> proactive eligible</div>
-      </div>
-
-      <!-- Sentiment Indicator -->
-      <div class="sentiment-bar" id="sentimentBar">
-        <span class="sentiment-label">Sentiment:</span>
-        <span class="sentiment-badge NEUTRAL" id="sentimentBadge">NEUTRAL</span>
-        <span class="sentiment-scores" id="sentimentScores"></span>
-      </div>
-
-      <!-- Auto-Escalation Alert -->
-      <div class="auto-escalation-alert" id="autoEscalationAlert">
-        <span class="alert-icon">🚨</span>
-        <div>
-          <div class="alert-text">Auto-Escalation Triggered</div>
-          <div class="alert-detail" id="autoEscalationDetail">Consecutive negative sentiment detected — routing to agent.</div>
+        <div class="lock-bottom">
+          <button class="lock-cta-btn" id="btnDisruption" aria-label="Simulate flight disruption">
+            Simulate Disruption
+          </button>
+          <div class="lock-slide-hint">swipe up to open</div>
         </div>
-      </div>
-
-      <div class="actions">
-        <button class="btn-primary" id="btnDisruption" onclick="createDisruption()">Create Disruption</button>
-        <button class="btn-success" id="btnConfirm" onclick="confirmSelection()" disabled>Confirm Selected</button>
-        <button class="btn-danger" id="btnEscalate" onclick="escalate()" disabled>Escalate</button>
-      </div>
-
-      <div class="options-panel" id="optionsPanel">
-        <h3>Rebooking Options</h3>
-        <div class="sort-filter-row" id="sortFilterRow">
-          <button id="sortTime" onclick="sortOptions('time')" class="active">Sort: Time</button>
-          <button id="sortCost" onclick="sortOptions('cost')">Sort: Cost</button>
-          <button id="filterRecommended" onclick="toggleRecommendedFilter()">Recommended Only</button>
-        </div>
-        <div id="optionsList">
-          <p style="color:#565f89; font-size:13px;">No options yet. Create a disruption to see options.</p>
-        </div>
-      </div>
-
-      <div class="booking-panel" id="bookingPanel">
-        <h3>🎉 Booking Confirmed</h3>
-        <div class="pnr" id="pnrCode"></div>
-        <div class="details" id="bookingDetails"></div>
-        <div class="itinerary" id="bookingItinerary"></div>
-        <div class="offline-note" id="offlineNote"></div>
-      </div>
-
-      <div class="escalation-panel" id="escalationPanel">
-        <h3>📋 Agent Escalation Context</h3>
-        <div id="escalationContent"></div>
-      </div>
-
-      <div class="metrics-panel" id="metricsPanel">
-        <div style="color:#7aa2f7; font-weight:600; margin-bottom:4px;">📊 Metrics Log</div>
-        <div id="metricsLog"></div>
       </div>
     </div>
+
+    <!-- ══════ Screen 2: Notification Detail ══════ -->
+    <div class="screen" id="screenDetail">
+      <div class="ios-nav-bar">
+        <button class="nav-back" id="detailBack" aria-label="Go back">‹ Back</button>
+        <span class="nav-title" id="navTitleDetail">Flight Update</span>
+      </div>
+      <div class="detail-scroll" id="detailScroll">
+        <div class="alert-banner" id="alertBanner">
+          <span class="alert-emoji">⚠️</span>
+          <div class="alert-content">
+            <div class="alert-type" id="alertType">CANCELLATION</div>
+            <div class="alert-cause" id="alertCause">Loading...</div>
+          </div>
+        </div>
+        <div class="flight-card" id="flightCard">
+          <div class="flight-number" id="flightNumber">UA891</div>
+          <div class="flight-route">
+            <span class="airport-code" id="originCode">FRA</span>
+            <div class="route-line">
+              <div class="line"></div>
+              <span class="plane-icon">✈</span>
+              <div class="line"></div>
+            </div>
+            <span class="airport-code" id="destCode">JFK</span>
+          </div>
+          <div class="flight-meta">
+            <span id="flightDate">2026-02-25</span>
+            <span class="status-pill cancelled" id="flightStatus">CANCELLED</span>
+          </div>
+        </div>
+        <div class="passenger-card" id="passengerCard">
+          <div class="passenger-avatar" id="passengerAvatar">AA</div>
+          <div class="passenger-info">
+            <div class="passenger-name" id="passengerName">Alice Anderson</div>
+            <div class="passenger-pnr" id="passengerPnr">PAX-0001</div>
+          </div>
+          <span class="tier-badge Platinum" id="passengerTier">Platinum</span>
+        </div>
+        <div class="notif-body-card" id="notifBodyCard">Loading notification...</div>
+        <div class="detail-cta">
+          <button class="ios-btn ios-btn-primary" id="ctaViewOptions" aria-label="View rebooking options">View Rebooking Options</button>
+          <button class="ios-btn ios-btn-secondary" id="ctaChatAssistant" aria-label="Chat with assistant">Chat with Assistant</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════ Screen 3: Options (Tab) ══════ -->
+    <div class="screen" id="screenOptions">
+      <div class="ios-nav-bar">
+        <span class="nav-title" id="navTitleOptions">FlyAssist</span>
+      </div>
+      <div class="options-header">
+        <div class="options-large-title">Rebooking Options</div>
+      </div>
+      <div class="filter-pills">
+        <button class="filter-pill active" id="sortTime" aria-label="Sort by earliest">Earliest</button>
+        <button class="filter-pill" id="sortCost" aria-label="Sort by lowest cost">Lowest Cost</button>
+        <button class="filter-pill" id="filterRecommended" aria-label="Show recommended only">Recommended</button>
+      </div>
+      <div class="options-scroll" id="optionsList">
+        <div class="options-no-items">Create a disruption to see options.</div>
+      </div>
+      <div class="options-confirm-bar">
+        <button class="ios-btn ios-btn-success" id="btnConfirm" disabled aria-label="Confirm selection">Confirm Selection</button>
+      </div>
+    </div>
+
+    <!-- ══════ Screen 4: Chat (Tab) ══════ -->
+    <div class="screen" id="screenChat">
+      <div class="ios-nav-bar">
+        <span class="nav-title">Assistant<span class="chat-nav-sentiment NEUTRAL" id="sentimentDot"></span></span>
+        <div class="nav-right">
+          <button class="nav-back" id="btnEscalate" style="position:static;transform:none;color:var(--ios-red);font-size:14px;font-weight:600;" aria-label="Escalate to agent" disabled>Escalate</button>
+        </div>
+      </div>
+      <div class="auto-escalation-banner" id="autoEscalationAlert">
+        <div class="pulse-dot"></div>
+        <span class="escalation-text" id="autoEscalationDetail">Routing to live agent...</span>
+      </div>
+      <div class="chat-messages" id="chatMessages">
+        <div class="msg system">Welcome! Simulate a disruption to begin.</div>
+      </div>
+      <div class="chat-input-area">
+        <div class="chat-input-wrapper">
+          <input type="text" id="chatInput" placeholder="Ask about your options..." disabled aria-label="Chat message input" />
+        </div>
+        <button class="chat-send-btn" id="btnSend" disabled aria-label="Send message">↑</button>
+      </div>
+    </div>
+
+    <!-- ══════ Screen 5: Booking Confirmation ══════ -->
+    <div class="screen" id="screenBooking">
+      <div class="ios-nav-bar">
+        <span class="nav-title">Confirmation</span>
+      </div>
+      <div class="booking-scroll">
+        <div class="booking-checkmark">✓</div>
+        <div class="booking-success-text">Booking Confirmed</div>
+        <div class="pnr-card">
+          <div class="pnr-label">Confirmation Code</div>
+          <div class="pnr-code" id="pnrCode"></div>
+        </div>
+        <div class="itinerary-card" id="bookingItinerary">
+          <div class="itin-passenger">
+            <span id="itinPassenger">Alice Anderson</span>
+            <span class="tier-badge Platinum" id="itinTier">Platinum</span>
+          </div>
+          <div class="itin-route">
+            <span class="itin-airport" id="itinOrigin">FRA</span>
+            <div class="route-line" style="flex:1;display:flex;align-items:center;gap:6px;">
+              <div class="line" style="flex:1;height:1px;background:var(--ios-gray4)"></div>
+              <span style="font-size:16px;color:var(--ios-blue)">✈</span>
+              <div class="line" style="flex:1;height:1px;background:var(--ios-gray4)"></div>
+            </div>
+            <span class="itin-airport" id="itinDest">JFK</span>
+          </div>
+          <div class="itin-meta" id="itinMeta"></div>
+        </div>
+        <div class="offline-note-card" id="offlineNote">
+          <span>ℹ️</span>
+          <span id="offlineNoteText"></span>
+        </div>
+        <button class="wallet-btn" aria-label="Add to Apple Wallet">🎫 Add to Wallet</button>
+        <button class="ios-btn ios-btn-primary" id="btnDone" aria-label="Done — reset app">Done</button>
+      </div>
+    </div>
+
+    <!-- ══════ Escalation Modal Sheet ══════ -->
+    <div class="escalation-overlay" id="escalationOverlay">
+      <div class="escalation-sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-header">
+          <div class="pulse-dot-blue"></div>
+          <span class="sheet-title">Connecting to Agent</span>
+        </div>
+        <div class="sheet-body" id="escalationBody">
+          We're connecting you with a live agent. Your case details have been shared so you won't need to repeat yourself.
+        </div>
+        <div class="sheet-wait">Est. wait: &lt; 2 minutes</div>
+        <button class="ios-btn ios-btn-secondary" id="btnDismissEscalation" aria-label="Dismiss escalation">Dismiss</button>
+      </div>
+    </div>
+
+    <!-- ══════ Metrics Drawer (Hidden Dev View) ══════ -->
+    <div class="metrics-drawer-overlay" id="metricsOverlay">
+      <div class="metrics-drawer">
+        <div class="sheet-handle"></div>
+        <div class="metrics-drawer-title">📊 Developer Metrics</div>
+
+        <div class="metrics-section" id="metricsManifestSection" style="display:none;">
+          <div class="metrics-section-title">Manifest Summary</div>
+          <div class="manifest-stats">
+            <div class="manifest-stat"><div class="manifest-stat-val" id="mTotal">0</div><div class="manifest-stat-label">Total Passengers</div></div>
+            <div class="manifest-stat"><div class="manifest-stat-val" id="mPlatinum">0</div><div class="manifest-stat-label">Platinum</div></div>
+            <div class="manifest-stat"><div class="manifest-stat-val" id="mGold">0</div><div class="manifest-stat-label">Gold</div></div>
+            <div class="manifest-stat"><div class="manifest-stat-val" id="mConnRisk">0</div><div class="manifest-stat-label">Connection Risk</div></div>
+            <div class="manifest-stat"><div class="manifest-stat-val" id="mProactive">0</div><div class="manifest-stat-label">Proactive Eligible</div></div>
+          </div>
+        </div>
+
+        <div class="metrics-section" id="metricsSentimentSection" style="display:none;">
+          <div class="metrics-section-title">Sentiment</div>
+          <div id="sentimentDetail" style="padding:6px 0;color:#E5E5EA;"></div>
+        </div>
+
+        <div class="metrics-section">
+          <div class="metrics-section-title">Event Log</div>
+          <div id="metricsLog"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════ Bottom Tab Bar ══════ -->
+    <nav class="tab-bar" id="tabBar" role="navigation" aria-label="Main navigation">
+      <button class="tab-item active" data-tab="notifications" aria-label="Updates tab">
+        <span class="tab-icon">🔔<span class="tab-dot" id="tabDotNotif"></span></span>
+        <span class="tab-label">Updates</span>
+      </button>
+      <button class="tab-item" data-tab="chat" aria-label="Chat tab">
+        <span class="tab-icon">💬<span class="tab-badge" id="tabBadgeChat"></span></span>
+        <span class="tab-label">Chat</span>
+      </button>
+      <button class="tab-item" data-tab="options" aria-label="Flights tab">
+        <span class="tab-icon">✈️<span class="tab-badge" id="tabBadgeOptions"></span></span>
+        <span class="tab-label">Flights</span>
+      </button>
+    </nav>
+
   </div>
 
-  <script src="app.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/options.js"></script>
+  <script src="js/navigation.js"></script>
+  <script src="js/actions.js"></script>
+  <script src="js/init.js"></script>
 </body>
 </html>

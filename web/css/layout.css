@@ -1,0 +1,149 @@
+/* ── Screens ───────────────────────────────────────── */
+.screen {
+  display: none;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+.screen.active {
+  display: flex;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .screen { animation: screenFadeIn 0.25s ease; }
+  @keyframes screenFadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
+/* ── Navigation Bar ────────────────────────────────── */
+.ios-nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  padding-top: calc(var(--safe-top) + 10px);
+  min-height: 44px;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 0.5px solid var(--ios-separator);
+  position: relative;
+  z-index: 10;
+}
+.ios-nav-bar .nav-back {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--ios-blue);
+  font-size: 17px;
+  cursor: pointer;
+  padding: 8px 4px;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+.ios-nav-bar .nav-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ios-text);
+  user-select: none;
+}
+.ios-nav-bar .nav-right {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── iOS Buttons ───────────────────────────────────── */
+.ios-btn {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: 14px;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 50px;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+}
+.ios-btn:active { transform: scale(0.98); opacity: 0.85; }
+.ios-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.ios-btn-primary { background: var(--ios-blue); color: #fff; }
+.ios-btn-secondary {
+  background: transparent;
+  color: var(--ios-blue);
+  border: 1.5px solid var(--ios-blue);
+}
+.ios-btn-success { background: var(--ios-green); color: #fff; }
+.ios-btn-danger { background: var(--ios-red); color: #fff; }
+
+/* ── Tier Badge ────────────────────────────────────── */
+.tier-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 50px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.tier-badge.Platinum { background: linear-gradient(135deg, #9B59B6, #8E44AD); color: #fff; }
+.tier-badge.Gold { background: linear-gradient(135deg, #F39C12, #E67E22); color: #fff; }
+.tier-badge.Silver { background: linear-gradient(135deg, #BDC3C7, #95A5A6); color: #fff; }
+.tier-badge.General { background: var(--ios-gray5); color: var(--ios-text3); }
+
+/* ── Status Pill ───────────────────────────────────── */
+.status-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 50px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.status-pill.cancelled { background: #FFE5E5; color: var(--ios-red); }
+.status-pill.delayed { background: #FFF3E0; color: var(--ios-orange); }
+
+/* ── Skeleton Loading ──────────────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg, #E5E5EA 25%, #F2F2F7 50%, #E5E5EA 75%);
+  background-size: 200% 100%;
+  border-radius: 8px;
+  min-height: 20px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .skeleton { animation: shimmer 1.5s ease-in-out infinite; }
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+}
+.skeleton-card {
+  background: var(--ios-card);
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.skeleton-line { height: 14px; }
+.skeleton-line.w75 { width: 75%; }
+.skeleton-line.w50 { width: 50%; }
+.skeleton-line.w100 { width: 100%; }
+.skeleton-line.h24 { height: 24px; }
+
+/* ── Status Text (hidden in iOS UI, used internally) ─ */
+#statusText { display: none; }
