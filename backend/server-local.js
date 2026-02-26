@@ -67,7 +67,13 @@ const server = http.createServer(async (req, res) => {
       const headers = result.headers || {};
       Object.entries(headers).forEach(([k, v]) => res.setHeader(k, v));
       res.writeHead(result.statusCode);
-      res.end(result.body);
+      
+      // Handle base64-encoded responses (e.g., PDFs)
+      if (result.isBase64Encoded) {
+        res.end(Buffer.from(result.body, 'base64'));
+      } else {
+        res.end(result.body);
+      }
     } catch (err) {
       console.error('Server error:', err);
       res.writeHead(500, { 'Content-Type': 'application/json' });
