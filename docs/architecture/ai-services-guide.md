@@ -31,6 +31,7 @@ This document describes the AWS AI services integrated into the GenAI Disruption
 | **Bedrock Guardrails** | `bedrock.js` | PII filtering, denied topics, content safety on all AI output | `USE_GUARDRAILS` |
 | **Amazon Comprehend** | `comprehend.js` | Sentiment analysis per chat message + PII detection | `USE_COMPREHEND` |
 | **Amazon Translate** | `translate.js` | Multi-language notification translation (75+ languages) | `USE_TRANSLATE` |
+| **Voice Session Orchestration** | `voice.js` + `handler.js` | Starts voice sessions, processes voice turns, handles human transfer lifecycle | `USE_VOICE` |
 
 All services are **optional** — when disabled, deterministic fallbacks ensure full functionality.
 
@@ -212,6 +213,8 @@ All AI services default to **OFF** for frictionless local development:
     Guardrails:        ⬚ OFF
     Comprehend:        ⬚ OFF (neutral)
     Translate:         ⬚ OFF (English)
+    Voice Sessions:    ✅ ON
+    Voice Transport:   simulated-stream
 ```
 
 **Fallback behavior:**
@@ -222,6 +225,20 @@ All AI services default to **OFF** for frictionless local development:
 | Guardrails | No filtering applied |
 | Comprehend | Returns `NEUTRAL` sentiment, no PII detected |
 | Translate | Returns original English text |
+
+---
+
+## Voice Session Metrics
+
+Voice interactions emit operational `METRIC:` logs for review and pilot tracking:
+
+| Metric | Description |
+|---|---|
+| `VOICE_SESSION_STARTED` | Voice session created successfully |
+| `VOICE_RESPONSE_SENT` | Voice turn response returned to user |
+| `VOICE_FALLBACK_USED` | Fallback response path used for voice turn |
+| `TRANSFER_REQUESTED` | Human transfer request accepted |
+| `TRANSFER_STATUS_UPDATED` | Transfer status transitioned (in progress/completed/unavailable) |
 
 To enable services locally, set the flags in `.env` and ensure valid AWS credentials.
 

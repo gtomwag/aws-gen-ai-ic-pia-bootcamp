@@ -11,6 +11,11 @@ let storedPassenger = null;
 let storedNotification = null;
 let storedDisruptionType = '';
 let storedDisruptionCause = '';
+let voiceSessionId = null;
+let voiceTurnSequence = 1;
+let isVoiceListening = false;
+let activeSpeechRecognition = null;
+let voiceTransferRequestId = null;
 
 // ── DOM refs ──────────────────────────────────────────────
 const chatMessages = document.getElementById('chatMessages');
@@ -19,6 +24,8 @@ const btnSend = document.getElementById('btnSend');
 const btnDisruption = document.getElementById('btnDisruption');
 const btnConfirm = document.getElementById('btnConfirm');
 const btnEscalate = document.getElementById('btnEscalate');
+const btnVoiceAgent = document.getElementById('btnVoiceAgent');
+const btnVoiceTab = document.getElementById('btnVoiceTab');
 const optionsList = document.getElementById('optionsList');
 const pnrCode = document.getElementById('pnrCode');
 const offlineNote = document.getElementById('offlineNote');

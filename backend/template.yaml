@@ -44,6 +44,15 @@ Parameters:
     Default: "false"
     AllowedValues: ["true", "false"]
     Description: Enable Amazon Translate for multi-language notifications
+  UseVoice:
+    Type: String
+    Default: "false"
+    AllowedValues: ["true", "false"]
+    Description: Enable voice session routes and orchestration
+  VoiceTransport:
+    Type: String
+    Default: "simulated-stream"
+    Description: Voice transport mode for web clients
 
 Globals:
   Function:
@@ -63,6 +72,8 @@ Globals:
         GUARDRAIL_VERSION: !Ref GuardrailVersion
         USE_COMPREHEND: !Ref UseComprehend
         USE_TRANSLATE: !Ref UseTranslate
+        USE_VOICE: !Ref UseVoice
+        VOICE_TRANSPORT: !Ref VoiceTransport
   Api:
     Cors:
       AllowMethods: "'GET,POST,OPTIONS'"
@@ -143,6 +154,26 @@ Resources:
           Type: Api
           Properties:
             Path: /notification
+            Method: get
+        VoiceSessionStart:
+          Type: Api
+          Properties:
+            Path: /voice/session/start
+            Method: post
+        VoiceTurn:
+          Type: Api
+          Properties:
+            Path: /voice/turn
+            Method: post
+        VoiceTransfer:
+          Type: Api
+          Properties:
+            Path: /voice/transfer
+            Method: post
+        VoiceTransferStatus:
+          Type: Api
+          Properties:
+            Path: /voice/transfer-status
             Method: get
         GetDashboard:
           Type: Api

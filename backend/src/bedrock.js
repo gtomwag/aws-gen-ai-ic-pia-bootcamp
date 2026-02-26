@@ -311,4 +311,39 @@ function buildPolicyFallback(query) {
   return `I'd be happy to help with your question about airline policies and passenger rights. For the most accurate information about your specific situation, I recommend speaking with one of our agents who can review the details of your case.`;
 }
 
-module.exports = { maybeBedrockChat, queryKnowledgeBase, isPolicyQuestion };
+async function maybeNovaSonicVoiceReply({ message, passenger, disruptionId, history }) {
+  if (isPolicyQuestion(message)) {
+    const kbResult = await queryKnowledgeBase(message, {
+      tier: passenger?.tier,
+      disruptionType: disruptionId,
+    });
+    return {
+      text: kbResult.text,
+      source: kbResult.source || 'knowledge-base',
+      citations: kbResult.citations || [],
+      audioBase64: null,
+    };
+  }
+
+  const chatResult = await maybeBedrockChat({
+    passenger,
+    disruptionId,
+    message,
+    options: [],
+    history,
+  });
+
+  return {
+    text: chatResult.text,
+    source: chatResult.source || 'fallback',
+    citations: [],
+    audioBase64: null,
+  };
+}
+
+module.exports = {
+  maybeBedrockChat,
+  maybeNovaSonicVoiceReply,
+  queryKnowledgeBase,
+  isPolicyQuestion,
+};

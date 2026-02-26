@@ -1,5 +1,20 @@
 const { v4: uuidv4 } = require('uuid');
 
+const VOICE_SESSION_STATUS = {
+  STARTING: 'starting',
+  ACTIVE: 'active',
+  ENDED: 'ended',
+  DISCONNECTED: 'disconnected',
+  FAILED: 'failed',
+};
+
+const TRANSFER_STATUS = {
+  REQUESTED: 'requested',
+  IN_PROGRESS: 'in_progress',
+  COMPLETED: 'completed',
+  UNAVAILABLE: 'unavailable',
+};
+
 /**
  * Generate a short unique ID
  */
@@ -51,4 +66,12 @@ function logMetric(name, value = 1, dimensions = {}) {
   console.log(`METRIC: ${name} | value=${value} | ${JSON.stringify(dimensions)}`);
 }
 
-module.exports = { generateId, generatePNR, respond, parseBody, logMetric };
+module.exports = {
+  generateId,
+  generatePNR,
+  respond,
+  parseBody,
+  logMetric,
+  VOICE_SESSION_STATUS,
+  TRANSFER_STATUS,
+};

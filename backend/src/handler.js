@@ -1,9 +1,23 @@
-const { generateId, generatePNR, respond, parseBody, logMetric } = require('./util');
+const {
+  generateId,
+  generatePNR,
+  respond,
+  parseBody,
+  logMetric,
+  TRANSFER_STATUS,
+  VOICE_SESSION_STATUS,
+} = require('./util');
 const store = require('./store');
 const { maybeBedrockChat, queryKnowledgeBase, isPolicyQuestion } = require('./bedrock');
 const { generateManifest, getDemoFocusPassengers } = require('./passengers');
 const { analyzeSentiment, detectPII, evaluateEscalationTrigger } = require('./comprehend');
 const { translateText, translateNotification } = require('./translate');
+const {
+  detectTransferIntent,
+  createVoiceSessionRecord,
+  buildTransferStatus,
+  orchestrateVoiceTurn,
+} = require('./voice');
 
 // ──────────────────────────────────────────────
 // Option generation (PRD-aligned)
@@ -797,126 +811,245 @@ async function handleGetNotification(event) {
   return respond(200, { sessionId, notification });
 }
 
-// ──────────────────────────────────────────────
-// GET /dashboard — Support Team Dashboard aggregation
-// ──────────────────────────────────────────────
-
-async function handleDashboard(event) {
-  const qs = event.queryStringParameters || {};
-  const timeRange = qs.timeRange || '7d';
-
-  // Calculate cutoff timestamp
-  const now = Date.now();
-  const rangeMs = {
-    '1h': 60 * 60 * 1000,
-    '24h': 24 * 60 * 60 * 1000,
-    '7d': 7 * 24 * 60 * 60 * 1000,
-    '30d': 30 * 24 * 60 * 60 * 1000,
-  };
-  const cutoff = new Date(now - (rangeMs[timeRange] || rangeMs['7d'])).toISOString();
-
-  // Scan all session and disruption items
-  const sessionItems = await store.scanByPkPrefix('SESSION#');
-  const disruptionItems = await store.scanByPkPrefix('DISRUPTION#');
-
-  // Filter by time range using the item's timestamp fields
-  function getTimestamp(item) {
-    return item.createdAt || item.escalatedAt || item.bookedAt || item.timestamp || '';
+async function handleVoiceSessionStart(body) {
+  const { sessionId, locale = 'en-US' } = body;
+  if (!sessionId) {
+    return respond(400, { error: 'Missing required field: sessionId' });
   }
 
-  // Escalations
-  const escalations = sessionItems.filter(
-    (i) => i.sk === 'ESCALATION' && (i.escalatedAt || '') >= cutoff
-  );
-  const escalationsByTier = { Platinum: 0, Gold: 0, Silver: 0, General: 0 };
-  const escalationsByReason = {};
-  for (const esc of escalations) {
-    let tier = (esc.passengerSummary && esc.passengerSummary.tier) || null;
-    if (!tier) {
-      // Infer from priority
-      if (esc.priority === 'HIGH') tier = 'Platinum';
-      else if (esc.priority === 'MEDIUM') tier = 'Gold';
-      else tier = 'General';
-    }
-    escalationsByTier[tier] = (escalationsByTier[tier] || 0) + 1;
-    const reason = esc.escalationReason || 'Unknown';
-    escalationsByReason[reason] = (escalationsByReason[reason] || 0) + 1;
+  const sessionMeta = await store.getJson(`SESSION#${sessionId}`, 'META');
+  if (!sessionMeta) {
+    return respond(404, { error: 'Session not found' });
   }
 
-  // Bookings — confirmed
-  const confirmedBookings = sessionItems.filter(
-    (i) => i.sk === 'BOOKING' && i.status && i.status.startsWith('CONFIRMED') && (i.bookedAt || '') >= cutoff
-  );
-  const confirmedByTier = { Platinum: 0, Gold: 0, Silver: 0, General: 0 };
-  for (const b of confirmedBookings) {
-    const tier = (b.itinerarySummary && b.itinerarySummary.tier) || 'General';
-    confirmedByTier[tier] = (confirmedByTier[tier] || 0) + 1;
+  const existing = await store.getVoiceSessionBySessionId(sessionId);
+  if (existing && existing.status === VOICE_SESSION_STATUS.ACTIVE) {
+    return respond(409, {
+      error: 'Active voice session already exists',
+      voiceSessionId: existing.voiceSessionId,
+      status: existing.status,
+    });
   }
 
-  // Bookings — failed
-  const failedBookings = sessionItems.filter(
-    (i) => i.sk === 'BOOKING' && (i.status === 'FAILED' || i.status === 'CANCELLED') && (i.bookedAt || '') >= cutoff
-  );
-  const failedByTier = { Platinum: 0, Gold: 0, Silver: 0, General: 0 };
-  for (const b of failedBookings) {
-    const tier = (b.itinerarySummary && b.itinerarySummary.tier) || 'General';
-    failedByTier[tier] = (failedByTier[tier] || 0) + 1;
+  const voiceSession = createVoiceSessionRecord({ sessionId, locale });
+
+  await store.upsertVoiceSession(sessionId, voiceSession);
+  await store.upsertVoiceSessionMeta(voiceSession.voiceSessionId, {
+    ...voiceSession,
+    passenger: sessionMeta.passenger,
+    disruptionId: sessionMeta.disruptionId,
+  });
+
+  logMetric('VOICE_SESSION_STARTED', 1, {
+    sessionId,
+    voiceSessionId: voiceSession.voiceSessionId,
+    locale,
+  });
+
+  return respond(200, {
+    voiceSessionId: voiceSession.voiceSessionId,
+    status: voiceSession.status,
+    streamUrl: `/voice/turn`,
+    message: 'Voice session started. You can speak now.',
+  });
+}
+
+async function handleVoiceTurn(body) {
+  const { voiceSessionId, transcriptText, sequence = 1 } = body;
+  if (!voiceSessionId || !transcriptText) {
+    return respond(400, { error: 'Missing required fields: voiceSessionId, transcriptText' });
   }
 
-  const totalBookings = confirmedBookings.length + failedBookings.length;
-  const successRate = totalBookings > 0 ? (confirmedBookings.length / totalBookings * 100).toFixed(2) : '0.00';
-  const failureRate = totalBookings > 0 ? (failedBookings.length / totalBookings * 100).toFixed(2) : '0.00';
-
-  // Disruptions
-  const filteredDisruptions = disruptionItems.filter(
-    (i) => i.sk === 'META' && (i.createdAt || '') >= cutoff
-  );
-  const disruptionsByType = {};
-  for (const d of filteredDisruptions) {
-    const type = d.type || 'UNKNOWN';
-    disruptionsByType[type] = (disruptionsByType[type] || 0) + 1;
+  const voiceSession = await store.getVoiceSession(voiceSessionId);
+  if (!voiceSession) {
+    return respond(404, { error: 'Voice session not found' });
   }
 
-  // Summary
-  const sessionMetas = sessionItems.filter(
-    (i) => i.sk === 'META' && (i.createdAt || '') >= cutoff
-  );
-  const totalSessions = sessionMetas.length;
-  const agentRequestsPercentage = totalSessions > 0
-    ? (escalations.length / totalSessions * 100).toFixed(2)
-    : '0.00';
+  if (voiceSession.status !== VOICE_SESSION_STATUS.ACTIVE) {
+    return respond(409, { error: `Voice session is not active (${voiceSession.status})` });
+  }
 
-  const result = {
-    timestamp: new Date().toISOString(),
-    timeRange,
-    escalations: {
-      total: escalations.length,
-      byTier: escalationsByTier,
-      byReason: escalationsByReason,
-    },
-    rebookings: {
-      total: totalBookings,
-      confirmed: confirmedBookings.length,
-      byTier: confirmedByTier,
-      successRate,
-    },
-    failedRebookings: {
-      total: failedBookings.length,
-      byTier: failedByTier,
-      failureRate,
-    },
-    disruptions: {
-      total: filteredDisruptions.length,
-      byType: disruptionsByType,
-    },
-    summary: {
-      totalSessions,
-      agentRequestsPercentage,
-    },
-  };
+  const turns = await store.queryByPk(`VOICE#${voiceSessionId}`);
+  const history = turns
+    .filter((item) => item.sk && item.sk.startsWith('RESPONSE#'))
+    .map((item) => ({ role: 'assistant', content: item.responseText }));
 
-  logMetric('DASHBOARD_VIEW', 1, { timeRange });
-  return respond(200, result);
+  await store.appendVoiceUtterance(voiceSessionId, sequence, {
+    utteranceId: generateId('UTT'),
+    sequence,
+    transcriptText,
+    capturedAt: new Date().toISOString(),
+    piiDetected: false,
+  });
+
+  if (detectTransferIntent(transcriptText)) {
+    logMetric('VOICE_TRANSFER_INTENT_DETECTED', 1, { voiceSessionId });
+    return respond(200, {
+      voiceSessionId,
+      transferIntentDetected: true,
+      message: 'Transfer intent detected. Requesting a human agent now.',
+    });
+  }
+
+  const responsePayload = await orchestrateVoiceTurn({
+    message: transcriptText,
+    passenger: voiceSession.passenger,
+    disruptionId: voiceSession.disruptionId,
+    history,
+  });
+
+  await store.appendVoiceResponse(voiceSessionId, sequence, {
+    responseId: generateId('VRS'),
+    sequence,
+    responseText: responsePayload.text,
+    source: responsePayload.source,
+    citations: responsePayload.citations || [],
+    fallbackReason: responsePayload.fallbackReason || null,
+    generatedAt: new Date().toISOString(),
+  });
+
+  await store.upsertVoiceSessionMeta(voiceSessionId, {
+    ...voiceSession,
+    turnCount: (voiceSession.turnCount || 0) + 1,
+    lastActivityAt: new Date().toISOString(),
+  });
+
+  logMetric('VOICE_RESPONSE_SENT', 1, { voiceSessionId, source: responsePayload.source });
+  if (responsePayload.fallbackReason) {
+    logMetric('VOICE_FALLBACK_USED', 1, { voiceSessionId, reason: responsePayload.fallbackReason });
+  }
+
+  return respond(200, {
+    voiceSessionId,
+    responseText: responsePayload.text,
+    source: responsePayload.source,
+    citations: responsePayload.citations || [],
+    audioBase64: responsePayload.audioBase64 || null,
+  });
+}
+
+async function handleVoiceTransfer(body) {
+  const { voiceSessionId, reason, trigger = 'user_explicit' } = body;
+  if (!voiceSessionId) {
+    return respond(400, { error: 'Missing required field: voiceSessionId' });
+  }
+
+  const voiceSession = await store.getVoiceSession(voiceSessionId);
+  if (!voiceSession) {
+    return respond(404, { error: 'Voice session not found' });
+  }
+
+  const existingRequestId = voiceSession.transferRequestId;
+  if (existingRequestId && voiceSession.transferStatus === TRANSFER_STATUS.IN_PROGRESS) {
+    const existing = await store.getTransferRequest(voiceSessionId, existingRequestId);
+    return respond(200, existing || buildTransferStatus({
+      transferRequestId: existingRequestId,
+      status: TRANSFER_STATUS.IN_PROGRESS,
+      statusMessage: 'Transfer already in progress.',
+    }));
+  }
+
+  const transferRequestId = existingRequestId || generateId('TRF');
+  const isUnavailable = String(reason || '').toLowerCase().includes('unavailable');
+  const transferState = isUnavailable
+    ? buildTransferStatus({
+      transferRequestId,
+      status: TRANSFER_STATUS.UNAVAILABLE,
+      statusMessage: 'Human routing is currently unavailable. We can continue here or offer callback support.',
+      fallbackOption: 'callback',
+    })
+    : buildTransferStatus({
+      transferRequestId,
+      status: TRANSFER_STATUS.IN_PROGRESS,
+      statusMessage: 'Transfer requested. Connecting you to a human agent.',
+    });
+
+  await store.upsertTransferRequest(voiceSessionId, transferRequestId, {
+    ...transferState,
+    voiceSessionId,
+    sessionId: voiceSession.sessionId,
+    trigger,
+    reason: reason || 'Customer requested human support',
+    requestedAt: new Date().toISOString(),
+  });
+
+  await store.upsertVoiceSessionMeta(voiceSessionId, {
+    ...voiceSession,
+    transferRequestId,
+    transferStatus: transferState.status,
+    lastActivityAt: new Date().toISOString(),
+  });
+
+  logMetric('TRANSFER_REQUESTED', 1, { voiceSessionId, transferRequestId, status: transferState.status });
+
+  return respond(200, {
+    voiceSessionId,
+    transferRequestId,
+    status: transferState.status,
+    statusMessage: transferState.statusMessage,
+    fallbackOption: transferState.fallbackOption,
+  });
+}
+
+async function handleVoiceTransferStatus(event) {
+  const transferRequestId = (event.queryStringParameters || {}).transferRequestId;
+  const voiceSessionId = (event.queryStringParameters || {}).voiceSessionId;
+
+  if (!transferRequestId || !voiceSessionId) {
+    return respond(400, { error: 'Missing query parameters: voiceSessionId, transferRequestId' });
+  }
+
+  const transfer = await store.getTransferRequest(voiceSessionId, transferRequestId);
+  if (!transfer) {
+    return respond(404, { error: 'Transfer request not found' });
+  }
+
+  let status = transfer.status;
+  if (status === TRANSFER_STATUS.IN_PROGRESS) {
+    status = TRANSFER_STATUS.COMPLETED;
+    await store.upsertTransferRequest(voiceSessionId, transferRequestId, {
+      ...transfer,
+      status,
+      updatedAt: new Date().toISOString(),
+      resolutionDetail: 'Handoff to live queue complete',
+    });
+    const voiceSession = await store.getVoiceSession(voiceSessionId);
+    await store.upsertVoiceSessionMeta(voiceSessionId, {
+      ...voiceSession,
+      status: VOICE_SESSION_STATUS.ENDED,
+      endedAt: new Date().toISOString(),
+      transferStatus: status,
+      lastActivityAt: new Date().toISOString(),
+    });
+    await store.upsertJson(`VOICE#${voiceSessionId}`, `TRANSFER_OUTCOME#${transferRequestId}`, {
+      transferRequestId,
+      outcome: 'completed',
+      resolutionDetail: 'Handoff to live queue complete',
+      resolvedAt: new Date().toISOString(),
+    });
+    logMetric('VOICE_SESSION_ENDED', 1, { voiceSessionId, reason: 'transfer_completed' });
+  }
+
+  if (status === TRANSFER_STATUS.UNAVAILABLE) {
+    await store.upsertJson(`VOICE#${voiceSessionId}`, `TRANSFER_OUTCOME#${transferRequestId}`, {
+      transferRequestId,
+      outcome: 'unavailable',
+      resolutionDetail: 'Human routing unavailable; callback support offered',
+      resolvedAt: new Date().toISOString(),
+    });
+  }
+
+  logMetric('TRANSFER_STATUS_UPDATED', 1, { voiceSessionId, transferRequestId, status });
+
+  const finalTransfer = await store.getTransferRequest(voiceSessionId, transferRequestId);
+  return respond(200, {
+    transferRequestId,
+    status: finalTransfer.status,
+    updatedAt: finalTransfer.updatedAt,
+    resolutionDetail: finalTransfer.resolutionDetail || null,
+    statusMessage: finalTransfer.statusMessage,
+    fallbackOption: finalTransfer.fallbackOption || null,
+  });
 }
 
 // ──────────────────────────────────────────────
@@ -944,6 +1077,9 @@ exports.handler = async (event) => {
     if (method === 'GET' && path === '/notification') {
       return await handleGetNotification(event);
     }
+    if (method === 'GET' && path === '/voice/transfer-status') {
+      return await handleVoiceTransferStatus(event);
+    }
     if (method === 'GET' && path === '/dashboard') {
       return await handleDashboard(event);
     }
@@ -964,6 +1100,15 @@ exports.handler = async (event) => {
     }
     if (method === 'POST' && path === '/escalate') {
       return await handleEscalate(body);
+    }
+    if (method === 'POST' && path === '/voice/session/start') {
+      return await handleVoiceSessionStart(body);
+    }
+    if (method === 'POST' && path === '/voice/turn') {
+      return await handleVoiceTurn(body);
+    }
+    if (method === 'POST' && path === '/voice/transfer') {
+      return await handleVoiceTransfer(body);
     }
 
     return respond(404, { error: `Not found: ${method} ${path}` });

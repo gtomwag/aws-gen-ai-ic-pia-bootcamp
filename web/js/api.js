@@ -20,8 +20,14 @@ async function apiCall(path, body) {
     setStatus('Ready');
     return data;
   } catch (err) {
-    setStatus(`Error: ${err.message}`);
-    addMessage('system', `⚠ Error: ${err.message}`);
+    const isNetworkError = err && (err.name === 'TypeError' || String(err.message || '').includes('Failed to fetch'));
+    const hint = isNetworkError
+      ? ` Network issue reaching ${API_BASE_URL}. Ensure backend is running and reachable.`
+      : '';
+    const message = `${err.message || 'Request failed.'}${hint}`;
+
+    setStatus(`Error: ${message}`);
+    addMessage('system', `⚠ Error: ${message}`);
     throw err;
   }
 }
