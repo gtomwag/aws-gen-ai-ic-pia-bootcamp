@@ -672,9 +672,9 @@ async function handleDashboard(event) {
         if (bookedAt < cutoffTime) continue;
         
         const tier = session.itinerarySummary?.tier || 'General';
-        const status = session.status || 'CONFIRMED';
+        const status = (session.status || 'CONFIRMED').toUpperCase();
         
-        if (status === 'CONFIRMED') {
+        if (status.startsWith('CONFIRMED')) {
           bookingCount++;
           if (tier in bookingsByTier) {
             bookingsByTier[tier]++;
@@ -716,6 +716,7 @@ async function handleDashboard(event) {
       },
       rebookings: {
         total: bookingCount,
+        confirmed: bookingCount,
         byTier: bookingsByTier,
         byChannel: bookingsByChannel,
         successRate: bookingCount > 0 ? ((bookingCount / Math.max(escalationCount + bookingCount, 1)) * 100).toFixed(2) : '0.00',
