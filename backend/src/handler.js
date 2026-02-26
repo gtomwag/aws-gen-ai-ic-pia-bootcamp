@@ -265,11 +265,21 @@ async function handleDisruption(body) {
     passengerId: passenger.passengerId || 'PAX-DEMO',
   };
 
-  // Store session meta
+  // Store session meta (include disruption info so /open-rebookings can find it)
   await store.upsertJson(`SESSION#${sessionId}`, 'META', {
     sessionId,
     disruptionId,
     passenger: enrichedPassenger,
+    disruption: {
+      status: type,
+      reason: reason || 'No reason provided',
+      flightNumber: enrichedPassenger.flightNumber || 'N/A',
+      departure: enrichedPassenger.departure || 'N/A',
+      arrival: enrichedPassenger.arrival || 'N/A',
+      originalScheduledTime: enrichedPassenger.date
+        ? `${enrichedPassenger.date} ${enrichedPassenger.departure || '00:00'}`
+        : 'N/A',
+    },
     status: 'ACTIVE',
     createdAt: new Date().toISOString(),
   });
