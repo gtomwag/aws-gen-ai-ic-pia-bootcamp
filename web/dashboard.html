@@ -405,7 +405,8 @@
     // ── Config ───────────────────────────────────────
     // API_BASE_URL is loaded from config.js (patched by upload-web.py on deploy)
     // Falls back to localhost for local development
-    if (typeof API_BASE_URL === 'undefined') var API_BASE_URL = 'http://127.0.0.1:3000';
+    if (typeof API_BASE_URL === 'undefined') window.API_BASE_URL = 'http://127.0.0.1:3000';
+    const _API = (typeof API_BASE_URL !== 'undefined') ? API_BASE_URL : 'http://127.0.0.1:3000';
 
     const FALLBACK_DATA = {
       timestamp: new Date().toISOString(),
