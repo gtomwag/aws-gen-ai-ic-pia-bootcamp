@@ -78,8 +78,8 @@ def upload_web(bucket_name, region, api_url=None):
             if ext in (".html", ".js", ".css", ".json", ".svg"):
                 with open(fpath, "r", encoding="utf-8") as f:
                     body = f.read()
-                # Patch API URL in app.js or config.js
-                if fname in ("app.js", "config.js") and api_url:
+                # Patch API URL in app.js, config.js, or dashboard.html
+                if fname in ("app.js", "config.js", "dashboard.html") and api_url:
                     body = patch_api_base_url(body, api_url)
                 body_bytes = body.encode("utf-8")
             else:
