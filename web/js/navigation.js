@@ -91,7 +91,11 @@ document.getElementById('detailBack').addEventListener('click', () => {
 });
 
 // CTA buttons on detail screen
-document.getElementById('ctaViewOptions').addEventListener('click', () => showScreen('screenOptions'));
+document.getElementById('ctaViewOptions').addEventListener('click', () => {
+  showScreen('screenOptions');
+  // Automatically show rebooking section
+  if (typeof showRebookingOptions === 'function') showRebookingOptions();
+});
 document.getElementById('ctaChatAssistant').addEventListener('click', () => slideIntoChat());
 
 // Lock screen notification card tap
@@ -104,7 +108,17 @@ homeOpenChat.addEventListener('click', () => slideIntoChat());
 
 // Done button on booking
 document.getElementById('btnDone').addEventListener('click', () => {
-  location.reload();
+  // Update trip card with confirmed booking
+  if (storedConfirmedBooking) {
+    updateTripCardWithConfirmedBooking(storedConfirmedBooking);
+  }
+  
+  // Update notification to show resolved status
+  updateNotificationToResolved();
+  
+  // Go back to detail screen
+  showScreen('screenDetail');
+  tabBar.classList.add('visible');
 });
 
 // Dismiss escalation

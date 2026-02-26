@@ -75,6 +75,8 @@ Globals:
         USE_VOICE: !Ref UseVoice
         VOICE_TRANSPORT: !Ref VoiceTransport
   Api:
+    BinaryMediaTypes:
+      - application/pdf
     Cors:
       AllowMethods: "'GET,POST,OPTIONS'"
       AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
@@ -179,6 +181,21 @@ Resources:
           Type: Api
           Properties:
             Path: /dashboard
+            Method: get
+        GetOpenRebookings:
+          Type: Api
+          Properties:
+            Path: /open-rebookings
+            Method: get
+        PostTestData:
+          Type: Api
+          Properties:
+            Path: /test-data
+            Method: post
+        GetBoardingPass:
+          Type: Api
+          Properties:
+            Path: /boarding-pass
             Method: get
 
   DisruptionTable:

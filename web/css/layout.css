@@ -117,6 +117,7 @@
 }
 .status-pill.cancelled { background: #fff1f2; color: var(--danger); }
 .status-pill.delayed { background: #fff7ed; color: var(--warning); }
+.status-pill.confirmed { background: #ecfdf5; color: #065f46; }
 
 /* ── Skeleton Loading ──────────────────────────────── */
 .skeleton {

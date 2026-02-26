@@ -265,11 +265,21 @@ async function handleDisruption(body) {
     passengerId: passenger.passengerId || 'PAX-DEMO',
   };
 
-  // Store session meta
+  // Store session meta (include disruption info so /open-rebookings can find it)
   await store.upsertJson(`SESSION#${sessionId}`, 'META', {
     sessionId,
     disruptionId,
     passenger: enrichedPassenger,
+    disruption: {
+      status: type,
+      reason: reason || 'No reason provided',
+      flightNumber: enrichedPassenger.flightNumber || 'N/A',
+      departure: enrichedPassenger.departure || 'N/A',
+      arrival: enrichedPassenger.arrival || 'N/A',
+      originalScheduledTime: enrichedPassenger.date
+        ? `${enrichedPassenger.date} ${enrichedPassenger.departure || '00:00'}`
+        : 'N/A',
+    },
     status: 'ACTIVE',
     createdAt: new Date().toISOString(),
   });
@@ -846,11 +856,16 @@ async function handleOpenRebookings() {
 
 async function handleGenerateTestData() {
   const testPassengers = [
-    { firstName: 'Alice', lastName: 'Anderson', tier: 'Platinum', origin: 'FRA', destination: 'JFK' },
-    { firstName: 'Bob', lastName: 'Brown', tier: 'Gold', origin: 'LHR', destination: 'LAX' },
-    { firstName: 'Carol', lastName: 'Chen', tier: 'Silver', origin: 'CDG', destination: 'ORD' },
-    { firstName: 'David', lastName: 'Davis', tier: 'General', origin: 'AMS', destination: 'MIA' },
-    { firstName: 'Eve', lastName: 'Evans', tier: 'Platinum', origin: 'LHR', destination: 'SFO' },
+    { firstName: 'Helly', lastName: 'Riggs', tier: 'Platinum', origin: 'FRA', destination: 'JFK' },
+    { firstName: 'Irving', lastName: 'Bailiff', tier: 'Gold', origin: 'LHR', destination: 'LAX' },
+    { firstName: 'Dylan', lastName: 'George', tier: 'Silver', origin: 'CDG', destination: 'ORD' },
+    { firstName: 'Burt', lastName: 'Goodman', tier: 'General', origin: 'AMS', destination: 'MIA' },
+    { firstName: 'Seth', lastName: 'Milchick', tier: 'Platinum', origin: 'LHR', destination: 'SFO' },
+    { firstName: 'Harmony', lastName: 'Cobel', tier: 'Gold', origin: 'FRA', destination: 'ORD' },
+    { firstName: 'Ricken', lastName: 'Hale', tier: 'Silver', origin: 'CDG', destination: 'MIA' },
+    { firstName: 'Devon', lastName: 'Scout-Hale', tier: 'General', origin: 'AMS', destination: 'SFO' },
+    { firstName: 'Gemma', lastName: 'Scout', tier: 'Platinum', origin: 'LHR', destination: 'JFK' },
+    { firstName: 'Petey', lastName: 'Kilmer', tier: 'Gold', origin: 'FRA', destination: 'LAX' },
   ];
 
   const testDisruptions = [
@@ -859,6 +874,11 @@ async function handleGenerateTestData() {
     { status: 'CANCELLED', reason: 'Crew unavailability - Scheduling conflict', flightNumber: 'AF198', departure: '09:15', arrival: '17:45', originalScheduledTime: '2026-02-26 09:15' },
     { status: 'DELAYED', reason: 'Air traffic control delay', flightNumber: 'KL645', departure: '18:45', arrival: '02:30', originalScheduledTime: '2026-02-26 18:45' },
     { status: 'CANCELLED', reason: 'Mechanical issue - Engine inspection required', flightNumber: 'LH203', departure: '11:00', arrival: '19:30', originalScheduledTime: '2026-02-26 11:00' },
+    { status: 'DELAYED', reason: 'Crew rest requirements exceeded', flightNumber: 'DL512', departure: '07:45', arrival: '15:30', originalScheduledTime: '2026-02-26 07:45' },
+    { status: 'CANCELLED', reason: 'Volcanic ash advisory - Airspace closure', flightNumber: 'AA330', departure: '20:00', arrival: '04:15', originalScheduledTime: '2026-02-26 20:00' },
+    { status: 'DELAYED', reason: 'De-icing operations - Winter storm', flightNumber: 'SW718', departure: '12:30', arrival: '20:00', originalScheduledTime: '2026-02-26 12:30' },
+    { status: 'CANCELLED', reason: 'Bird strike damage - Safety inspection', flightNumber: 'UA445', departure: '15:15', arrival: '23:45', originalScheduledTime: '2026-02-26 15:15' },
+    { status: 'DELAYED', reason: 'Gate conflict - Terminal congestion', flightNumber: 'JB622', departure: '10:00', arrival: '18:30', originalScheduledTime: '2026-02-26 10:00' },
   ];
 
   const created = [];
