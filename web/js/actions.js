@@ -413,12 +413,15 @@ async function handleVoiceTranscript(transcript) {
       trigger: 'intent_detected',
     });
     voiceTransferRequestId = transferData.transferRequestId || null;
-    addMessage('system', `📞 ${transferData.statusMessage}`);
+    const initialTransferStatusMessage = transferData.statusMessage || '';
+    if (initialTransferStatusMessage) {
+      addMessage('system', `📞 ${initialTransferStatusMessage}`);
+    }
     addMetric('voice_transfer_requested_ui', `status=${transferData.status}`);
 
     if (voiceTransferRequestId) {
       const statusData = await apiCall(`/voice/transfer-status?voiceSessionId=${voiceSessionId}&transferRequestId=${voiceTransferRequestId}`);
-      if (statusData?.statusMessage) {
+      if (statusData?.statusMessage && statusData.statusMessage !== initialTransferStatusMessage) {
         addMessage('system', `📡 ${statusData.statusMessage}`);
       }
       addMetric('voice_transfer_status_ui', `status=${statusData.status}`);
