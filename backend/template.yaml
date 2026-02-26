@@ -144,6 +144,11 @@ Resources:
           Properties:
             Path: /notification
             Method: get
+        GetDashboard:
+          Type: Api
+          Properties:
+            Path: /dashboard
+            Method: get
 
   DisruptionTable:
     Type: AWS::DynamoDB::Table
