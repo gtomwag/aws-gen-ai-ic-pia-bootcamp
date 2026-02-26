@@ -14,399 +14,20 @@ const PORT = process.env.PORT || 3000;
 process.env.USE_LOCAL_STORE = 'true';
 process.env.USE_BEDROCK = process.env.USE_BEDROCK || 'false';
 
-// Initialize sample data for dashboard testing
-async function initializeSampleData() {
-  try {
-    // Create sample sessions with escalations and bookings spread across different time periods
-    const now = Date.now();
-    const MINUTE = 60 * 1000;
-    const HOUR = 60 * 60 * 1000;
-    const DAY = 24 * HOUR;
-    
-    const sampleSessions = [
-      // ===== LAST 1 HOUR (2 escalations, 2 bookings) =====
-      {
-        sessionId: 'SES-000A',
-        disruptionId: 'DIS-001',
-        escalation: {
-          passengerSummary: { tier: 'Gold', name: 'Jennifer Davis' },
-          escalationReason: 'Customer requested agent assistance',
-          priority: 'MEDIUM',
-          escalatedAt: new Date(now - 15 * MINUTE).toISOString(),
-        },
-        booking: {
-          pnr: 'PNR000A',
-          status: 'CONFIRMED',
-          bookedAt: new Date(now - 15 * MINUTE).toISOString(),
-          itinerarySummary: { tier: 'Gold' },
-        },
-      },
-      {
-        sessionId: 'SES-000B',
-        disruptionId: 'DIS-001',
-        booking: {
-          pnr: 'PNR000B',
-          status: 'CONFIRMED',
-          bookedAt: new Date(now - 30 * MINUTE).toISOString(),
-          itinerarySummary: { tier: 'Platinum' },
-        },
-      },
-      {
-        sessionId: 'SES-000C',
-        disruptionId: 'DIS-001',
-        escalation: {
-          passengerSummary: { tier: 'Silver', name: 'Robert Taylor' },
-          escalationReason: 'Sentiment auto-escalation (negative)',
-          priority: 'NORMAL',
-          escalatedAt: new Date(now - 45 * MINUTE).toISOString(),
-        },
-      },
-      
-      // ===== LAST 24 HOURS (3 escalations, 4 bookings) =====
-      {
-        sessionId: 'SES-001',
-        disruptionId: 'DIS-001',
-        escalation: {
-          passengerSummary: { tier: 'Platinum', name: 'John Smith' },
-          escalationReason: 'Customer requested agent assistance',
-          priority: 'HIGH',
-          escalatedAt: new Date(now - 2 * HOUR).toISOString(),
-        },
-        booking: {
-          pnr: 'PNR001',
-          status: 'CONFIRMED',
-          bookedAt: new Date(now - 2 * HOUR).toISOString(),
-          itinerarySummary: { tier: 'Platinum' },
-        },
-      },
-      {
-        sessionId: 'SES-002',
-        disruptionId: 'DIS-001',
-        escalation: {
-          passengerSummary: { tier: 'Gold', name: 'Sarah Johnson' },
-          escalationReason: 'Sentiment auto-escalation (negative)',
-          priority: 'MEDIUM',
-          escalatedAt: new Date(now - 5 * HOUR).toISOString(),
-        },
-        booking: {
-          pnr: 'PNR002',
-          status: 'FAILED',
-          bookedAt: new Date(now - 5 * HOUR).toISOString(),
-          itinerarySummary: { tier: 'Gold' },
-        },
-      },
-      {
-        sessionId: 'SES-003',
-        disruptionId: 'DIS-001',
-        booking: {
-          pnr: 'PNR003',
-          status: 'CONFIRMED',
-          bookedAt: new Date(now - 8 * HOUR).toISOString(),
-          itinerarySummary: { tier: 'Silver' },
-        },
-      },
-      {
-        sessionId: 'SES-004',
-        disruptionId: 'DIS-001',
-        escalation: {
-          passengerSummary: { tier: 'Platinum', name: 'Mike Chen' },
-          escalationReason: 'Wheelchair assistance needed',
-          priority: 'HIGH',
-          escalatedAt: new Date(now - 12 * HOUR).toISOString(),
-        },
-        booking: {
-          pnr: 'PNR004',
-          status: 'FAILED',
-          bookedAt: new Date(now - 12 * HOUR).toISOString(),
-          itinerarySummary: { tier: 'Platinum' },
-        },
-      },
-      {
-        sessionId: 'SES-005',
-        disruptionId: 'DIS-001',
-        booking: {
-          pnr: 'PNR005',
-          status: 'CONFIRMED',
-          bookedAt: new Date(now - 18 * HOUR).toISOString(),
-          itinerarySummary: { tier: 'General' },
-        },
-      },
-      {
-        sessionId: 'SES-006',
-        disruptionId: 'DIS-002',
-        booking: {
-          pnr: 'PNR006',
-          status: 'CONFIRMED',
-          bookedAt: new Date(now - 20 * HOUR).toISOString(),
-          itinerarySummary: { tier: 'Gold' },
-        },
-      },
-      
-      // ===== LAST 7 DAYS (but older than 24h) (4 escalations, 3 bookings) =====
-      {
-        sessionId: 'SES-007',
-        disruptionId: 'DIS-002',
-        escalation: {
-          passengerSummary: { tier: 'Gold', name: 'Emma Wilson' },
-          escalationReason: 'Complex rebooking scenario',
-          priority: 'MEDIUM',
-          escalatedAt: new Date(now - 2 * DAY).toISOString(),
-        },
-        booking: {
-          pnr: 'PNR007',
-          status: 'CONFIRMED',
-          bookedAt: new Date(now - 2 * DAY).toISOString(),
-          itinerarySummary: { tier: 'Gold' },
-        },
-      },
-      {
-        sessionId: 'SES-008',
-        disruptionId: 'DIS-002',
-        booking: {
-          pnr: 'PNR008',
-          status: 'CONFIRMED',
-          bookedAt: new Date(now - 3 * DAY).toISOString(),
-          itinerarySummary: { tier: 'Silver' },
-        },
-      },
-      {
-        sessionId: 'SES-008B',
-        disruptionId: 'DIS-002',
-        booking: {
-          pnr: 'PNR008B',
-          status: 'FAILED',
-          bookedAt: new Date(now - 3.5 * DAY).toISOString(),
-          itinerarySummary: { tier: 'General' },
-        },
-      },
-      {
-        sessionId: 'SES-009',
-        disruptionId: 'DIS-002',
-        escalation: {
-          passengerSummary: { tier: 'General', name: 'Alex Rodriguez' },
-          escalationReason: 'Compensation inquiry',
-          priority: 'NORMAL',
-          escalatedAt: new Date(now - 4 * DAY).toISOString(),
-        },
-      },
-      {
-        sessionId: 'SES-010',
-        disruptionId: 'DIS-003',
-        booking: {
-          pnr: 'PNR010',
-          status: 'CONFIRMED',
-          bookedAt: new Date(now - 5 * DAY).toISOString(),
-          itinerarySummary: { tier: 'Platinum' },
-        },
-      },
-      {
-        sessionId: 'SES-011',
-        disruptionId: 'DIS-003',
-        escalation: {
-          passengerSummary: { tier: 'Silver', name: 'Maria Garcia' },
-          escalationReason: 'Customer requested agent assistance',
-          priority: 'NORMAL',
-          escalatedAt: new Date(now - 6 * DAY).toISOString(),
-        },
-      },
-      {
-        sessionId: 'SES-012',
-        disruptionId: 'DIS-003',
-        escalation: {
-          passengerSummary: { tier: 'Platinum', name: 'James Lee' },
-          escalationReason: 'Special meal request',
-          priority: 'HIGH',
-          escalatedAt: new Date(now - 6.5 * DAY).toISOString(),
-        },
-      },
-      
-      // ===== LAST 30 DAYS (but older than 7d) (5 escalations, 6 bookings) =====
-      {
-        sessionId: 'SES-013',
-        disruptionId: 'DIS-004',
-        escalation: {
-          passengerSummary: { tier: 'Gold', name: 'Lisa Brown' },
-          escalationReason: 'Sentiment auto-escalation (negative)',
-          priority: 'MEDIUM',
-          escalatedAt: new Date(now - 10 * DAY).toISOString(),
-        },
-        booking: {
-          pnr: 'PNR013',
-          status: 'CONFIRMED',
-          bookedAt: new Date(now - 10 * DAY).toISOString(),
-          itinerarySummary: { tier: 'Gold' },
-        },
-      },
-      {
-        sessionId: 'SES-014',
-        disruptionId: 'DIS-004',
-        booking: {
-          pnr: 'PNR014',
-          status: 'CONFIRMED',
-          bookedAt: new Date(now - 12 * DAY).toISOString(),
-          itinerarySummary: { tier: 'Silver' },
-        },
-      },
-      {
-        sessionId: 'SES-014B',
-        disruptionId: 'DIS-004',
-        booking: {
-          pnr: 'PNR014B',
-          status: 'CANCELLED',
-          bookedAt: new Date(now - 13 * DAY).toISOString(),
-          itinerarySummary: { tier: 'Gold' },
-        },
-      },
-      {
-        sessionId: 'SES-015',
-        disruptionId: 'DIS-004',
-        escalation: {
-          passengerSummary: { tier: 'General', name: 'David Kim' },
-          escalationReason: 'Baggage assistance needed',
-          priority: 'NORMAL',
-          escalatedAt: new Date(now - 15 * DAY).toISOString(),
-        },
-        booking: {
-          pnr: 'PNR015',
-          status: 'FAILED',
-          bookedAt: new Date(now - 15 * DAY).toISOString(),
-          itinerarySummary: { tier: 'General' },
-        },
-      },
-      {
-        sessionId: 'SES-016',
-        disruptionId: 'DIS-005',
-        booking: {
-          pnr: 'PNR016',
-          status: 'CONFIRMED',
-          bookedAt: new Date(now - 18 * DAY).toISOString(),
-          itinerarySummary: { tier: 'Platinum' },
-        },
-      },
-      {
-        sessionId: 'SES-017',
-        disruptionId: 'DIS-005',
-        escalation: {
-          passengerSummary: { tier: 'Platinum', name: 'Rachel White' },
-          escalationReason: 'Customer requested agent assistance',
-          priority: 'HIGH',
-          escalatedAt: new Date(now - 20 * DAY).toISOString(),
-        },
-        booking: {
-          pnr: 'PNR017',
-          status: 'CONFIRMED',
-          bookedAt: new Date(now - 20 * DAY).toISOString(),
-          itinerarySummary: { tier: 'Platinum' },
-        },
-      },
-      {
-        sessionId: 'SES-018',
-        disruptionId: 'DIS-005',
-        booking: {
-          pnr: 'PNR018',
-          status: 'CONFIRMED',
-          bookedAt: new Date(now - 22 * DAY).toISOString(),
-          itinerarySummary: { tier: 'General' },
-        },
-      },
-      {
-        sessionId: 'SES-019',
-        disruptionId: 'DIS-006',
-        escalation: {
-          passengerSummary: { tier: 'Silver', name: 'Tom Anderson' },
-          escalationReason: 'Complex rebooking scenario',
-          priority: 'NORMAL',
-          escalatedAt: new Date(now - 25 * DAY).toISOString(),
-        },
-        booking: {
-          pnr: 'PNR019',
-          status: 'FAILED',
-          bookedAt: new Date(now - 25 * DAY).toISOString(),
-          itinerarySummary: { tier: 'Silver' },
-        },
-      },
-      {
-        sessionId: 'SES-020',
-        disruptionId: 'DIS-006',
-        booking: {
-          pnr: 'PNR020',
-          status: 'CONFIRMED',
-          bookedAt: new Date(now - 28 * DAY).toISOString(),
-          itinerarySummary: { tier: 'Gold' },
-        },
-      },
-      {
-        sessionId: 'SES-021',
-        disruptionId: 'DIS-006',
-        escalation: {
-          passengerSummary: { tier: 'Gold', name: 'Nina Patel' },
-          escalationReason: 'Compensation inquiry',
-          priority: 'MEDIUM',
-          escalatedAt: new Date(now - 29 * DAY).toISOString(),
-        },
-      },
-    ];
-
-    // Store sample data
-    for (const session of sampleSessions) {
-      await store.upsertJson(`SESSION#${session.sessionId}`, 'META', {
-        sessionId: session.sessionId,
-        disruptionId: session.disruptionId,
-        status: 'COMPLETED',
-        createdAt: new Date(Date.now() - 240000).toISOString(),
-      });
-
-      if (session.escalation) {
-        await store.upsertJson(`SESSION#${session.sessionId}`, 'ESCALATION', session.escalation);
-      }
-
-      if (session.booking) {
-        await store.upsertJson(`SESSION#${session.sessionId}`, 'BOOKING', session.booking);
-      }
-    }
-
-    // Create sample disruptions
-    await store.upsertJson('DISRUPTION#DIS-001', 'META', {
-      type: 'cancellation',
-      reason: 'mechanical',
-      airport: 'ORD',
-      createdAt: new Date(Date.now() - 240000).toISOString(),
-    });
-
-    await store.upsertJson('DISRUPTION#DIS-002', 'META', {
-      type: 'delay',
-      reason: 'weather',
-      airport: 'SFO',
-      createdAt: new Date(Date.now() - 180000).toISOString(),
-    });
-
-    console.log('✓ Sample data loaded for dashboard testing');
-  } catch (err) {
-    console.error('Error initializing sample data:', err);
-  }
-}
-
 const server = http.createServer(async (req, res) => {
-  // Serve static files first
-  if (req.method === 'GET' && (req.url === '/' || req.url.endsWith('.html') || req.url.endsWith('.js') || req.url.endsWith('.css'))) {
-    let filePath = req.url === '/' ? '/index.html' : req.url;
-    filePath = path.join(__dirname, '../web', filePath);
-    
-    try {
-      if (fs.existsSync(filePath)) {
-        const content = fs.readFileSync(filePath, 'utf-8');
-        let contentType = 'text/html';
-        if (filePath.endsWith('.js')) contentType = 'application/javascript';
-        if (filePath.endsWith('.css')) contentType = 'text/css';
-        res.writeHead(200, { 'Content-Type': contentType });
-        res.end(content);
-        return;
-      }
-    } catch (err) {
-      console.error('File serve error:', err);
+  // ── Static file serving for web/ assets ──
+  const urlPath = req.url.split('?')[0];
+  if (urlPath.match(/\.(html|css|js)$/) || urlPath === '/') {
+    const filePath = path.join(__dirname, '..', 'web', urlPath === '/' ? 'index.html' : urlPath);
+    if (fs.existsSync(filePath)) {
+      const ext = path.extname(filePath).slice(1);
+      const mimeTypes = { html: 'text/html', css: 'text/css', js: 'application/javascript' };
+      res.writeHead(200, { 'Content-Type': mimeTypes[ext] || 'text/plain' });
+      fs.createReadStream(filePath).pipe(res);
+      return;
     }
   }
-  
+
   // Collect body
   let body = '';
   req.on('data', (chunk) => { body += chunk; });
@@ -442,19 +63,16 @@ const server = http.createServer(async (req, res) => {
   });
 });
 
-server.listen(PORT, async () => {
-  // Initialize sample data
-  await initializeSampleData();
-
+server.listen(PORT, () => {
   console.log(`\n  Local dev server running at http://127.0.0.1:${PORT}\n`);
   console.log('  Routes:');
   console.log('    GET  /health');
-  console.log('    GET  /dashboard');
   console.log('    POST /disruption');
   console.log('    POST /chat');
   console.log('    POST /select-option');
   console.log('    POST /confirm');
   console.log('    POST /escalate');
+  console.log('    GET  /dashboard');
   console.log('');
   console.log('  AI Capabilities:');
   console.log(`    Bedrock Chat:      ${process.env.USE_BEDROCK === 'true' ? '✅ ON' : '⬚ OFF (fallback)'}`);
@@ -463,6 +81,165 @@ server.listen(PORT, async () => {
   console.log(`    Comprehend:        ${process.env.USE_COMPREHEND === 'true' ? '✅ ON' : '⬚ OFF (neutral)'}`);
   console.log(`    Translate:         ${process.env.USE_TRANSLATE === 'true' ? '✅ ON' : '⬚ OFF (English)'}`);
   console.log('');
-  console.log('  📊 Dashboard ready at http://127.0.0.1:3000/dashboard.html');
+  console.log('  📊 Dashboard: http://127.0.0.1:' + PORT + '/dashboard.html');
   console.log('');
+
+  // Seed sample data for dashboard testing
+  initializeSampleData();
 });
+
+// ── Sample data seeding for dashboard ─────────────────────
+
+function initializeSampleData() {
+  const SEED_PASSENGERS = [
+    { firstName: 'Alice', lastName: 'Anderson', tier: 'Platinum', passengerId: 'PAX-0001' },
+    { firstName: 'Bob', lastName: 'Bauer', tier: 'Gold', passengerId: 'PAX-0015' },
+    { firstName: 'Carlos', lastName: 'Chen', tier: 'Silver', passengerId: 'PAX-0042' },
+    { firstName: 'Diana', lastName: 'Diaz', tier: 'General', passengerId: 'PAX-0118' },
+    { firstName: 'Erik', lastName: 'Evans', tier: 'Platinum', passengerId: 'PAX-0003' },
+    { firstName: 'Fatima', lastName: 'Fischer', tier: 'Gold', passengerId: 'PAX-0022' },
+    { firstName: 'George', lastName: 'Garcia', tier: 'Silver', passengerId: 'PAX-0055' },
+    { firstName: 'Hannah', lastName: 'Hoffman', tier: 'General', passengerId: 'PAX-0130' },
+    { firstName: 'Ivan', lastName: 'Ibrahim', tier: 'Gold', passengerId: 'PAX-0019' },
+    { firstName: 'Julia', lastName: 'Jensen', tier: 'Platinum', passengerId: 'PAX-0005' },
+    { firstName: 'Kenji', lastName: 'Kim', tier: 'Silver', passengerId: 'PAX-0061' },
+    { firstName: 'Lina', lastName: 'Lee', tier: 'General', passengerId: 'PAX-0145' },
+    { firstName: 'Marcus', lastName: 'Martinez', tier: 'Gold', passengerId: 'PAX-0028' },
+    { firstName: 'Nadia', lastName: 'Nguyen', tier: 'Silver', passengerId: 'PAX-0070' },
+    { firstName: 'Omar', lastName: 'Olsson', tier: 'General', passengerId: 'PAX-0155' },
+    { firstName: 'Priya', lastName: 'Patel', tier: 'Platinum', passengerId: 'PAX-0007' },
+    { firstName: 'Quinn', lastName: 'Quinn', tier: 'Gold', passengerId: 'PAX-0031' },
+    { firstName: 'Rosa', lastName: 'Rivera', tier: 'General', passengerId: 'PAX-0160' },
+    { firstName: 'Stefan', lastName: 'Singh', tier: 'Silver', passengerId: 'PAX-0078' },
+    { firstName: 'Tanya', lastName: 'Torres', tier: 'General', passengerId: 'PAX-0170' },
+  ];
+
+  const SEED_DISRUPTIONS = [
+    { id: 'DIS-d001a1b2', type: 'CANCELLATION', reason: 'Mechanical issue', airport: 'FRA' },
+    { id: 'DIS-d002c3d4', type: 'DELAY', reason: 'Weather conditions', airport: 'ORD' },
+    { id: 'DIS-d003e5f6', type: 'CANCELLATION', reason: 'Crew availability', airport: 'JFK' },
+    { id: 'DIS-d004a7b8', type: 'DELAY', reason: 'Air traffic control', airport: 'LAX' },
+    { id: 'DIS-d005c9d0', type: 'CANCELLATION', reason: 'Technical inspection required', airport: 'MUC' },
+  ];
+
+  const ESCALATION_REASONS = [
+    'Customer requested agent assistance',
+    'Sentiment auto-escalation (negative)',
+    'Wheelchair assistance needed',
+    'Complex rebooking scenario',
+    'Compensation inquiry',
+    'Baggage assistance needed',
+  ];
+
+  const FLIGHT_NUMBERS = ['UA2041', 'UA3122', 'UA4587', 'UA2899', 'UA5004', 'UA1877', 'UA1200', 'UA891', 'UA1234'];
+  const AIRPORTS = ['FRA', 'ORD', 'JFK', 'LAX', 'MUC', 'LHR', 'SFO', 'ATL'];
+  const CLASSES = ['Economy', 'Premium Economy', 'Business', 'First'];
+
+  const now = Date.now();
+  const HOUR = 60 * 60 * 1000;
+  const DAY = 24 * HOUR;
+
+  // Time offsets for each session bucket
+  const timeOffsets = [
+    // Last 1 hour: 3 sessions
+    15 * 60 * 1000, 30 * 60 * 1000, 50 * 60 * 1000,
+    // Last 24 hours: 5 sessions
+    3 * HOUR, 6 * HOUR, 10 * HOUR, 16 * HOUR, 22 * HOUR,
+    // Last 7 days: 6 sessions
+    2 * DAY, 3 * DAY, 4 * DAY, 5 * DAY, 5.5 * DAY, 6 * DAY,
+    // Last 30 days: 6 sessions
+    10 * DAY, 14 * DAY, 18 * DAY, 22 * DAY, 26 * DAY, 29 * DAY,
+  ];
+
+  // Seed disruptions
+  for (const d of SEED_DISRUPTIONS) {
+    store.putItem({
+      pk: `DISRUPTION#${d.id}`,
+      sk: 'META',
+      type: d.type,
+      reason: d.reason,
+      airport: d.airport,
+      createdAt: new Date(now - 2 * DAY).toISOString(),
+    });
+  }
+
+  // Seed sessions
+  for (let i = 0; i < SEED_PASSENGERS.length; i++) {
+    const pax = SEED_PASSENGERS[i];
+    const offset = timeOffsets[i];
+    const sessionTime = new Date(now - offset);
+    const sessionId = `SES-${(0x10000000 + i * 0x1111).toString(16).slice(0, 8)}`;
+    const disruption = SEED_DISRUPTIONS[i % SEED_DISRUPTIONS.length];
+    const origin = disruption.airport;
+    const dest = AIRPORTS[(AIRPORTS.indexOf(origin) + 3) % AIRPORTS.length];
+    const flight = FLIGHT_NUMBERS[i % FLIGHT_NUMBERS.length];
+
+    // SESSION META
+    store.putItem({
+      pk: `SESSION#${sessionId}`,
+      sk: 'META',
+      sessionId,
+      disruptionId: disruption.id,
+      passenger: {
+        firstName: pax.firstName,
+        lastName: pax.lastName,
+        tier: pax.tier,
+        passengerId: pax.passengerId,
+        origin,
+        destination: dest,
+        flightNumber: flight,
+      },
+      status: 'COMPLETED',
+      createdAt: sessionTime.toISOString(),
+    });
+
+    // ~60% get escalation (indices 0..11)
+    if (i < 12) {
+      const priority = pax.tier === 'Platinum' ? 'HIGH' : pax.tier === 'Gold' ? 'MEDIUM' : 'NORMAL';
+      store.putItem({
+        pk: `SESSION#${sessionId}`,
+        sk: 'ESCALATION',
+        passengerSummary: {
+          name: `${pax.firstName} ${pax.lastName}`,
+          tier: pax.tier,
+          passengerId: pax.passengerId,
+        },
+        escalationReason: ESCALATION_REASONS[i % ESCALATION_REASONS.length],
+        priority,
+        escalatedAt: new Date(sessionTime.getTime() + 5 * 60 * 1000).toISOString(),
+      });
+    }
+
+    // ~70% get booking (indices 0..13)
+    if (i < 14) {
+      const pnrNum = 10000 + i * 1111;
+      const isPremium = pax.tier === 'Platinum' || pax.tier === 'Gold';
+      // Mix of confirmed and failed: indices 2, 7, 11 are failed/cancelled
+      let status;
+      if (i === 2 || i === 7 || i === 11) {
+        status = i === 11 ? 'CANCELLED' : 'FAILED';
+      } else {
+        status = 'CONFIRMED (MOCK)';
+      }
+
+      store.putItem({
+        pk: `SESSION#${sessionId}`,
+        sk: 'BOOKING',
+        pnr: `PNR-DEMO-${pnrNum}`,
+        status,
+        bookedAt: new Date(sessionTime.getTime() + 10 * 60 * 1000).toISOString(),
+        itinerarySummary: {
+          flights: [`${flight} ${origin}→${dest}`],
+          class: isPremium ? 'Business' : 'Economy',
+          departure: '14:30',
+          arrival: '17:45',
+          passenger: `${pax.firstName} ${pax.lastName}`,
+          tier: pax.tier,
+        },
+      });
+    }
+  }
+
+  console.log('  ✅ Sample data loaded for dashboard testing');
+  console.log(`     ${SEED_PASSENGERS.length} sessions, ${SEED_DISRUPTIONS.length} disruptions seeded\n`);
+}

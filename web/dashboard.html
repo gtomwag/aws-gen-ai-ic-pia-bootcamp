@@ -1,273 +1,188 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Support Team Dashboard</title>
-  
+  <link rel="stylesheet" href="css/tokens.css" />
+  <link rel="stylesheet" href="css/dark.css" />
   <style>
-    :root {
-      --bg: #eef1f5;
-      --surface: #ffffff;
-      --surface-muted: #f8fafc;
-      --text: #0f172a;
-      --text-muted: #64748b;
-      --line: #dbe3ee;
-      --primary: #1d4ed8;
-      --success: #0f766e;
-      --warning: #b45309;
-      --danger: #be123c;
-    }
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    /* ── Dashboard Layout ─────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: radial-gradient(circle at top, #f7f9fc 0%, var(--bg) 50%, #e6ebf3 100%);
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+      background: var(--ios-bg);
+      color: var(--ios-text);
       min-height: 100vh;
-      padding: 20px;
-      color: var(--text);
+      padding-top: 100px;
     }
 
-    .container {
-      max-width: 1600px;
-      margin: 0 auto;
+    /* ── Nav Bar ───────────────────────────────────── */
+    .dash-nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      background: rgba(255,255,255,0.92);
+      border-bottom: 1px solid var(--ios-separator);
+      padding: 12px 24px;
     }
-
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 30px;
-      background: var(--surface);
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 18px 22px;
-      box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08);
+    .dash-nav-inner {
+      max-width: 1400px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 8px;
     }
-
-    h1 {
-      font-size: 24px;
-      font-weight: 700;
-      color: var(--text);
+    .nav-back {
+      color: var(--ios-blue); text-decoration: none;
+      font-size: 15px; font-weight: 500;
+      display: flex; align-items: center; gap: 4px;
     }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 15px;
+    .nav-back:hover { text-decoration: underline; }
+    .dash-title {
+      font-size: 20px; font-weight: 700;
+      letter-spacing: -0.3px;
     }
-
-    .nav-links select,
-    .nav-links a,
-    .refresh-btn {
-      color: var(--primary);
-      text-decoration: none;
-      padding: 8px 14px;
-      background: var(--surface-muted);
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      font-size: 13px;
-      font-weight: 600;
+    .dash-controls {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .dash-select {
+      font-family: inherit; font-size: 14px;
+      padding: 6px 12px; border-radius: 8px;
+      border: 1px solid var(--ios-separator);
+      background: var(--ios-card); color: var(--ios-text);
       cursor: pointer;
-      transition: all 0.2s ease;
+    }
+    .dash-refresh {
+      font-size: 18px; background: none; border: none;
+      cursor: pointer; padding: 6px 10px; border-radius: 8px;
+      color: var(--ios-blue);
+    }
+    .dash-refresh:hover { background: rgba(0,122,255,0.1); }
+    .dash-timestamp {
+      width: 100%; text-align: center;
+      font-size: 12px; color: var(--ios-text3);
+      margin-top: 4px;
     }
 
-    .nav-links select:hover,
-    .nav-links a:hover,
-    .refresh-btn:hover {
-      background: #eff6ff;
-      border-color: #bfdbfe;
-      color: #1e40af;
+    /* ── Container ─────────────────────────────────── */
+    .dash-container {
+      max-width: 1400px; margin: 0 auto;
+      padding: 24px;
     }
 
-    .timestamp {
-      color: var(--text-muted);
-      font-size: 12px;
-      margin-top: 6px;
-    }
-
-    .dashboard {
+    /* ── KPI Cards Grid ────────────────────────────── */
+    .kpi-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 24px;
-      margin-bottom: 40px;
-    }
-
-    .overview {
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
       margin-bottom: 24px;
     }
 
-    .overview-card {
-      display: flex;
-      align-items: center;
-      gap: 24px;
+    .kpi-card {
+      background: var(--ios-card);
+      border-radius: var(--card-radius);
+      box-shadow: var(--card-shadow);
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
     }
-
-    .overview-title {
-      min-width: 140px;
+    .kpi-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 4px;
     }
+    .kpi-card.escalation::before { background: linear-gradient(90deg, var(--ios-blue), var(--ios-purple)); }
+    .kpi-card.confirmed::before { background: var(--ios-green); }
+    .kpi-card.failed::before { background: var(--ios-red); }
+    .kpi-card.summary::before { background: linear-gradient(90deg, var(--ios-purple), var(--ios-blue)); }
 
-    .overview-title h2 {
+    .kpi-label {
+      font-size: 13px; font-weight: 600;
+      color: var(--ios-text2);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    .kpi-value {
+      font-size: 42px; font-weight: 700;
+      letter-spacing: -1px;
+      margin-bottom: 12px;
+    }
+    .kpi-value.green { color: var(--ios-green); }
+    .kpi-value.red { color: var(--ios-red); }
+
+    .tier-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 4px 0;
       font-size: 14px;
-      color: var(--text);
-      font-weight: 700;
-      margin-bottom: 4px;
     }
-
-    .overview-title p {
-      font-size: 12px;
-      color: var(--text-muted);
+    .tier-row + .tier-row {
+      border-top: 1px solid var(--ios-separator);
     }
-
-    .overview-metrics {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 12px;
-      width: 100%;
-    }
-
-    .overview-metric {
-      background: var(--surface-muted);
-      border: 1px solid var(--line);
+    .tier-badge {
+      display: inline-block;
+      padding: 2px 10px;
       border-radius: 12px;
-      padding: 12px 14px;
-      display: grid;
-      gap: 6px;
-    }
-
-    .overview-metric .label {
       font-size: 12px;
-      color: var(--text-muted);
       font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
+      color: #fff;
     }
-
-    .overview-metric .value {
-      font-size: 20px;
-      font-weight: 700;
-      color: var(--text);
-    }
-
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 22px;
-      box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 20px 36px rgba(15, 23, 42, 0.12);
-    }
-
-    .card h2 {
-      font-size: 13px;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 14px;
-      font-weight: 600;
-    }
-
-    .card .metric-value {
-      font-size: 44px;
-      font-weight: 700;
-      color: var(--primary);
-      line-height: 1;
-    }
-
-    .card .metric-label {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-top: 8px;
-    }
+    .tier-badge.Platinum { background: linear-gradient(135deg, #9B59B6, #8E44AD); }
+    .tier-badge.Gold { background: linear-gradient(135deg, #F39C12, #E67E22); }
+    .tier-badge.Silver { background: linear-gradient(135deg, #BDC3C7, #95A5A6); color: #333; }
+    .tier-badge.General { background: var(--ios-gray5); }
 
     .stat-row {
-      display: flex;
-      justify-content: space-between;
-      margin: 10px 0;
-      padding: 10px 12px;
-      background: var(--surface-muted);
-      border-radius: 10px;
-      border: 1px solid var(--line);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 6px 0;
+      font-size: 14px;
     }
-
-    .stat-label {
-      color: var(--text);
-      font-weight: 600;
-      font-size: 13px;
+    .stat-row + .stat-row {
+      border-top: 1px solid var(--ios-separator);
     }
+    .stat-label { color: var(--ios-text2); }
+    .stat-val { font-weight: 600; }
+    .stat-val.green { color: var(--ios-green); }
+    .stat-val.orange { color: var(--ios-orange); }
+    .stat-val.red { color: var(--ios-red); }
 
-    .stat-value {
-      color: var(--text);
-      font-weight: 600;
-      font-size: 13px;
-    }
-
-    .stat-value.positive {
-      color: var(--success);
-    }
-
-    .stat-value.negative {
-      color: var(--danger);
-    }
-
-    .stat-value.warning {
-      color: var(--warning);
-    }
-
-    .charts-section {
+    /* ── Chart Cards Grid ──────────────────────────── */
+    .chart-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-      gap: 24px;
-      margin-bottom: 40px;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
     }
 
     .chart-card {
-      background: var(--surface);
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 22px;
-      box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .chart-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 20px 36px rgba(15, 23, 42, 0.12);
-    }
-
-    .chart-card h3 {
-      font-size: 14px;
-      color: var(--text);
-      margin-bottom: 18px;
-      font-weight: 700;
-    }
-
-    .chart-container {
+      background: var(--ios-card);
+      border-radius: var(--card-radius);
+      box-shadow: var(--card-shadow);
+      padding: 20px;
       position: relative;
-      height: 320px;
+      overflow: hidden;
+    }
+    .chart-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--ios-blue), var(--ios-purple));
+    }
+    .chart-title {
+      font-size: 15px; font-weight: 600;
+      color: var(--ios-text2);
+      margin-bottom: 16px;
     }
 
     .bar-chart {
       display: flex;
       align-items: flex-end;
       justify-content: space-around;
-      height: 260px;
-      margin: 24px 0;
-      gap: 20px;
-      padding: 0 10px;
+      height: 180px;
+      gap: 12px;
+      padding-top: 20px;
     }
-
-    .bar {
+    .bar-col {
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -275,336 +190,235 @@
       height: 100%;
       justify-content: flex-end;
     }
-
-    .bar-item {
-      width: 100%;
-      border-radius: 10px 10px 0 0;
-      transition: all 0.2s ease;
-      position: relative;
-    }
-
-    .bar-item:hover {
-      filter: brightness(1.05);
-      transform: scaleY(1.01);
-    }
-
-    .bar-label {
-      margin-top: 10px;
-      font-size: 11px;
-      color: var(--text-muted);
-      text-align: center;
-      width: 100%;
-      font-weight: 600;
-    }
-
     .bar-value {
-      position: absolute;
-      top: -26px;
+      font-size: 13px; font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--ios-text);
+    }
+    .bar {
       width: 100%;
+      max-width: 60px;
+      border-radius: 6px 6px 0 0;
+      min-height: 4px;
+      transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .bar.platinum { background: linear-gradient(135deg, #9B59B6, #8E44AD); }
+    .bar.gold { background: linear-gradient(135deg, #F39C12, #E67E22); }
+    .bar.silver { background: linear-gradient(135deg, #BDC3C7, #95A5A6); }
+    .bar.general { background: var(--ios-gray5); }
+    .bar.green { background: var(--ios-green); }
+    .bar.red { background: var(--ios-red); }
+    .bar-label {
+      font-size: 12px; font-weight: 500;
+      color: var(--ios-text3);
+      margin-top: 8px;
       text-align: center;
+    }
+
+    /* ── Escalation Reasons Card ───────────────────── */
+    .reasons-card {
+      background: var(--ios-card);
+      border-radius: var(--card-radius);
+      box-shadow: var(--card-shadow);
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .reasons-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--ios-blue), var(--ios-purple));
+    }
+    .reason-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 8px 0;
+    }
+    .reason-row + .reason-row {
+      border-top: 1px solid var(--ios-separator);
+    }
+    .reason-label {
+      flex: 0 0 260px;
       font-size: 13px;
+      color: var(--ios-text2);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .reason-bar-wrap {
+      flex: 1;
+      height: 8px;
+      background: var(--ios-gray6);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .reason-bar {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--ios-blue), var(--ios-purple));
+      transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .reason-count {
+      flex: 0 0 30px;
+      font-size: 14px;
       font-weight: 700;
-      color: var(--text);
+      text-align: right;
+      color: var(--ios-text);
     }
 
-    .loading {
-      text-align: center;
-      padding: 60px 20px;
-      color: var(--text-muted);
-      font-size: 16px;
-      font-weight: 500;
+    /* ── Skeleton loading ──────────────────────────── */
+    .skeleton { position: relative; overflow: hidden; }
+    .skeleton-line {
+      height: 16px; border-radius: 8px;
+      background: var(--ios-gray6);
+      margin-bottom: 8px;
+    }
+    .skeleton-line.big { height: 42px; width: 80px; margin-bottom: 12px; }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .skeleton-line {
+        animation: skeleton-pulse 1.5s ease-in-out infinite;
+      }
+      @keyframes skeleton-pulse {
+        0%, 100% { opacity: 0.4; }
+        50% { opacity: 1; }
+      }
     }
 
-    .loading::after {
-      content: '...';
-      display: inline-block;
-      animation: dots 1.5s steps(4, end) infinite;
+    /* ── Dark mode overrides ───────────────────────── */
+    @media (prefers-color-scheme: dark) {
+      .dash-nav {
+        background: rgba(28,28,30,0.92);
+      }
+      .tier-badge.Silver { color: #fff; }
+      .tier-badge.General { color: #ccc; }
     }
 
-    @keyframes dots {
-      0%, 20% { content: '.'; }
-      40% { content: '..'; }
-      60%, 100% { content: '...'; }
-    }
-
-    .legend {
-      display: flex;
-      gap: 20px;
-      flex-wrap: wrap;
-      margin-top: 20px;
-      padding-top: 20px;
-      border-top: 1px solid var(--line);
-    }
-
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-
-    .legend-color {
-      width: 12px;
-      height: 12px;
-      border-radius: 2px;
-    }
-
-    .loading {
-      text-align: center;
-      padding: 40px;
-      color: var(--text-muted);
-    }
-
-    .error {
-      background: #fee2e2;
-      color: #991b1b;
-      padding: 16px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-    }
-
-    .refresh-btn {
-      background: var(--surface-muted);
-      border: 1px solid var(--line);
-      padding: 8px 14px;
-      border-radius: 10px;
-      cursor: pointer;
-      font-weight: 600;
-      color: var(--primary);
-      transition: all 0.2s ease;
-      font-size: 13px;
-    }
-
-    .refresh-btn:hover {
-      background: #eff6ff;
-      border-color: #bfdbfe;
-      color: #1e40af;
-    }
-
-    .time-filter {
-      background: var(--surface-muted);
-      border: 1px solid var(--line);
-      padding: 8px 14px;
-      border-radius: 10px;
-      font-weight: 600;
-      color: var(--primary);
-      cursor: pointer;
-      transition: all 0.2s ease;
-      font-size: 13px;
-    }
-
-    .time-filter:hover {
-      background: #eff6ff;
-      border-color: #bfdbfe;
-      color: #1e40af;
-    }
-
-    .time-filter:focus {
-      outline: none;
-      border-color: #93c5fd;
-    }
-
+    /* ── Responsive ────────────────────────────────── */
     @media (max-width: 768px) {
-      .charts-section {
-        grid-template-columns: 1fr;
-      }
+      body { padding-top: 120px; }
+      .dash-nav-inner { flex-direction: column; align-items: stretch; }
+      .dash-title { text-align: center; font-size: 17px; }
+      .dash-controls { justify-content: center; }
+      .kpi-grid { grid-template-columns: 1fr; }
+      .chart-grid { grid-template-columns: 1fr; }
+      .reason-label { flex: 0 0 140px; font-size: 12px; }
+    }
 
-      .dashboard {
-        grid-template-columns: 1fr;
+    @media (prefers-reduced-motion: no-preference) {
+      .kpi-card, .chart-card, .reasons-card {
+        animation: card-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
       }
-
-      h1 {
-        font-size: 24px;
-      }
-
-      header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .nav-links {
-        width: 100%;
-        margin-top: 15px;
-      }
-
-      .overview-card {
-        flex-direction: column;
-        align-items: flex-start;
+      @keyframes card-in {
+        from { opacity: 0; transform: translateY(16px); }
+        to { opacity: 1; transform: translateY(0); }
       }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <div>
-        <h1>📊 Support Team Dashboard</h1>
-        <p class="timestamp">Last updated: <span id="timestamp">Loading...</span></p>
-      </div>
-      <div class="nav-links">
-        <select class="time-filter" id="timeFilter" onchange="loadDashboard()">
+
+  <!-- ══════ Nav Bar ══════ -->
+  <header class="dash-nav">
+    <div class="dash-nav-inner">
+      <a href="index.html" class="nav-back">← Customer View</a>
+      <div class="dash-title">📊 Support Team Dashboard</div>
+      <div class="dash-controls">
+        <select class="dash-select" id="timeFilter">
           <option value="1h">Last 1 Hour</option>
           <option value="24h">Last 24 Hours</option>
           <option value="7d" selected>Last 7 Days</option>
           <option value="30d">Last 30 Days</option>
         </select>
-        <button class="refresh-btn" onclick="loadDashboard()">🔄 Refresh</button>
-        <a href="index.html">← Back to App</a>
+        <button class="dash-refresh" id="btnRefresh" title="Refresh">🔄</button>
       </div>
-    </header>
-
-    <div id="error" style="display: none;"></div>
-
-    <div id="loading" class="loading" style="display: none;">
-      Loading dashboard data...
+      <div class="dash-timestamp">Last updated: <span id="timestamp">—</span></div>
     </div>
+  </header>
 
-    <div id="dashboard-content" style="display: none;">
-      <!-- Overview Header -->
-      <div class="overview">
-        <div class="card overview-card">
-          <div class="overview-title">
-            <h2>Overview</h2>
-            <p>Key operational indicators</p>
-          </div>
-          <div class="overview-metrics">
-            <div class="overview-metric">
-              <div class="label">Success Rate</div>
-              <div class="value stat-value positive" id="success-rate">0%</div>
-            </div>
-            <div class="overview-metric">
-              <div class="label">Failure Rate</div>
-              <div class="value stat-value warning" id="failure-rate">0%</div>
-            </div>
-            <div class="overview-metric">
-              <div class="label">Agent Requests %</div>
-              <div class="value stat-value" id="agent-request-pct">0%</div>
-            </div>
-            <div class="overview-metric">
-              <div class="label">Total Sessions</div>
-              <div class="value stat-value" id="total-sessions">0</div>
-            </div>
-            <div class="overview-metric">
-              <div class="label">Disruptions</div>
-              <div class="value stat-value" id="disruption-count">0</div>
-            </div>
-          </div>
+  <main class="dash-container">
+
+    <!-- ══════ KPI Cards ══════ -->
+    <section class="kpi-grid" id="kpiGrid">
+      <!-- Escalation Card -->
+      <div class="kpi-card escalation">
+        <div class="kpi-label">Agent Escalations</div>
+        <div class="kpi-value" id="escTotal">—</div>
+        <div id="escTiers"></div>
+      </div>
+      <!-- Confirmed Card -->
+      <div class="kpi-card confirmed">
+        <div class="kpi-label">Confirmed Rebookings</div>
+        <div class="kpi-value green" id="confTotal">—</div>
+        <div id="confTiers"></div>
+      </div>
+      <!-- Failed Card -->
+      <div class="kpi-card failed">
+        <div class="kpi-label">Failed Rebookings</div>
+        <div class="kpi-value red" id="failTotal">—</div>
+        <div class="stat-row">
+          <span class="stat-label">Failure Rate</span>
+          <span class="stat-val orange" id="failRate">—</span>
+        </div>
+        <div id="failTiers"></div>
+      </div>
+      <!-- Key Metrics Card -->
+      <div class="kpi-card summary">
+        <div class="kpi-label">Key Metrics</div>
+        <div class="stat-row">
+          <span class="stat-label">Success Rate</span>
+          <span class="stat-val green" id="successRate">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Agent Requests</span>
+          <span class="stat-val orange" id="agentPct">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Total Sessions</span>
+          <span class="stat-val" id="totalSessions">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Active Disruptions</span>
+          <span class="stat-val" id="totalDisruptions">—</span>
         </div>
       </div>
+    </section>
 
-      <!-- KPI Cards -->
-      <div class="dashboard">
-        <div class="card">
-          <h2>Agent Escalation Requests</h2>
-          <div class="metric-value" id="escalation-total">0</div>
-          <div class="metric-label">Total escalations to date</div>
-          <div style="margin-top: 20px;">
-            <div class="stat-row">
-              <span class="stat-label">Platinum</span>
-              <span class="stat-value" id="escalations-platinum">0</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label">Gold</span>
-              <span class="stat-value" id="escalations-gold">0</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label">Silver</span>
-              <span class="stat-value" id="escalations-silver">0</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label">General</span>
-              <span class="stat-value" id="escalations-general">0</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <h2>Successful Rebookings</h2>
-          <div class="metric-value" id="booking-total">0</div>
-          <div class="metric-label">Total confirmed bookings</div>
-          <div style="margin-top: 20px;">
-            <div class="stat-row">
-              <span class="stat-label">Platinum</span>
-              <span class="stat-value" id="bookings-platinum">0</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label">Gold</span>
-              <span class="stat-value" id="bookings-gold">0</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label">Silver</span>
-              <span class="stat-value" id="bookings-silver">0</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label">General</span>
-              <span class="stat-value" id="bookings-general">0</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <h2>Unsuccessful Rebookings</h2>
-          <div class="metric-value negative" id="failed-booking-total">0</div>
-          <div class="metric-label">Total failed booking attempts</div>
-          <div style="margin-top: 20px;">
-            <div class="stat-row">
-              <span class="stat-label">Failure Rate</span>
-              <span class="stat-value warning" id="failure-rate">0%</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label">Platinum</span>
-              <span class="stat-value" id="failed-bookings-platinum">0</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label">Gold</span>
-              <span class="stat-value" id="failed-bookings-gold">0</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label">Silver</span>
-              <span class="stat-value" id="failed-bookings-silver">0</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label">General</span>
-              <span class="stat-value" id="failed-bookings-general">0</span>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Charts -->
-      <div class="charts-section">
-        <div class="chart-card">
-          <h3>Escalation Requests by Tier</h3>
-          <div class="bar-chart" id="escalation-chart"></div>
-        </div>
-
-        <div class="chart-card">
-          <h3>Successful Rebookings by Tier</h3>
-          <div class="bar-chart" id="rebooking-chart"></div>
-        </div>
-
-        <div class="chart-card">
-          <h3>Failed Rebookings by Tier</h3>
-          <div class="bar-chart" id="failed-rebooking-chart"></div>
-        </div>
-      </div>
-
-      <!-- Escalation Reasons -->
+    <!-- ══════ Bar Charts ══════ -->
+    <section class="chart-grid" id="chartGrid">
       <div class="chart-card">
-        <h3>Top Escalation Reasons</h3>
-        <div id="escalation-reasons"></div>
+        <div class="chart-title">Escalation Requests by Tier</div>
+        <div class="bar-chart" id="chartEscalations"></div>
       </div>
-    </div>
-  </div>
+      <div class="chart-card">
+        <div class="chart-title">Confirmed Rebookings by Tier</div>
+        <div class="bar-chart" id="chartConfirmed"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Failed Rebookings by Tier</div>
+        <div class="bar-chart" id="chartFailed"></div>
+      </div>
+    </section>
 
+    <!-- ══════ Escalation Reasons ══════ -->
+    <section class="reasons-card">
+      <div class="chart-title">Top Escalation Reasons</div>
+      <div id="reasonsList"></div>
+    </section>
+
+  </main>
+
+  <script src="js/config.js"></script>
   <script>
-    const API_BASE_URL = window.API_BASE_URL || 'http://127.0.0.1:3000';
+    // ── Config ───────────────────────────────────────
+    // API_BASE_URL is loaded from config.js (patched by upload-web.py on deploy)
+    // Falls back to localhost for local development
+    if (typeof API_BASE_URL === 'undefined') var API_BASE_URL = 'http://127.0.0.1:3000';
 
-    // Sample data for demo
-    const SAMPLE_DATA = {
+    const FALLBACK_DATA = {
       timestamp: new Date().toISOString(),
+      timeRange: '7d',
       escalations: {
         total: 12,
         byTier: { Platinum: 5, Gold: 4, Silver: 2, General: 1 },
@@ -613,224 +427,165 @@
           'Sentiment auto-escalation (negative)': 3,
           'Wheelchair assistance needed': 2,
           'Complex rebooking scenario': 2,
-          'Compensation inquiry': 1
+          'Compensation inquiry': 1,
         },
-        avgResponseTime: 45,
       },
       rebookings: {
         total: 28,
+        confirmed: 20,
         byTier: { Platinum: 10, Gold: 9, Silver: 6, General: 3 },
-        byChannel: { chat: 22, voice: 4, web: 2 },
-        successRate: '70.00',
+        successRate: '71.43',
       },
       failedRebookings: {
         total: 8,
         byTier: { Platinum: 2, Gold: 3, Silver: 2, General: 1 },
-        failureRate: '22.22',
+        failureRate: '28.57',
       },
-      disruptions: {
-        total: 3,
-        byType: { cancellation: 2, delay: 1 }
-      },
-      summary: {
-        totalSessions: 40,
-        agentRequestsPercentage: '30.00',
-      },
+      disruptions: { total: 3, byType: { CANCELLATION: 2, DELAY: 1 } },
+      summary: { totalSessions: 40, agentRequestsPercentage: '30.00' },
     };
 
+    const TIERS = ['Platinum', 'Gold', 'Silver', 'General'];
+
+    // ── DOM refs ─────────────────────────────────────
+    const timeFilter = document.getElementById('timeFilter');
+    const btnRefresh = document.getElementById('btnRefresh');
+    const elTimestamp = document.getElementById('timestamp');
+
+    // ── Load dashboard ───────────────────────────────
     async function loadDashboard() {
-      const loadingEl = document.getElementById('loading');
-      const contentEl = document.getElementById('dashboard-content');
-      const errorEl = document.getElementById('error');
-      const timeFilter = document.getElementById('timeFilter').value;
-
-      loadingEl.style.display = 'block';
-      contentEl.style.display = 'none';
-      errorEl.style.display = 'none';
-
       try {
-        const response = await fetch(`${API_BASE_URL}/dashboard?timeRange=${timeFilter}`);
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-
-        const data = await response.json();
+        const range = timeFilter.value;
+        const resp = await fetch(`${API_BASE_URL}/dashboard?timeRange=${range}`);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
         renderDashboard(data);
-        loadingEl.style.display = 'none';
-        contentEl.style.display = 'block';
       } catch (err) {
-        console.error('Dashboard error:', err);
-        console.log('Using sample data instead...');
-        // Fall back to sample data
-        renderDashboard(SAMPLE_DATA);
-        loadingEl.style.display = 'none';
-        contentEl.style.display = 'block';
+        console.warn('Dashboard API unavailable, using fallback data:', err.message);
+        renderDashboard(FALLBACK_DATA);
       }
     }
 
+    // ── Render dashboard ─────────────────────────────
     function renderDashboard(data) {
-      const { escalations, rebookings, failedRebookings, disruptions, summary } = data;
+      // Timestamp
+      elTimestamp.textContent = new Date(data.timestamp).toLocaleString();
 
-      // Update timestamp
-      const date = new Date(data.timestamp);
-      document.getElementById('timestamp').textContent = date.toLocaleString();
+      // KPIs
+      document.getElementById('escTotal').textContent = data.escalations.total;
+      document.getElementById('confTotal').textContent = data.rebookings.confirmed;
+      document.getElementById('failTotal').textContent = data.failedRebookings.total;
+      document.getElementById('failRate').textContent = data.failedRebookings.failureRate + '%';
+      document.getElementById('successRate').textContent = data.rebookings.successRate + '%';
+      document.getElementById('agentPct').textContent = data.summary.agentRequestsPercentage + '%';
+      document.getElementById('totalSessions').textContent = data.summary.totalSessions;
+      document.getElementById('totalDisruptions').textContent = data.disruptions.total;
 
-      // KPI Cards
-      document.getElementById('escalation-total').textContent = escalations.total;
-      document.getElementById('escalations-platinum').textContent = escalations.byTier.Platinum;
-      document.getElementById('escalations-gold').textContent = escalations.byTier.Gold;
-      document.getElementById('escalations-silver').textContent = escalations.byTier.Silver;
-      document.getElementById('escalations-general').textContent = escalations.byTier.General;
+      // Tier breakdowns for KPI cards
+      renderTierRows('escTiers', data.escalations.byTier);
+      renderTierRows('confTiers', data.rebookings.byTier);
+      renderTierRows('failTiers', data.failedRebookings.byTier);
 
-      document.getElementById('booking-total').textContent = rebookings.total;
-      document.getElementById('bookings-platinum').textContent = rebookings.byTier.Platinum;
-      document.getElementById('bookings-gold').textContent = rebookings.byTier.Gold;
-      document.getElementById('bookings-silver').textContent = rebookings.byTier.Silver;
-      document.getElementById('bookings-general').textContent = rebookings.byTier.General;
-
-      document.getElementById('failed-booking-total').textContent = failedRebookings.total;
-      document.getElementById('failed-bookings-platinum').textContent = failedRebookings.byTier.Platinum;
-      document.getElementById('failed-bookings-gold').textContent = failedRebookings.byTier.Gold;
-      document.getElementById('failed-bookings-silver').textContent = failedRebookings.byTier.Silver;
-      document.getElementById('failed-bookings-general').textContent = failedRebookings.byTier.General;
-      document.getElementById('failure-rate').textContent = `${failedRebookings.failureRate}%`;
-
-      document.getElementById('success-rate').textContent = `${rebookings.successRate}%`;
-      document.getElementById('agent-request-pct').textContent = `${summary.agentRequestsPercentage}%`;
-      document.getElementById('total-sessions').textContent = summary.totalSessions;
-      document.getElementById('disruption-count').textContent = disruptions.total;
-
-      // Render charts with combined max value for correct proportions
-      const allTierValues = [
-        ...Object.values(escalations.byTier),
-        ...Object.values(rebookings.byTier),
-        ...Object.values(failedRebookings.byTier)
+      // Compute global max across all 3 chart datasets for proportional bars
+      const allValues = [
+        ...Object.values(data.escalations.byTier || {}),
+        ...Object.values(data.rebookings.byTier || {}),
+        ...Object.values(data.failedRebookings.byTier || {}),
       ];
-      const globalMax = Math.max(...allTierValues, 1);
-      
-      renderEscalationChart(escalations.byTier, globalMax);
-      renderRebookingChart(rebookings.byTier, globalMax);
-      renderFailedRebookingChart(failedRebookings.byTier, globalMax);
-      renderEscalationReasons(escalations.byReason);
+      const globalMax = Math.max(1, ...allValues);
+
+      // Charts
+      renderEscalationChart(data.escalations.byTier, globalMax);
+      renderRebookingChart(data.rebookings.byTier, globalMax);
+      renderFailedRebookingChart(data.failedRebookings.byTier, globalMax);
+
+      // Reasons
+      renderEscalationReasons(data.escalations.byReason);
     }
 
+    function renderTierRows(containerId, byTier) {
+      const el = document.getElementById(containerId);
+      el.innerHTML = TIERS.map(t => `
+        <div class="tier-row">
+          <span class="tier-badge ${t}">${t}</span>
+          <span>${byTier[t] || 0}</span>
+        </div>
+      `).join('');
+    }
+
+    // ── Bar Charts ───────────────────────────────────
     function renderEscalationChart(byTier, globalMax) {
-      const container = document.getElementById('escalation-chart');
-      const maxValue = globalMax || Math.max(...Object.values(byTier), 1);
-
-      const colors = {
-        Platinum: '#667eea',
-        Gold: '#f59e0b',
-        Silver: '#8b5cf6',
-        General: '#6b7280'
-      };
-
-      // Ensure all tiers are displayed
-      const tiers = ['Platinum', 'Gold', 'Silver', 'General'];
-      container.innerHTML = tiers.map(tier => {
-        const count = byTier[tier] || 0;
-        const height = (count / maxValue) * 100;
-        return `
-          <div class="bar">
-            <div class="bar-item" style="height: ${height}%; background-color: ${colors[tier]};">
-              ${count > 0 ? `<div class="bar-value">${count}</div>` : ''}
-            </div>
-            ${count === 0 ? `<div class="bar-value" style="position: static; margin-top: 8px;">${count}</div>` : ''}
-            <div class="bar-label">${tier}</div>
-          </div>
-        `;
+      const el = document.getElementById('chartEscalations');
+      el.innerHTML = TIERS.map(t => {
+        const val = byTier[t] || 0;
+        const pct = globalMax > 0 ? (val / globalMax * 100) : 0;
+        return `<div class="bar-col">
+          <div class="bar-value">${val}</div>
+          <div class="bar ${t.toLowerCase()}" style="height:${pct}%"></div>
+          <div class="bar-label">${t}</div>
+        </div>`;
       }).join('');
     }
 
     function renderRebookingChart(byTier, globalMax) {
-      const container = document.getElementById('rebooking-chart');
-      const maxValue = globalMax || Math.max(...Object.values(byTier), 1);
-
-      const colors = {
-        Platinum: '#10b981',
-        Gold: '#3b82f6',
-        Silver: '#8b5cf6',
-        General: '#6b7280'
-      };
-
-      // Ensure all tiers are displayed
-      const tiers = ['Platinum', 'Gold', 'Silver', 'General'];
-      container.innerHTML = tiers.map(tier => {
-        const count = byTier[tier] || 0;
-        const height = (count / maxValue) * 100;
-        return `
-          <div class="bar">
-            <div class="bar-item" style="height: ${height}%; background-color: ${colors[tier]};">
-              ${count > 0 ? `<div class="bar-value">${count}</div>` : ''}
-            </div>
-            ${count === 0 ? `<div class="bar-value" style="position: static; margin-top: 8px;">${count}</div>` : ''}
-            <div class="bar-label">${tier}</div>
-          </div>
-        `;
+      const el = document.getElementById('chartConfirmed');
+      el.innerHTML = TIERS.map(t => {
+        const val = byTier[t] || 0;
+        const pct = globalMax > 0 ? (val / globalMax * 100) : 0;
+        return `<div class="bar-col">
+          <div class="bar-value">${val}</div>
+          <div class="bar green" style="height:${pct}%"></div>
+          <div class="bar-label">${t}</div>
+        </div>`;
       }).join('');
     }
 
     function renderFailedRebookingChart(byTier, globalMax) {
-      const container = document.getElementById('failed-rebooking-chart');
-      const maxValue = globalMax || Math.max(...Object.values(byTier), 1);
-
-      const colors = {
-        Platinum: '#ef4444',
-        Gold: '#f97316',
-        Silver: '#f59e0b',
-        General: '#6b7280'
-      };
-
-      // Ensure all tiers are displayed
-      const tiers = ['Platinum', 'Gold', 'Silver', 'General'];
-      container.innerHTML = tiers.map(tier => {
-        const count = byTier[tier] || 0;
-        const height = (count / maxValue) * 100;
-        return `
-          <div class="bar">
-            <div class="bar-item" style="height: ${height}%; background-color: ${colors[tier]};">
-              ${count > 0 ? `<div class="bar-value">${count}</div>` : ''}
-            </div>
-            ${count === 0 ? `<div class="bar-value" style="position: static; margin-top: 8px;">${count}</div>` : ''}
-            <div class="bar-label">${tier}</div>
-          </div>
-        `;
+      const el = document.getElementById('chartFailed');
+      el.innerHTML = TIERS.map(t => {
+        const val = byTier[t] || 0;
+        const pct = globalMax > 0 ? (val / globalMax * 100) : 0;
+        return `<div class="bar-col">
+          <div class="bar-value">${val}</div>
+          <div class="bar red" style="height:${pct}%"></div>
+          <div class="bar-label">${t}</div>
+        </div>`;
       }).join('');
     }
 
+    // ── Escalation Reasons ───────────────────────────
     function renderEscalationReasons(byReason) {
-      const container = document.getElementById('escalation-reasons');
-      const sorted = Object.entries(byReason)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5); // Top 5 reasons
-
-      if (sorted.length === 0) {
-        container.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">No escalations yet</p>';
+      const el = document.getElementById('reasonsList');
+      if (!byReason || Object.keys(byReason).length === 0) {
+        el.innerHTML = '<div style="color:var(--ios-text3);font-size:14px;padding:12px 0">No escalation data in this time range</div>';
         return;
       }
-
-      const maxValue = Math.max(...sorted.map(([_, count]) => count), 1);
-
-      container.innerHTML = sorted.map(([reason, count]) => {
-        const percentage = (count / maxValue) * 100;
-        return `
-          <div style="margin-bottom: 16px;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-              <span style="color: #333; font-weight: 500;">${reason}</span>
-              <span style="color: #667eea; font-weight: 600;">${count}</span>
-            </div>
-            <div style="height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;">
-              <div style="height: 100%; width: ${percentage}%; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);"></div>
-            </div>
-          </div>
-        `;
+      const sorted = Object.entries(byReason).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      const max = sorted[0][1] || 1;
+      el.innerHTML = sorted.map(([reason, count]) => {
+        const pct = (count / max * 100).toFixed(0);
+        return `<div class="reason-row">
+          <span class="reason-label" title="${reason}">${reason}</span>
+          <div class="reason-bar-wrap"><div class="reason-bar" style="width:${pct}%"></div></div>
+          <span class="reason-count">${count}</span>
+        </div>`;
       }).join('');
     }
 
-    // Load dashboard on page load
-    document.addEventListener('DOMContentLoaded', loadDashboard);
+    // ── Events ───────────────────────────────────────
+    timeFilter.addEventListener('change', loadDashboard);
+    btnRefresh.addEventListener('click', loadDashboard);
 
-    // Auto-refresh every 30 seconds
+    // Toggle back to customer view (Ctrl+Shift+D / Cmd+Shift+D)
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'D') {
+        e.preventDefault();
+        window.location.href = 'index.html';
+      }
+    });
+
+    // ── Init ─────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', loadDashboard);
     setInterval(loadDashboard, 30000);
   </script>
 </body>

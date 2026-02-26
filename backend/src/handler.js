@@ -798,6 +798,128 @@ async function handleGetNotification(event) {
 }
 
 // ──────────────────────────────────────────────
+// GET /dashboard — Support Team Dashboard aggregation
+// ──────────────────────────────────────────────
+
+async function handleDashboard(event) {
+  const qs = event.queryStringParameters || {};
+  const timeRange = qs.timeRange || '7d';
+
+  // Calculate cutoff timestamp
+  const now = Date.now();
+  const rangeMs = {
+    '1h': 60 * 60 * 1000,
+    '24h': 24 * 60 * 60 * 1000,
+    '7d': 7 * 24 * 60 * 60 * 1000,
+    '30d': 30 * 24 * 60 * 60 * 1000,
+  };
+  const cutoff = new Date(now - (rangeMs[timeRange] || rangeMs['7d'])).toISOString();
+
+  // Scan all session and disruption items
+  const sessionItems = await store.scanByPkPrefix('SESSION#');
+  const disruptionItems = await store.scanByPkPrefix('DISRUPTION#');
+
+  // Filter by time range using the item's timestamp fields
+  function getTimestamp(item) {
+    return item.createdAt || item.escalatedAt || item.bookedAt || item.timestamp || '';
+  }
+
+  // Escalations
+  const escalations = sessionItems.filter(
+    (i) => i.sk === 'ESCALATION' && (i.escalatedAt || '') >= cutoff
+  );
+  const escalationsByTier = { Platinum: 0, Gold: 0, Silver: 0, General: 0 };
+  const escalationsByReason = {};
+  for (const esc of escalations) {
+    let tier = (esc.passengerSummary && esc.passengerSummary.tier) || null;
+    if (!tier) {
+      // Infer from priority
+      if (esc.priority === 'HIGH') tier = 'Platinum';
+      else if (esc.priority === 'MEDIUM') tier = 'Gold';
+      else tier = 'General';
+    }
+    escalationsByTier[tier] = (escalationsByTier[tier] || 0) + 1;
+    const reason = esc.escalationReason || 'Unknown';
+    escalationsByReason[reason] = (escalationsByReason[reason] || 0) + 1;
+  }
+
+  // Bookings — confirmed
+  const confirmedBookings = sessionItems.filter(
+    (i) => i.sk === 'BOOKING' && i.status && i.status.startsWith('CONFIRMED') && (i.bookedAt || '') >= cutoff
+  );
+  const confirmedByTier = { Platinum: 0, Gold: 0, Silver: 0, General: 0 };
+  for (const b of confirmedBookings) {
+    const tier = (b.itinerarySummary && b.itinerarySummary.tier) || 'General';
+    confirmedByTier[tier] = (confirmedByTier[tier] || 0) + 1;
+  }
+
+  // Bookings — failed
+  const failedBookings = sessionItems.filter(
+    (i) => i.sk === 'BOOKING' && (i.status === 'FAILED' || i.status === 'CANCELLED') && (i.bookedAt || '') >= cutoff
+  );
+  const failedByTier = { Platinum: 0, Gold: 0, Silver: 0, General: 0 };
+  for (const b of failedBookings) {
+    const tier = (b.itinerarySummary && b.itinerarySummary.tier) || 'General';
+    failedByTier[tier] = (failedByTier[tier] || 0) + 1;
+  }
+
+  const totalBookings = confirmedBookings.length + failedBookings.length;
+  const successRate = totalBookings > 0 ? (confirmedBookings.length / totalBookings * 100).toFixed(2) : '0.00';
+  const failureRate = totalBookings > 0 ? (failedBookings.length / totalBookings * 100).toFixed(2) : '0.00';
+
+  // Disruptions
+  const filteredDisruptions = disruptionItems.filter(
+    (i) => i.sk === 'META' && (i.createdAt || '') >= cutoff
+  );
+  const disruptionsByType = {};
+  for (const d of filteredDisruptions) {
+    const type = d.type || 'UNKNOWN';
+    disruptionsByType[type] = (disruptionsByType[type] || 0) + 1;
+  }
+
+  // Summary
+  const sessionMetas = sessionItems.filter(
+    (i) => i.sk === 'META' && (i.createdAt || '') >= cutoff
+  );
+  const totalSessions = sessionMetas.length;
+  const agentRequestsPercentage = totalSessions > 0
+    ? (escalations.length / totalSessions * 100).toFixed(2)
+    : '0.00';
+
+  const result = {
+    timestamp: new Date().toISOString(),
+    timeRange,
+    escalations: {
+      total: escalations.length,
+      byTier: escalationsByTier,
+      byReason: escalationsByReason,
+    },
+    rebookings: {
+      total: totalBookings,
+      confirmed: confirmedBookings.length,
+      byTier: confirmedByTier,
+      successRate,
+    },
+    failedRebookings: {
+      total: failedBookings.length,
+      byTier: failedByTier,
+      failureRate,
+    },
+    disruptions: {
+      total: filteredDisruptions.length,
+      byType: disruptionsByType,
+    },
+    summary: {
+      totalSessions,
+      agentRequestsPercentage,
+    },
+  };
+
+  logMetric('DASHBOARD_VIEW', 1, { timeRange });
+  return respond(200, result);
+}
+
+// ──────────────────────────────────────────────
 // Lambda entry point
 // ──────────────────────────────────────────────
 
