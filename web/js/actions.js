@@ -61,7 +61,7 @@ async function createDisruption() {
 
     // Auto-chat to get assistant response
     addMessage('user', 'Show me the best options and tradeoffs.');
-    const chatData = await apiCall('/chat', {
+    const chatData = await apiCall('/chatv2', {
       sessionId,
       message: 'Show me the best options and tradeoffs.',
     });
@@ -128,7 +128,7 @@ async function sendChat() {
   addMessage('user', message);
 
   try {
-    const data = await apiCall('/chat', { sessionId, message });
+    const data = await apiCall('/chatv2', { sessionId, message });
 
     // PII: retroactively mark the user message
     if (data.piiDetected) {
