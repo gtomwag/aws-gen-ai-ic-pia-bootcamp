@@ -806,6 +806,8 @@
       max-height: none;
       transform: none;
       box-shadow: none;
+      display: grid;
+      grid-template-rows: 40px 112px 56px;
     }
 
     .chat-option-card.isolated-pass:hover {
@@ -826,7 +828,8 @@
       justify-content: space-between;
       align-items: center;
       gap: 8px;
-      padding: 7px 12px;
+      padding: 0 12px;
+      height: 100%;
     }
 
     .chat-option-card.isolated-pass .iso-pass-left {
@@ -866,12 +869,13 @@
     }
 
     .chat-option-card.isolated-pass .iso-pass-middle {
-      padding: 1px 12px 3px;
+      padding: 0 12px;
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-      align-items: end;
-      gap: 8px;
+      align-items: center;
+      gap: 4px;
       border-bottom: 1px solid #1f2430;
+      height: 100%;
     }
 
     .chat-option-card.isolated-pass .iso-pass-airport {
@@ -879,7 +883,7 @@
       display: grid;
       gap: 0;
       min-width: 0;
-      align-content: end;
+      align-content: center;
     }
 
     .chat-option-card.isolated-pass .iso-pass-airport.to {
@@ -887,8 +891,8 @@
     }
 
     .chat-option-card.isolated-pass .iso-pass-code {
-      font-size: 42px;
-      line-height: 0.88;
+      font-size: 38px;
+      line-height: 0.9;
       letter-spacing: -0.02em;
       color: #0b0f16;
       font-family: var(--font-body);
@@ -905,13 +909,14 @@
       overflow: hidden;
       text-overflow: ellipsis;
       line-height: 1.05;
+      margin-top: -1px;
     }
 
     .chat-option-card.isolated-pass .iso-pass-plane-row {
       display: flex;
       align-items: center;
       gap: 6px;
-      margin-bottom: 2px;
+      margin-bottom: 1px;
     }
 
     .chat-option-card.isolated-pass .iso-pass-line {
@@ -932,15 +937,16 @@
     .chat-option-card.isolated-pass .iso-pass-bottom {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 8px;
-      padding: 0 12px 6px;
-      align-items: start;
+      gap: 4px;
+      padding: 0 12px 3px;
+      align-items: center;
+      height: 100%;
     }
 
     .chat-option-card.isolated-pass .iso-pass-stat {
       text-align: center;
       display: grid;
-      gap: 2px;
+      gap: 0;
     }
 
     .chat-option-card.isolated-pass .iso-pass-label {
@@ -948,6 +954,7 @@
       letter-spacing: 0.05em;
       text-transform: uppercase;
       color: #1f2937;
+      line-height: 1;
     }
 
     .chat-option-card.isolated-pass .iso-pass-value {
@@ -1796,7 +1803,7 @@
 
           <div class="mobile-screen app-screen" id="appScreen">
             <header class="app-header">
-              <h2><i data-lucide="sparkles" class="icon"></i> Disruption Assistant</h2>
+              <h2><i data-lucide="sparkles" class="icon"></i> AI Concierge</h2>
               <span class="status" id="statusText">Ready</span>
             </header>
 
@@ -1862,7 +1869,7 @@
               <div class="chat-panel">
                 <div class="chat-messages" id="chatMessages">
                 </div>
-                <div class="typing-indicator" id="typingIndicator"><i data-lucide="loader-circle" class="icon icon-sm"></i> AI assistant is typing...</div>
+                <div class="typing-indicator" id="typingIndicator"><i data-lucide="loader-circle" class="icon icon-sm"></i> AI Concierge is typing...</div>
                 <div class="chat-footer">
                   <div class="quick-replies" id="quickReplies">
                     <button class="quick-reply" onclick="handleQuickReplyClick(this)" data-action="chat" data-value="Show me the best option for earliest arrival." disabled>Best option</button>
@@ -1935,7 +1942,7 @@
               </div>
 
               <div class="booking-panel" id="bookingPanel">
-                <h3><i data-lucide="circle-check" class="icon"></i> Booking Confirmed</h3>
+                <h3><i data-lucide="circle-check" class="icon"></i> Confirmed</h3>
                 <div class="pnr" id="pnrCode"></div>
                 <div class="details" id="bookingDetails"></div>
                 <div class="itinerary" id="bookingItinerary"></div>

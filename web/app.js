@@ -12,6 +12,7 @@ let metricsEntries = [];
 let latestOptionsMessage = null;
 let showingSuggestedOnly = false;
 let suggestedOptionId = null;
+let additionalOptionCursor = 0;
 let confirmedBooking = null;
 let launchSequenceId = 0;
 
@@ -228,7 +229,7 @@ function setStatus(text) {
 
 function setTypingIndicator(isVisible, text) {
   if (!typingIndicator) return;
-  typingIndicator.innerHTML = `<i data-lucide="loader-circle" class="icon icon-sm"></i> ${text || 'AI assistant is typing...'}`;
+  typingIndicator.innerHTML = `<i data-lucide="loader-circle" class="icon icon-sm"></i> ${text || 'AI Concierge is typing...'}`;
   typingIndicator.classList.toggle('visible', isVisible);
   refreshLucideIcons();
 }
@@ -282,8 +283,7 @@ function getOptionSelectionSuggestions(options) {
 function getSuggestedFollowupSuggestions() {
   return [
     { label: 'See more choices', action: 'show-more', value: '' },
-    { label: 'Why this is best', action: 'chat', value: 'Why is this suggested booking the best option for me?' },
-    { label: 'Talk to a human', action: 'escalate', value: '' },
+    { label: 'Talk to agent', action: 'escalate', value: '' },
     { label: 'Confirm booking', action: 'confirm', value: '' },
   ];
 }
@@ -538,6 +538,16 @@ function formatDepartBadgeTime(timeValue) {
   return `${hour12}:${minute}${ampm}`;
 }
 
+function fallbackSeatForOption(option) {
+  const optionIdText = String(option?.optionId || option?.rank || '1');
+  const digits = (optionIdText.match(/\d+/) || ['1'])[0];
+  const optionNum = Number(digits) || 1;
+  const row = 10 + optionNum;
+  const letters = ['A', 'B', 'C', 'D'];
+  const letter = letters[(optionNum - 1) % letters.length];
+  return `${row}${letter}`;
+}
+
 function toNumberOrFallback(value, fallback) {
   const num = Number(value);
   return Number.isFinite(num) ? num : fallback;
@@ -614,11 +624,44 @@ async function showMoreChoices() {
   if (!currentOptions || currentOptions.length === 0) return;
   await shortThinkingPause(980);
   showingSuggestedOnly = false;
-  addMessage('assistant', 'Absolutely — here are more choices for you to review.');
-  renderOptionsInChat(currentOptions, {
-    introText: 'Additional options are below. Tap any option to select it:',
-    highlightedOptionId: selectedOptionId || suggestedOptionId,
+  const alternatives = currentOptions.filter((option) => {
+    if (suggestedOptionId && option.optionId === suggestedOptionId) return false;
+    if (selectedOptionId && option.optionId === selectedOptionId) return false;
+    return true;
   });
+
+  if (alternatives.length === 0) {
+    addMessage('assistant', 'I do not have additional alternatives right now. Would you like to confirm the current option or speak with an agent?');
+    setQuickReplySuggestions([
+      { label: 'Confirm booking', action: 'confirm', value: '' },
+      { label: 'Talk to agent', action: 'escalate', value: '' },
+    ]);
+    setQuickRepliesEnabled(true);
+    return;
+  }
+
+  if (additionalOptionCursor >= alternatives.length) {
+    additionalOptionCursor = 0;
+  }
+
+  const option = alternatives[additionalOptionCursor];
+  additionalOptionCursor += 1;
+
+  addMessage('assistant', `Here is another option for you. ${buildSimpleOptionDescription(option)}`);
+
+  renderOptionsInChat([option], {
+    introText: null,
+    titleText: `Suggested option ${option.optionId}`,
+    highlightedOptionId: option.optionId,
+  });
+
+  addMessage('assistant', 'Does this option work better for you?');
+  setQuickReplySuggestions([
+    { label: 'See more choices', action: 'show-more', value: '' },
+    { label: 'Talk to agent', action: 'escalate', value: '' },
+    { label: 'Confirm booking', action: 'confirm', value: '' },
+  ]);
+  setQuickRepliesEnabled(true);
 }
 
 function highlightSelectedChatOptionCards() {
@@ -639,16 +682,20 @@ function renderOptionsInChat(options, config = {}) {
   metaRow.className = 'msg-meta';
   const sender = document.createElement('span');
   sender.className = 'sender';
-  sender.textContent = 'AI Assistant';
+  sender.textContent = 'AI Concierge';
   const time = document.createElement('span');
   time.textContent = messageTimeLabel();
   metaRow.appendChild(sender);
   metaRow.appendChild(time);
   wrapper.appendChild(metaRow);
 
-  const intro = document.createElement('div');
-  intro.textContent = config.introText || 'Here are your best rebooking options. Tap one to choose it:';
-  wrapper.appendChild(intro);
+  const hasCustomIntro = Object.prototype.hasOwnProperty.call(config, 'introText');
+  const introText = hasCustomIntro ? config.introText : 'Here are your best rebooking options. Tap one to choose it:';
+  if (introText) {
+    const intro = document.createElement('div');
+    intro.textContent = introText;
+    wrapper.appendChild(intro);
+  }
 
   if (config.titleText) {
     const title = document.createElement('div');
@@ -667,7 +714,7 @@ function renderOptionsInChat(options, config = {}) {
     const departs = o.depart || '--';
     const departBadge = formatDepartBadgeTime(departs);
     const gate = o.gate || '--';
-    const seat = o.seat || '--';
+    const seat = o.seat || fallbackSeatForOption(o);
     const fromCity = airportDisplayName(route.fromCode);
     const toCity = airportDisplayName(route.toCode);
     const card = document.createElement('div');
@@ -735,29 +782,12 @@ function addMessage(role, text, meta) {
     metaRow.className = 'msg-meta';
     const sender = document.createElement('span');
     sender.className = 'sender';
-    sender.textContent = role === 'assistant' ? 'AI Assistant' : 'You';
+    sender.textContent = role === 'assistant' ? 'AI Concierge' : 'You';
     const time = document.createElement('span');
     time.textContent = messageTimeLabel();
     metaRow.appendChild(sender);
     metaRow.appendChild(time);
     div.appendChild(metaRow);
-  }
-
-  // ── Source badge for assistant messages ──
-  if (role === 'assistant' && meta && meta.source) {
-    const badge = document.createElement('div');
-    const src = meta.source;
-    if (src === 'knowledge-base') {
-      badge.className = 'msg-source-badge source-kb';
-      badge.textContent = 'Knowledge Base';
-    } else if (src === 'bedrock') {
-      badge.className = 'msg-source-badge source-bedrock';
-      badge.textContent = 'Bedrock AI';
-    } else {
-      badge.className = 'msg-source-badge source-fallback';
-      badge.textContent = 'Fallback';
-    }
-    div.appendChild(badge);
   }
 
   // ── Message body ──
@@ -869,6 +899,7 @@ function formatCostDelta(delta) {
 
 function renderOptions(options) {
   allOptions = options || [];
+  additionalOptionCursor = 0;
   applyFiltersAndSort();
   if (showingSuggestedOnly) {
     const suggested = chooseSuggestedOption(currentOptions);
@@ -969,6 +1000,7 @@ async function createDisruption() {
   chatMessages.innerHTML = '';
   selectedOptionId = null;
   suggestedOptionId = null;
+  additionalOptionCursor = 0;
   showingSuggestedOnly = true;
   addMetric('disruption_request', 'type=CANCELLATION airport=FRA');
 
@@ -1029,8 +1061,6 @@ async function createDisruption() {
       setTypingIndicator(true, 'Reviewing routes and prioritizing your best rebooking options...');
       await wait(CHAT_THINK_MS);
       setTypingIndicator(false);
-      await wait(CHAT_BETWEEN_MSG_MS);
-      addMessage('assistant', 'Thank you for your patience. I found the strongest rebooking options for you. Please select one to continue.');
       await wait(CHAT_BETWEEN_MSG_MS + 140);
       renderOptions(data.options);
       addMetric('options_generated', `count=${data.options.length}`);
