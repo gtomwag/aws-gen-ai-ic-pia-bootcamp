@@ -269,10 +269,12 @@ async function escalate() {
 
 function downloadBoardingPass() {
   if (!sessionId) {
+    alert('ERROR: No session ID available. Please complete the booking flow first.');
     console.error('No session ID available for boarding pass download');
     return;
   }
   
+  console.log('Downloading boarding pass for sessionId:', sessionId);
   const pnr = pnrCode.textContent;
   
   // Download PDF boarding pass with actual booking data

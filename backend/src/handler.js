@@ -936,7 +936,7 @@ async function handleBoardingPass(event) {
     // Get session data
     const sessionData = await store.getItem(`SESSION#${sessionId}`, 'META');
     if (!sessionData) {
-      console.log('Session not found:', sessionId);
+      console.log('Session META not found:', sessionId);
       return respond(404, { error: 'Session not found' });
     }
 
@@ -963,8 +963,8 @@ async function handleBoardingPass(event) {
     const passengerName = `${passenger.firstName || 'Passenger'} ${passenger.lastName || 'Name'}`;
     const tier = passenger.tier || 'General';
     const classType = itinerary.class || 'Economy';
-    const seat = '12A';
-    const gate = 'B12';
+    const seat = itinerary.seat || '12A';
+    const gate = itinerary.gate || 'B12';
     const boardingTime = itinerary.departure || '18:30';
     const date = passenger.date || '2026-02-25';
     
