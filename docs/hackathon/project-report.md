@@ -7,8 +7,8 @@
 **Project:** DuHast Airlines — AI-Powered Proactive Disruption Management  
 **Client/Domain:** Airline Operations — Irregular Operations (IROPS) Management  
 **Format:** 1-Day Proof of Concept (Hackathon)  
-**Date:** February 25, 2026  
-**Objective:** Demonstrate an AI-driven, proactive disruption management workflow that detects flight disruptions, assesses passenger impact with tier-based prioritization, generates personalized rebooking options, sends proactive notifications, handles booking confirmations, and produces agent escalation packets — all in under 3 seconds per passenger.
+**Date:** February 26, 2026  
+**Objective:** Demonstrate an AI-driven, proactive disruption management workflow using AWS AgentCore Runtime with a Bedrock agent that intelligently handles flight disruptions, generates personalized rebooking options, queries policy knowledge bases, and provides seamless customer self-service through an intuitive mobile-first interface.
 
 ---
 
@@ -117,84 +117,98 @@ An AI-driven **proactive** system that:
 ### Solution Overview
 
 **Stack:**
-- **Compute:** AWS Lambda (Node.js 18) — single function, multiple route handlers
-- **API:** Amazon API Gateway (REST) with CORS
+- **Agent Runtime:** AWS AgentCore Runtime hosting Bedrock agent with Claude 3.5 Sonnet
+- **Agent Tools:** 2 active tools (generate_rebooking_options, query_policy), 4 tools ready for testing (analyze_passenger_sentiment, translate_message, confirm_booking, create_escalation)
+- **API Layer:** API Gateway + Lambda proxy forwarding requests to AgentCore Runtime
+- **Compute:** AWS Lambda (Python for agent, Node.js for original backend)
 - **Storage:** Amazon DynamoDB — single-table design (pk/sk composite key)
-- **AI (optional):** Amazon Bedrock (Claude 3 Haiku) for natural-language chat
-- **Frontend:** Dependency-free static HTML/JS/CSS
-- **IaC:** AWS SAM (template.yaml)
-- **Local dev:** Simple Node.js HTTP server (`server-local.js`) with in-memory store
+- **AI Services:** Bedrock Knowledge Base (RAG), AgentCore Runtime
+- **Frontend:** Dependency-free static HTML/JS/CSS with mobile-first design
+- **IaC:** AWS SAM for backend, AgentCore CLI for agent deployment
 
 ### Solution Diagram
 
 ```mermaid
 graph LR
     A["Static Web UI<br>HTML/JS/CSS<br>(DuHast Airlines)"] -->|HTTP| B["API Gateway"]
-    B --> C["Lambda<br>Node.js 18"]
-    C --> D["DynamoDB<br>Single Table"]
-    C -.->|"Chat + Voice"| E["Bedrock<br>Claude 3 Haiku"]
-    C -.->|"Policy Q&A"| KB["Bedrock KB<br>RAG (4 docs)"]
-    E -.->|"Safety"| BG["Bedrock<br>Guardrails"]
-    C -.->|"Sentiment + PII"| CO["Comprehend"]
-    C -.->|"Translate"| TR["Translate"]
-    C -.->|"Voice Sessions"| VS["Nova Sonic<br>Voice Agent"]
-    VS -.->|"Reuses"| E
-    VS -.->|"Reuses"| KB
+    B --> C["Lambda Proxy<br>Python"]
+    C --> D["AgentCore Runtime<br>Bedrock Agent"]
+    D --> E["Claude 3.5 Sonnet"]
+    D --> KB["Bedrock KB<br>RAG (Policy Docs)"]
+    D -.->|"Tool: analyze_sentiment"| CO["Comprehend"]
+    D -.->|"Tool: translate"| TR["Translate"]
+    B --> L["Lambda<br>Node.js<br>(Original Backend)"]
+    L --> DB["DynamoDB<br>Single Table"]
 ```
 
-### AI Service Chaining
+### AI Service Integration
 
-> **Rubric: Technical Depth** — The six AWS AI services don't operate in isolation — they form an intelligent pipeline:
+> **Rubric: Technical Depth** — The system uses AWS AgentCore Runtime to orchestrate AI services through an intelligent agent:
 
 ```
-User Message
-    │
-    ├─► isPolicyQuestion() ──► YES ──► Bedrock Knowledge Base (RAG)
-    │         (30+ keyword triggers)          │
-    │                                         ├─► RetrieveAndGenerate
-    │                                         ├─► Citation extraction
-    │                                         └─► Bedrock Guardrails filter
-    │
-    ├─► NO ──► Bedrock Claude 3 Haiku (Chat)
-    │              │
-    │              ├─► System prompt with passenger context
-    │              ├─► Anti-hallucination instructions
-    │              └─► Bedrock Guardrails filter
-    │
-    ├─► Amazon Comprehend (parallel, every message)
-    │       ├─► DetectSentiment → confidence scores
-    │       ├─► DetectPiiEntities → entity flags
-    │       └─► evaluateEscalationTrigger() → auto-escalation check
-    │
-    ├─► Voice pathway (if voice session):
-    │       ├─► detectTransferIntent() → regex NLU (5 patterns + negation)
-    │       ├─► maybeNovaSonicVoiceReply() → KB or Chat routing
-    │       └─► Voice session lifecycle management
-    │
-    └─► Amazon Translate (notifications)
-            ├─► DetectDominantLanguage
-            ├─► TranslateText (75+ languages)
-            └─► Preserve original for audit
+User Message → API Gateway → Lambda Proxy → AgentCore Runtime
+                                                    │
+                                                    ▼
+                                            Bedrock Agent (Claude 3.5 Sonnet)
+                                                    │
+                                    ┌───────────────┼───────────────┐
+                                    ▼               ▼               ▼
+                            Tool Selection    Tool Selection   Tool Selection
+                                    │               │               │
+                        ┌───────────┴───────┐       │       ┌───────┴────────┐
+                        ▼                   ▼       ▼       ▼                ▼
+            generate_rebooking_options  query_policy  analyze_sentiment  translate_message
+                        │                   │           │                    │
+                        ▼                   ▼           ▼                    ▼
+                Python Function      Bedrock KB    Comprehend          Translate
+                                      (RAG)
 ```
 
-Every AI service has:
-- **Feature flag** (`USE_BEDROCK`, `USE_KNOWLEDGE_BASE`, `USE_GUARDRAILS`, `USE_COMPREHEND`, `USE_TRANSLATE`, `USE_VOICE`)
-- **Deterministic fallback** when disabled (system never breaks)
-- **METRIC: structured logging** (CloudWatch-ready)
-- **Visual UI indicator** (source badges, sentiment bar, PII badge, escalation alert, citations)
+**Agent Tool Capabilities:**
+1. **generate_rebooking_options** ✅ ACTIVE - Dynamically generates personalized flight options based on passenger tier, origin, destination, and constraints
+2. **query_policy** ✅ ACTIVE - Queries Bedrock Knowledge Base for EU261, compensation, GDPR, and airline policy information
+3. **analyze_passenger_sentiment** 🔧 READY - Uses Amazon Comprehend to analyze message sentiment (coded, ready for UI integration and testing)
+4. **translate_message** 🔧 READY - Translates messages between languages using Amazon Translate (coded, ready for testing)
+5. **confirm_booking** 🔧 READY - Confirms rebooking selection and generates PNR (coded, ready for integration)
+6. **create_escalation** 🔧 READY - Creates escalation ticket with priority based on passenger tier (coded, ready for integration)
+
+The agent automatically selects which tools to use based on the user's intent. Currently, the two active tools (generate_rebooking_options and query_policy) handle the core rebooking and policy query workflows. The remaining tools are fully implemented and ready for testing/tweaking as needed. All agent actions and reasoning are visible in AgentCore observability dashboards.
 
 ### Module Breakdown
 
 | Module | File | Responsibility | POC vs Mocked |
 |---|---|---|---|
+| **AgentCore Agent** | `agentcoreCreateManually/src/main.py` | Implements 6 inline tools for the Bedrock agent | Real (deployed to AgentCore Runtime) |
+| **Lambda Proxy** | `backend/api-proxy/handler.py` | Forwards `/chatv2` requests to AgentCore Runtime | Real (deployed) |
 | **Disruption Detection** | `handler.js` → `handleDisruption` | Creates disruption record from API/event trigger | Real (synthetic trigger) |
 | **Impact Assessment** | `handler.js` + `passengers.js` | Generates 200-passenger manifest with tiers, connection risks, consent status | Real (synthetic data) |
 | **Option Generator** | `handler.js` → `generateCandidateOptions` | 4–6 ranked options per passenger with tier-based perks, constraint filtering | Real (rule-based) |
 | **Proactive Notification** | `handler.js` → `generateNotificationCopy` | Personalized notification with tier badge, channel selection, CTA | Real (simulated delivery) |
-| **Chat / Conversational AI** | `bedrock.js` → `maybeBedrockChat` | Natural language option comparison | Real (Bedrock) or Fallback (deterministic) |
+| **Chat / Conversational AI** | AgentCore Runtime | Natural language understanding with automatic tool selection | Real (AgentCore + Bedrock) |
 | **Booking Confirmation** | `handler.js` → `handleConfirm` | Mock PNR with itinerary summary and offline-friendly note | Mocked (no PSS) |
 | **Escalation Packet** | `handler.js` → `handleEscalate` | Full context: passenger, disruption, options, selections, AI recommendation, policy notes | Real (rule-based) |
 | **Metrics** | `util.js` → `logMetric` | METRIC: structured logs for all key events | Real (CloudWatch-ready) |
+
+### Frontend Experience
+
+The UI has been redesigned for optimal user experience:
+
+**Chat Interface:**
+- Suggested prompt cards appear after disruption (no auto-messages)
+- Users can click suggested prompts or type their own
+- Clear "AI Assistant" labeling with source badges
+- Clean, distraction-free interface
+
+**Trips Tab:**
+- Shows current flight status by default
+- "View Rebooking Options" button appears when flight is disrupted
+- Rebooking options shown as secondary view with close button
+- After booking confirmation, trip card updates to show new flight with "Confirmed" status
+
+**Updates/Notifications:**
+- Notification status updates to "RESOLVED" after successful rebooking
+- Shows confirmation details and new flight information
+- Clear visual feedback throughout the booking flow
 
 ---
 
@@ -202,16 +216,14 @@ Every AI service has:
 
 | Service | Module | How We Use It | Integration Depth | Status |
 |---|---|---|---|---|
-| **Amazon Bedrock — Claude 3 Haiku** | `bedrock.js` | Context-aware chat with custom system prompt (passenger tier, disruption context, EU261 guidance, anti-hallucination instructions); response includes `source` attribution field | System prompt engineering, context injection, source attribution, graceful error fallback | ✅ Active |
-| **Bedrock Knowledge Bases (RAG)** | `bedrock.js` | `RetrieveAndGenerate` for policy questions; auto-routed via `isPolicyQuestion()` with 30+ keyword triggers; returns citation footnotes from 4 indexed documents (EU261, airline policy, GDPR, FAQ) | Automatic query routing, citation extraction, 4 curated knowledge documents, deterministic policy fallback when KB unavailable | ✅ Active |
-| **Bedrock Guardrails** | `bedrock.js` | 5 guardrail policies: PII anonymization, denied topics (legal advice, competitor comparisons, unauthorized promises), content safety filters, word filters ("guaranteed", "we admit fault", "lawsuit"), grounding checks for KB responses | Multi-policy guardrail configuration, applied to all Bedrock output paths | ✅ Active |
-| **Amazon Comprehend** | `comprehend.js` | Dual API call per chat message: (1) `DetectSentiment` → POSITIVE/NEGATIVE/NEUTRAL/MIXED with confidence scores, (2) `DetectPiiEntities` → SSN, credit card, passport flagging; custom `evaluateEscalationTrigger()` fires auto-escalation after 2+ consecutive NEGATIVE at >70% confidence | Two parallel analyses per message, custom business logic for escalation, sentiment trajectory tracking | ✅ Active |
-| **Amazon Translate** | `translate.js` | `TranslateText` + `DetectDominantLanguage` for notification localization; original English preserved as `originalBody` for audit; 75+ language support | Language detection, translation with audit trail preservation, channel-aware notification rendering | ✅ Active |
-| **Amazon Bedrock Nova Sonic (Voice)** | `voice.js` + `bedrock.js` | Voice session orchestration via `maybeNovaSonicVoiceReply()`; reuses KB and Chat pathways for voice queries; transfer intent detection with 5 regex patterns + negation handling; voice session lifecycle management (start → active → transfer → complete) | Voice AI reusing text pipelines, NLU intent detection, human transfer lifecycle management | ✅ Active |
-| **AWS Lambda** | `handler.js` | All backend compute (Node.js 18) — single function, 10+ route handlers | Monolithic Lambda with feature-flag-driven AI service orchestration | ✅ Active |
-| **Amazon API Gateway** | `template.yaml` | REST API with CORS for all endpoints | HTTP routing, CORS configuration | ✅ Active |
-| **Amazon DynamoDB** | `store.js` | Single-table design (pk/sk composite key) for all entities | 8 entity types co-located by session for efficient queries | ✅ Active |
-| **AWS SAM** | `template.yaml` | Infrastructure as Code — 8 AI service parameters, IAM policies for all services | Parameterized deployment with per-service configuration | ✅ Active |
+| **AWS AgentCore Runtime** | `agentcoreCreateManually/` | Managed runtime hosting Bedrock agent with 6 inline tools; handles tool orchestration, context management, and response generation | Full agent deployment with tool definitions, system prompts, and observability | ✅ Deployed |
+| **Amazon Bedrock — Claude 3.5 Sonnet** | Agent foundation model | Powers the agent's reasoning, natural language understanding, and tool selection decisions | Agent-level integration with automatic tool calling | ✅ Active |
+| **Bedrock Knowledge Bases (RAG)** | `query_policy` tool | Agent calls this tool for policy questions; retrieves from EU261, airline policy, GDPR documents | Tool-based integration, actively used by agent | ✅ Active |
+| **Amazon Comprehend** | `analyze_passenger_sentiment` tool | Agent can call this tool to analyze sentiment | Tool implemented, ready for UI integration | 🔧 Ready |
+| **Amazon Translate** | `translate_message` tool | Agent can call this tool for multi-language support | Tool implemented, ready for testing | 🔧 Ready |
+| **AWS Lambda** | `handler.py` (proxy), `handler.js` (backend) | Proxy Lambda forwards chat requests to AgentCore; original Lambda handles disruption creation, options, booking | Dual Lambda architecture: proxy + original backend | ✅ Active |
+| **Amazon API Gateway** | `template.yaml` | REST API with `/chatv2` endpoint for AgentCore, legacy endpoints for original backend | HTTP routing with CORS configuration | ✅ Active |
+| **Amazon DynamoDB** | `store.js` | Single-table design for sessions, disruptions, bookings, escalations | 8 entity types co-located by session | ✅ Active |
 
 ---
 
