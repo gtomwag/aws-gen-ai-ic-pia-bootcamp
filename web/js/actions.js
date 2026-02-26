@@ -278,6 +278,6 @@ function downloadBoardingPass() {
   const pnr = pnrCode.textContent;
   
   // Download PDF boarding pass with actual booking data
-  window.location.href = `/boarding-pass?sessionId=${sessionId}`;
+  window.location.href = `${API_BASE_URL}/boarding-pass?sessionId=${sessionId}`;
   addMetric('boarding_pass_download', `pnr=${pnr} sessionId=${sessionId}`);
 }
