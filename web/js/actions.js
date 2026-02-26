@@ -110,7 +110,7 @@ function handleChatMeta(data) {
     autoEscalationAlert.classList.add('visible');
     autoEscalationDetail.textContent =
       `${data.autoEscalation.consecutiveNegative} consecutive negative — routing to agent`;
-    addMessage('system', '🚨 Auto-escalation triggered. Consider speaking with an agent.');
+    addMessage('system', 'Auto-escalation triggered. Consider speaking with an agent.');
     addMetric('SENTIMENT_AUTO_ESCALATE', `consecutive=${data.autoEscalation.consecutiveNegative}`);
   }
 
@@ -137,7 +137,7 @@ async function sendChat() {
       if (lastUserMsg && !lastUserMsg.querySelector('.msg-pii-warning')) {
         const pii = document.createElement('div');
         pii.className = 'msg-pii-warning';
-        pii.textContent = '🔒 Sensitive data detected';
+        pii.textContent = 'Sensitive data detected';
         lastUserMsg.appendChild(pii);
       }
       addMetric('PII_DETECTED', 'in user message');
@@ -221,7 +221,7 @@ async function confirmSelection() {
       offlineNote.classList.add('visible');
     }
 
-    addMessage('system', `✅ Booking confirmed! PNR: ${b.pnr}`);
+    addMessage('system', `Booking confirmed. PNR: ${b.pnr}`);
     addMetric('booking_confirmed', `pnr=${b.pnr}`);
 
     // Show booking screen
@@ -242,7 +242,7 @@ async function escalate() {
 
   try {
     const data = await apiCall('/escalate', { sessionId, reason: 'Customer requested live agent' });
-    addMessage('system', '📞 Escalated to agent. Handoff packet created.');
+    addMessage('system', 'Escalated to agent. Handoff packet created.');
     addMetric('escalated', `priority=${data.packet.priority} tier=${data.packet.passengerSummary?.tier}`);
 
     // Show escalation modal sheet
@@ -381,7 +381,7 @@ async function ensureVoiceSession() {
     voiceSessionId = startData.voiceSessionId;
     voiceTurnSequence = 1;
     addMetric('voice_session_started_ui', `voiceSessionId=${voiceSessionId}`);
-    addMessage('system', '📞 Voice session started. Listening...');
+    addMessage('system', 'Voice session started. Listening...');
     return voiceSessionId;
   } catch (err) {
     if (err?.message && err.message.includes('Active voice session already exists')) {
@@ -396,7 +396,7 @@ async function handleVoiceTranscript(transcript) {
   const cleaned = (transcript || '').trim();
   if (!cleaned || !voiceSessionId) return;
 
-  addMessage('user', `🎙️ ${cleaned}`);
+  addMessage('user', cleaned);
 
   const voiceData = await apiCall('/voice/turn', {
     voiceSessionId,
@@ -415,19 +415,19 @@ async function handleVoiceTranscript(transcript) {
     voiceTransferRequestId = transferData.transferRequestId || null;
     const initialTransferStatusMessage = transferData.statusMessage || '';
     if (initialTransferStatusMessage) {
-      addMessage('system', `📞 ${initialTransferStatusMessage}`);
+      addMessage('system', initialTransferStatusMessage);
     }
     addMetric('voice_transfer_requested_ui', `status=${transferData.status}`);
 
     if (voiceTransferRequestId) {
       const statusData = await apiCall(`/voice/transfer-status?voiceSessionId=${voiceSessionId}&transferRequestId=${voiceTransferRequestId}`);
       if (statusData?.statusMessage && statusData.statusMessage !== initialTransferStatusMessage) {
-        addMessage('system', `📡 ${statusData.statusMessage}`);
+        addMessage('system', statusData.statusMessage);
       }
       addMetric('voice_transfer_status_ui', `status=${statusData.status}`);
     }
 
-    stopVoiceConversation('📴 Voice call ended. Transferring to a human agent now.');
+    stopVoiceConversation('Voice call ended. Transferring to a human agent now.');
     return;
   }
 
@@ -442,7 +442,7 @@ async function handleVoiceTranscript(transcript) {
 
 async function startVoiceConversation() {
   if (isVoiceCallActive) {
-    stopVoiceConversation('📴 Voice call ended.');
+    stopVoiceConversation('Voice call ended.');
     return;
   }
 
@@ -463,7 +463,7 @@ async function startVoiceConversation() {
     voiceTransferRequestId = null;
     setVoiceCallUiActive(true);
     addMetric('voice_phone_call_started_ui', `voiceSessionId=${activeSessionId}`);
-    addMessage('system', '📞 Connected to Nova Sonic II. Speak now. Say "escalate to a human" any time to transfer.');
+    addMessage('system', 'Connected to Nova Sonic II. Speak now. Say "escalate to a human" any time to transfer.');
     startVoiceListeningLoop();
   } catch (err) {
     console.error('startVoiceConversation error:', err);

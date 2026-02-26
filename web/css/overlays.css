@@ -103,7 +103,11 @@
   color: #fff;
   margin-bottom: 12px;
   font-family: var(--font-body);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
+.metrics-drawer-title .lucide { width: 16px; height: 16px; }
 .metrics-section {
   margin-bottom: 12px;
 }

@@ -22,7 +22,13 @@
   align-items: flex-start;
   gap: 10px;
 }
-.alert-banner .alert-emoji { font-size: 22px; }
+.alert-banner .alert-emoji {
+  font-size: 22px;
+  color: var(--danger);
+  display: inline-flex;
+  align-items: center;
+}
+.alert-banner .alert-emoji .lucide { width: 20px; height: 20px; }
 .alert-banner .alert-content { flex: 1; }
 .alert-banner .alert-type {
   font-size: 15px;
@@ -74,6 +80,7 @@
   font-size: 16px;
   color: var(--ios-blue);
 }
+.flight-route .route-line .plane-icon .lucide { width: 16px; height: 16px; }
 .flight-meta {
   display: flex;
   justify-content: space-between;

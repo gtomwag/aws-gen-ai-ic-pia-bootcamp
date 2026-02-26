@@ -27,7 +27,7 @@ async function apiCall(path, body) {
     const message = `${err.message || 'Request failed.'}${hint}`;
 
     setStatus(`Error: ${message}`);
-    addMessage('system', `⚠ Error: ${message}`);
+    addMessage('system', `Error: ${message}`);
     throw err;
   }
 }

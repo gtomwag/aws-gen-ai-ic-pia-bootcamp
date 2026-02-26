@@ -21,6 +21,8 @@ function showScreen(screenId) {
   const tabScreens = ['screenOptions', 'screenChat', 'screenDetail'];
   if (tabScreens.includes(screenId)) {
     tabBar.classList.add('visible');
+  } else {
+    tabBar.classList.remove('visible');
   }
 
   // Update active tab
@@ -30,6 +32,44 @@ function showScreen(screenId) {
     const tabBtn = document.querySelector(`.tab-item[data-tab="${tabMap[screenId]}"]`);
     if (tabBtn) tabBtn.classList.add('active');
   }
+
+  refreshIcons();
+}
+
+function slideIntoChat() {
+  showScreen('screenChat');
+  screenChat.classList.add('auto-slide-in');
+  setTimeout(() => {
+    screenChat.classList.remove('auto-slide-in');
+  }, 360);
+}
+
+function setHomeSkeletonState(active) {
+  const appHome = document.getElementById('appHome');
+  if (!appHome) return;
+  appHome.classList.toggle('loading', active);
+}
+
+const LAUNCH_SPLASH_MS = 1050;
+const HOME_SKELETON_MS = 1650;
+
+function launchLoadingThenHome({ autoOpenChat = true } = {}) {
+  setHomeSkeletonState(false);
+  showScreen('screenLoading');
+  setTimeout(() => {
+    showScreen('screenHome');
+    setHomeSkeletonState(true);
+    if (autoOpenChat) {
+      setTimeout(() => {
+        setHomeSkeletonState(false);
+        slideIntoChat();
+      }, HOME_SKELETON_MS);
+    } else {
+      setTimeout(() => {
+        setHomeSkeletonState(false);
+      }, HOME_SKELETON_MS);
+    }
+  }, LAUNCH_SPLASH_MS);
 }
 
 // Tab bar click
@@ -43,18 +83,24 @@ document.querySelectorAll('.tab-item').forEach(tab => {
 
 // Back button on detail
 document.getElementById('detailBack').addEventListener('click', () => {
-  showScreen('screenLock');
-  tabBar.classList.remove('visible');
+  if (sessionId) {
+    showScreen('screenHome');
+  } else {
+    showScreen('screenLock');
+  }
 });
 
 // CTA buttons on detail screen
 document.getElementById('ctaViewOptions').addEventListener('click', () => showScreen('screenOptions'));
-document.getElementById('ctaChatAssistant').addEventListener('click', () => showScreen('screenChat'));
+document.getElementById('ctaChatAssistant').addEventListener('click', () => slideIntoChat());
 
 // Lock screen notification card tap
 document.getElementById('lockNotifCard').addEventListener('click', () => {
-  showScreen('screenDetail');
+  launchLoadingThenHome({ autoOpenChat: true });
 });
+
+homeViewUpdate.addEventListener('click', () => showScreen('screenDetail'));
+homeOpenChat.addEventListener('click', () => slideIntoChat());
 
 // Done button on booking
 document.getElementById('btnDone').addEventListener('click', () => {

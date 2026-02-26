@@ -39,6 +39,8 @@ const sentimentDot = document.getElementById('sentimentDot');
 
 // Screens
 const screenLock = document.getElementById('screenLock');
+const screenLoading = document.getElementById('screenLoading');
+const screenHome = document.getElementById('screenHome');
 const screenDetail = document.getElementById('screenDetail');
 const screenOptions = document.getElementById('screenOptions');
 const screenChat = document.getElementById('screenChat');
@@ -46,3 +48,18 @@ const screenBooking = document.getElementById('screenBooking');
 const tabBar = document.getElementById('tabBar');
 const metricsOverlay = document.getElementById('metricsOverlay');
 const escalationOverlay = document.getElementById('escalationOverlay');
+
+// Home landing refs
+const homePassengerName = document.getElementById('homePassengerName');
+const homePassengerTier = document.getElementById('homePassengerTier');
+const homeTripFlight = document.getElementById('homeTripFlight');
+const homeTripStatus = document.getElementById('homeTripStatus');
+const homeTripTime = document.getElementById('homeTripTime');
+const homeTripRoute = document.getElementById('homeTripRoute');
+const homeTripDeparts = document.getElementById('homeTripDeparts');
+const homeTripGate = document.getElementById('homeTripGate');
+const homeTripTerminal = document.getElementById('homeTripTerminal');
+const homeTripSeat = document.getElementById('homeTripSeat');
+const homeTripCause = document.getElementById('homeTripCause');
+const homeViewUpdate = document.getElementById('homeViewUpdate');
+const homeOpenChat = document.getElementById('homeOpenChat');

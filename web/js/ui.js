@@ -1,5 +1,11 @@
 // ── UI Helpers ────────────────────────────────────────────
 
+function refreshIcons() {
+  if (window.lucide && typeof window.lucide.createIcons === 'function') {
+    window.lucide.createIcons();
+  }
+}
+
 function addMessage(role, text, meta) {
   const div = document.createElement('div');
   div.className = `msg ${role}`;
@@ -10,13 +16,13 @@ function addMessage(role, text, meta) {
     const src = meta.source;
     if (src === 'knowledge-base') {
       badge.className = 'msg-source-badge source-kb';
-      badge.textContent = '📚 Knowledge Base';
+      badge.innerHTML = '<i data-lucide="book-open" aria-hidden="true"></i><span>Knowledge Base</span>';
     } else if (src === 'bedrock') {
       badge.className = 'msg-source-badge source-bedrock';
-      badge.textContent = '🤖 AI Assistant';
+      badge.innerHTML = '<i data-lucide="sparkles" aria-hidden="true"></i><span>AI Assistant</span>';
     } else {
       badge.className = 'msg-source-badge source-fallback';
-      badge.textContent = '💬 Quick Reply';
+      badge.innerHTML = '<i data-lucide="message-circle" aria-hidden="true"></i><span>Quick Reply</span>';
     }
     div.appendChild(badge);
   }
@@ -33,7 +39,7 @@ function addMessage(role, text, meta) {
     citDiv.className = 'msg-citations';
     const toggleId = 'cit-' + Date.now();
     citDiv.innerHTML =
-      `<div class="citation-toggle" onclick="document.getElementById('${toggleId}').classList.toggle('expanded')">📎 Sources ›</div>` +
+      `<div class="citation-toggle" onclick="document.getElementById('${toggleId}').classList.toggle('expanded')"><i data-lucide="paperclip" aria-hidden="true"></i><span>Sources ›</span></div>` +
       `<div class="citation-list" id="${toggleId}">` +
       meta.citations.map((c, i) =>
         `<span class="citation-item">[${i + 1}] ${typeof c === 'string' ? c : (c.title || c.uri || c.text || JSON.stringify(c))}</span>`
@@ -45,12 +51,13 @@ function addMessage(role, text, meta) {
   if (role === 'user' && meta && meta.piiDetected) {
     const pii = document.createElement('div');
     pii.className = 'msg-pii-warning';
-    pii.textContent = '🔒 Sensitive data detected';
+    pii.textContent = 'Sensitive data detected';
     div.appendChild(pii);
   }
 
   chatMessages.appendChild(div);
   chatMessages.scrollTop = chatMessages.scrollHeight;
+  refreshIcons();
 }
 
 function addMetric(name, detail) {
@@ -109,6 +116,23 @@ function showNotification(notification, passenger) {
 
   // Notification body
   document.getElementById('notifBodyCard').textContent = notification.body || '';
+
+  // Home landing summary
+  if (homePassengerName) homePassengerName.textContent = name;
+  if (homePassengerTier) homePassengerTier.textContent = `DuHast Signature ${passenger.tier || 'General'}`;
+  if (homeTripFlight) homeTripFlight.textContent = passenger.flightNumber || notification.affectedFlight || 'UA891';
+  if (homeTripStatus) {
+    const status = (storedDisruptionType || 'CANCELLATION').toUpperCase();
+    homeTripStatus.textContent = status;
+    homeTripStatus.classList.toggle('cancelled', status === 'CANCELLATION' || status === 'CANCELLED');
+  }
+  if (homeTripTime) homeTripTime.textContent = 'Departs Fri, 6:00 AM';
+  if (homeTripRoute) homeTripRoute.textContent = `${passenger.origin || 'FRA'} → ${passenger.destination || 'JFK'}`;
+  if (homeTripDeparts) homeTripDeparts.textContent = '6:00 AM';
+  if (homeTripGate) homeTripGate.textContent = '--';
+  if (homeTripTerminal) homeTripTerminal.textContent = '--';
+  if (homeTripSeat) homeTripSeat.textContent = '3A';
+  if (homeTripCause) homeTripCause.textContent = storedDisruptionCause || notification.cause || 'Operational disruption';
 }
 
 function showManifestSummary(summary) {
@@ -122,3 +146,5 @@ function showManifestSummary(summary) {
   document.getElementById('mConnRisk').textContent = summary.connectionAtRisk;
   document.getElementById('mProactive').textContent = summary.proactiveEligible;
 }
+
+refreshIcons();

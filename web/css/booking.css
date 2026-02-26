@@ -25,6 +25,7 @@
   color: #fff;
   margin-top: 20px;
 }
+.booking-checkmark .lucide { width: 40px; height: 40px; }
 @media (prefers-reduced-motion: no-preference) {
   .booking-checkmark {
     animation: checkPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -128,6 +129,7 @@
   color: var(--ios-text2);
 }
 .offline-note-card.visible { display: flex; }
+.offline-note-card .lucide { width: 16px; height: 16px; color: var(--ios-blue); }
 
 .wallet-btn {
   width: 100%;
@@ -147,3 +149,4 @@
   gap: 8px;
 }
 .wallet-btn:active { opacity: 0.85; }
+.wallet-btn .lucide { width: 18px; height: 18px; }

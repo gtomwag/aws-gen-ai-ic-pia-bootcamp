@@ -51,7 +51,7 @@ function applyFiltersAndSort() {
          onclick="selectOption('${o.optionId}')"
          aria-label="Option ${o.rank || o.optionId}: ${o.routing}">
       <div class="opt-rank">${o.rank || o.optionId}</div>
-      <div class="opt-selected-check">✓</div>
+      <div class="opt-selected-check"><i data-lucide="check" aria-hidden="true"></i></div>
       <div class="opt-times">
         <span class="opt-time-lg">${o.depart}</span>
         <span class="opt-arrow">→</span>
@@ -70,6 +70,8 @@ function applyFiltersAndSort() {
   `;
     })
     .join('');
+
+  refreshIcons();
 }
 
 function sortOptions(by) {

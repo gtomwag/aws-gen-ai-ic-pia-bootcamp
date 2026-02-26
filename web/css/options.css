@@ -165,6 +165,7 @@
   align-items: center;
   justify-content: center;
 }
+.opt-selected-check .lucide { width: 14px; height: 14px; }
 .option-card.selected .opt-selected-check { display: flex; }
 
 /* Sticky confirm at bottom of options */

@@ -1,9 +1,13 @@
 // ── Configuration ──────────────────────────────────────────
 const API_BASE_URL = (() => {
-	const { protocol, hostname, origin } = window.location;
+	const { protocol, hostname, origin, port } = window.location;
 
-	// Local dev server (http://127.0.0.1:3000) serves both UI and API
-	if (protocol === 'http:' && (hostname === '127.0.0.1' || hostname === 'localhost')) {
+	// Local full-stack dev server where UI + API share origin
+	if (
+		protocol === 'http:' &&
+		(hostname === '127.0.0.1' || hostname === 'localhost') &&
+		port === '3000'
+	) {
 		return origin;
 	}
 

@@ -82,3 +82,10 @@ body {
 
 /* ── Scrollbar Styling ─────────────────────────────── */
 ::-webkit-scrollbar { width: 0; background: transparent; }
+
+.lucide {
+  width: 1em;
+  height: 1em;
+  stroke-width: 2;
+  flex-shrink: 0;
+}

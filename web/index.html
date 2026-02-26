@@ -9,6 +9,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/tokens.css" />
   <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/loading.css" />
+  <link rel="stylesheet" href="css/home.css" />
   <link rel="stylesheet" href="css/lock.css" />
   <link rel="stylesheet" href="css/detail.css" />
   <link rel="stylesheet" href="css/options.css" />
@@ -37,7 +39,7 @@
     }
   </style>
   <header>
-    <h1>✈ DuHast Disruption Management</h1>
+    <h1><i data-lucide="plane" aria-hidden="true"></i> DuHast Disruption Management</h1>
     <a href="dashboard.html" class="dashboard-link">Dashboard View →</a>
     <div style="display: flex; align-items: center; gap: 16px;">
       <span class="status" id="statusText">Ready</span>
@@ -56,7 +58,7 @@
         <div class="lock-notification-area">
           <div class="lock-notif-card" id="lockNotifCard" aria-label="Flight notification — tap to view details">
             <div class="lock-notif-header">
-              <div class="lock-notif-icon">✈️</div>
+              <div class="lock-notif-icon"><i data-lucide="plane" aria-hidden="true"></i></div>
               <div class="lock-notif-app">DuHast Airlines</div>
               <div class="lock-notif-time">now</div>
             </div>
@@ -73,6 +75,63 @@
       </div>
     </div>
 
+    <!-- ══════ Screen 1.5: App Loading ══════ -->
+    <div class="screen" id="screenLoading" aria-live="polite">
+      <div class="loading-wrap">
+        <div class="loading-brand">DuHast Airlines</div>
+        <div class="loading-sub">Launching your AI Concierge</div>
+      </div>
+    </div>
+
+    <!-- ══════ Screen 1.6: Home Landing ══════ -->
+    <div class="screen" id="screenHome">
+      <div class="app-home" id="appHome">
+        <div class="home-topbar">
+          <div class="home-logo">DuHast</div>
+          <div class="home-actions">
+            <div class="home-icon-btn"><i data-lucide="message-circle" aria-hidden="true"></i></div>
+            <div class="home-icon-btn"><i data-lucide="bell" aria-hidden="true"></i></div>
+          </div>
+        </div>
+
+        <div class="home-card member-card">
+          <div class="label">Traveler</div>
+          <div class="title" id="homePassengerName">Alice Anderson</div>
+          <div class="desc" id="homePassengerTier">DuHast Signature Platinum • Priority support active</div>
+        </div>
+
+        <div class="home-card trip-card">
+          <div class="trip-header">
+            <div class="trip-flight" id="homeTripFlight">UA 891</div>
+            <div class="trip-state cancelled" id="homeTripStatus">CANCELLED</div>
+          </div>
+          <div class="trip-body">
+            <div class="trip-time" id="homeTripTime">Departs Fri, 6:00 AM</div>
+            <div class="trip-route" id="homeTripRoute">FRA → JFK</div>
+          </div>
+          <div class="trip-footer">
+            <div class="trip-meta">
+              <div><span class="label">Departs</span><span id="homeTripDeparts">6:00 AM</span></div>
+              <div><span class="label">Gate</span><span id="homeTripGate">--</span></div>
+              <div><span class="label">Terminal</span><span id="homeTripTerminal">--</span></div>
+              <div><span class="label">Seat</span><span id="homeTripSeat">3A</span></div>
+            </div>
+            <div class="trip-btn" id="homeViewUpdate">View Update</div>
+          </div>
+        </div>
+
+        <div class="home-card">
+          <div class="label">Travel Advisory</div>
+          <div class="title">Stay informed before departure</div>
+          <div class="desc" id="homeTripCause">Severe weather at FRA</div>
+        </div>
+
+        <div class="home-actions-row">
+          <button class="ios-btn ios-btn-primary" id="homeOpenChat">Chat with AI Concierge</button>
+        </div>
+      </div>
+    </div>
+
     <!-- ══════ Screen 2: Notification Detail ══════ -->
     <div class="screen" id="screenDetail">
       <div class="ios-nav-bar">
@@ -81,7 +140,7 @@
       </div>
       <div class="detail-scroll" id="detailScroll">
         <div class="alert-banner" id="alertBanner">
-          <span class="alert-emoji">⚠️</span>
+          <span class="alert-emoji"><i data-lucide="triangle-alert" aria-hidden="true"></i></span>
           <div class="alert-content">
             <div class="alert-type" id="alertType">CANCELLATION</div>
             <div class="alert-cause" id="alertCause">Loading...</div>
@@ -93,7 +152,7 @@
             <span class="airport-code" id="originCode">FRA</span>
             <div class="route-line">
               <div class="line"></div>
-              <span class="plane-icon">✈</span>
+              <span class="plane-icon"><i data-lucide="plane" aria-hidden="true"></i></span>
               <div class="line"></div>
             </div>
             <span class="airport-code" id="destCode">JFK</span>
@@ -145,7 +204,7 @@
       <div class="ios-nav-bar">
         <span class="nav-title">Assistant<span class="chat-nav-sentiment NEUTRAL" id="sentimentDot"></span></span>
         <div class="nav-right">
-          <button class="nav-icon-btn" id="btnVoiceAgent" aria-label="Call Agent" title="Call Agent">📞</button>
+          <button class="nav-icon-btn" id="btnVoiceAgent" aria-label="Call Agent" title="Call Agent"><i data-lucide="phone" aria-hidden="true"></i></button>
           <button class="nav-back" id="btnEscalate" style="position:static;transform:none;color:var(--danger);font-size:14px;font-weight:600;" aria-label="Escalate to agent" disabled>Escalate</button>
         </div>
       </div>
@@ -170,7 +229,7 @@
         <span class="nav-title">Confirmation</span>
       </div>
       <div class="booking-scroll">
-        <div class="booking-checkmark">✓</div>
+        <div class="booking-checkmark"><i data-lucide="check" aria-hidden="true"></i></div>
         <div class="booking-success-text">Booking Confirmed</div>
         <div class="pnr-card">
           <div class="pnr-label">Confirmation Code</div>
@@ -185,7 +244,7 @@
             <span class="itin-airport" id="itinOrigin">FRA</span>
             <div class="route-line" style="flex:1;display:flex;align-items:center;gap:6px;">
               <div class="line" style="flex:1;height:1px;background:var(--line)"></div>
-              <span style="font-size:16px;color:var(--primary)">✈</span>
+              <span style="font-size:16px;color:var(--primary)"><i data-lucide="plane" aria-hidden="true"></i></span>
               <div class="line" style="flex:1;height:1px;background:var(--line)"></div>
             </div>
             <span class="itin-airport" id="itinDest">JFK</span>
@@ -193,10 +252,10 @@
           <div class="itin-meta" id="itinMeta"></div>
         </div>
         <div class="offline-note-card" id="offlineNote">
-          <span>ℹ️</span>
+          <span><i data-lucide="info" aria-hidden="true"></i></span>
           <span id="offlineNoteText"></span>
         </div>
-        <button class="wallet-btn" aria-label="Add to Apple Wallet">🎫 Add to Wallet</button>
+        <button class="wallet-btn" aria-label="Add to Apple Wallet"><i data-lucide="ticket" aria-hidden="true"></i> Add to Wallet</button>
         <button class="ios-btn ios-btn-primary" id="btnDone" aria-label="Done — reset app">Done</button>
       </div>
     </div>
@@ -221,7 +280,7 @@
     <div class="metrics-drawer-overlay" id="metricsOverlay">
       <div class="metrics-drawer">
         <div class="sheet-handle"></div>
-        <div class="metrics-drawer-title">📊 Developer Metrics</div>
+        <div class="metrics-drawer-title"><i data-lucide="chart-column" aria-hidden="true"></i> Developer Metrics</div>
 
         <div class="metrics-section" id="metricsManifestSection" style="display:none;">
           <div class="metrics-section-title">Manifest Summary</div>
@@ -251,25 +310,26 @@
     <!-- ══════ Bottom Tab Bar ══════ -->
     <nav class="tab-bar" id="tabBar" role="navigation" aria-label="Main navigation">
       <button class="tab-item active" data-tab="notifications" aria-label="Updates tab">
-        <span class="tab-icon">🔔<span class="tab-dot" id="tabDotNotif"></span></span>
+        <span class="tab-icon"><i data-lucide="bell" aria-hidden="true"></i><span class="tab-dot" id="tabDotNotif"></span></span>
         <span class="tab-label">Updates</span>
       </button>
       <button class="tab-item" data-tab="chat" aria-label="Chat tab">
-        <span class="tab-icon">💬<span class="tab-badge" id="tabBadgeChat"></span></span>
+        <span class="tab-icon"><i data-lucide="message-circle" aria-hidden="true"></i><span class="tab-badge" id="tabBadgeChat"></span></span>
         <span class="tab-label">Chat</span>
       </button>
       <button class="tab-item" id="btnVoiceTab" aria-label="Call agent">
-        <span class="tab-icon">📞</span>
+        <span class="tab-icon"><i data-lucide="phone" aria-hidden="true"></i></span>
         <span class="tab-label">Call</span>
       </button>
       <button class="tab-item" data-tab="options" aria-label="Flights tab">
-        <span class="tab-icon">✈️<span class="tab-badge" id="tabBadgeOptions"></span></span>
+        <span class="tab-icon"><i data-lucide="plane" aria-hidden="true"></i><span class="tab-badge" id="tabBadgeOptions"></span></span>
         <span class="tab-label">Flights</span>
       </button>
     </nav>
 
   </div>
 
+  <script src="https://unpkg.com/lucide@latest"></script>
   <script src="js/config.js"></script>
   <script src="js/state.js"></script>
   <script src="js/api.js"></script>

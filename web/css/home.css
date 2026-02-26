@@ -1,0 +1,207 @@
+#screenHome {
+  overflow: hidden;
+}
+
+#screenHome .app-home {
+  padding: 12px 10px calc(10px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  background: linear-gradient(160deg, var(--charcoal) 0%, var(--slate) 68%, #26303b 100%);
+  position: relative;
+}
+
+#screenHome .app-home.loading .home-card .label,
+#screenHome .app-home.loading .home-card .title,
+#screenHome .app-home.loading .home-card .desc {
+  color: transparent;
+  background: linear-gradient(90deg, rgba(232, 230, 225, 0.14) 25%, rgba(232, 230, 225, 0.28) 50%, rgba(232, 230, 225, 0.14) 75%);
+  background-size: 220% 100%;
+  animation: shimmer 1.2s linear infinite;
+  border-radius: 6px;
+}
+
+#screenHome .app-home.loading .home-card .label {
+  width: 45%;
+  height: 11px;
+}
+
+#screenHome .app-home.loading .home-card .title {
+  width: 72%;
+  height: 14px;
+}
+
+#screenHome .app-home.loading .home-card .desc {
+  width: 92%;
+  min-height: 26px;
+}
+
+.home-card {
+  border: 1px solid rgba(184, 147, 109, 0.32);
+  border-radius: 16px;
+  background: rgba(248, 247, 244, 0.08);
+  padding: 12px;
+  display: grid;
+  gap: 6px;
+  backdrop-filter: blur(4px);
+}
+
+.home-card .label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #d4b896;
+}
+
+.home-card .title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--pearl);
+}
+
+.home-card .desc {
+  font-size: 12px;
+  color: #e8e6e1;
+  line-height: 1.35;
+}
+
+.home-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+.home-logo {
+  font-size: 26px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--pearl);
+  text-transform: uppercase;
+}
+
+.home-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.home-icon-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(184, 147, 109, 0.35);
+  background: rgba(248, 247, 244, 0.1);
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  color: var(--pearl);
+}
+.home-icon-btn .lucide {
+  width: 16px;
+  height: 16px;
+}
+
+.member-card {
+  background: linear-gradient(180deg, var(--charcoal) 0%, var(--slate) 100%);
+  color: var(--pearl);
+  border: 1px solid rgba(184, 147, 109, 0.45);
+}
+
+.member-card .title,
+.member-card .desc,
+.member-card .label {
+  color: #fff;
+}
+
+.trip-card {
+  border-radius: 22px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.trip-header,
+.trip-body,
+.trip-footer {
+  padding: 12px;
+}
+
+.trip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(184, 147, 109, 0.28);
+}
+
+.trip-flight {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--pearl);
+}
+
+.trip-state {
+  background: #16a34a;
+  color: #fff;
+  border-radius: 7px;
+  font-size: 11px;
+  padding: 4px 8px;
+  font-weight: 700;
+}
+
+.trip-state.cancelled {
+  background: #b91c1c;
+}
+
+.trip-time {
+  font-size: 21px;
+  color: var(--pearl);
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.trip-route {
+  font-size: 17px;
+  color: #d4b896;
+  font-weight: 700;
+}
+
+.trip-meta {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  font-size: 11px;
+  color: #e8e6e1;
+  border-top: 1px solid rgba(184, 147, 109, 0.28);
+  border-bottom: 1px solid rgba(184, 147, 109, 0.28);
+}
+
+.trip-meta div {
+  display: grid;
+  gap: 2px;
+}
+
+.trip-btn {
+  background: var(--charcoal);
+  color: var(--pearl);
+  border-radius: 999px;
+  text-align: center;
+  padding: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.home-actions-row {
+  margin-top: 4px;
+  display: grid;
+  gap: 10px;
+}
+
+.home-actions-row .ios-btn {
+  min-height: 44px;
+}
