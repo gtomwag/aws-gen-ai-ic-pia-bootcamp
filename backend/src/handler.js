@@ -869,10 +869,25 @@ async function handleGenerateTestData() {
     const sessionId = `TEST-${generateId('SES')}`;
     const disruptionId = `DISR-${generateId('D')}`;
 
+    // Prepare full passenger object for option generation
+    const fullPassenger = {
+      firstName: passenger.firstName,
+      lastName: passenger.lastName,
+      tier: passenger.tier,
+      origin: passenger.origin,
+      destination: passenger.destination,
+      pnr: generatePNR(),
+      flightNumber: disruption.flightNumber,
+      hasApp: true,
+      consentForProactive: true,
+      passengerId: `PAX-TEST-${i}`,
+    };
+
     // Create disruption record
     await store.upsertJson(`DISRUPTION#${disruptionId}`, 'META', {
       disruptionId,
-      ...disruption,
+      type: disruption.status,
+      reason: disruption.reason,
       createdAt: new Date().toISOString(),
     });
 
@@ -880,14 +895,7 @@ async function handleGenerateTestData() {
     await store.upsertJson(`SESSION#${sessionId}`, 'META', {
       sessionId,
       disruptionId,
-      passenger: {
-        firstName: passenger.firstName,
-        lastName: passenger.lastName,
-        tier: passenger.tier,
-        origin: passenger.origin,
-        destination: passenger.destination,
-        pnr: generatePNR(),
-      },
+      passenger: fullPassenger,
       disruption: {
         status: disruption.status,
         reason: disruption.reason,
@@ -899,6 +907,13 @@ async function handleGenerateTestData() {
       status: 'DISRUPTED',
       createdAt: new Date().toISOString(),
     });
+
+    // Generate rebooking options for this passenger
+    const options = generateCandidateOptions(fullPassenger, {
+      type: disruption.status,
+      reason: disruption.reason,
+    });
+    await store.upsertJson(`SESSION#${sessionId}`, 'OPTIONS', { options });
 
     // Create notification
     await store.upsertJson(`SESSION#${sessionId}`, 'NOTIFICATION', {
@@ -913,6 +928,7 @@ async function handleGenerateTestData() {
       customerName: `${passenger.firstName} ${passenger.lastName}`,
       flightNumber: disruption.flightNumber,
       status: disruption.status,
+      optionsGenerated: options.length,
     });
   }
 
