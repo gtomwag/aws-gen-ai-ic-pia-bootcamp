@@ -2,29 +2,34 @@
 
 async function createDisruption() {
   btnDisruption.disabled = true;
-  addMetric('disruption_request', 'type=CANCELLATION airport=FRA');
 
-  storedDisruptionType = 'CANCELLATION';
-  storedDisruptionCause = 'Severe weather – thunderstorm at FRA, runway closure';
+  // Pick a random Severance character for this session
+  const p = pickRandomPassenger();
+  const airportCode = p.origin;
+  storedDisruptionType = p.disruptionType;
+  storedDisruptionCause = p.disruptionCause;
+
+  addMetric('disruption_request', `type=${storedDisruptionType} airport=${airportCode} passenger=${p.firstName} ${p.lastName}`);
 
   try {
     const data = await apiCall('/disruption', {
-      type: 'CANCELLATION',
-      reason: 'Severe weather – thunderstorm at FRA, runway closure',
-      airport: 'FRA',
+      type: storedDisruptionType,
+      reason: storedDisruptionCause,
+      airport: airportCode,
       passengerCount: 200,
       passenger: {
-        firstName: 'Mark',
-        lastName: 'Scout',
-        tier: 'Platinum',
-        origin: 'FRA',
-        destination: 'JFK',
-        flightNumber: 'UA891',
+        firstName: p.firstName,
+        lastName: p.lastName,
+        tier: p.tier,
+        origin: p.origin,
+        destination: p.destination,
+        flightNumber: p.flightNumber,
         date: '2026-02-25',
         hasApp: true,
         consentForProactive: true,
-        passengerId: 'PAX-0001',
-        constraints: ['arrive_before_21_00'],
+        passengerId: 'PAX-' + String(Math.floor(Math.random() * 9999) + 1).padStart(4, '0'),
+        constraints: p.constraints,
+        seat: p.seat,
         specialRequirements: null,
         connectionRisk: null,
       },
@@ -188,7 +193,7 @@ async function confirmSelection() {
     // Enhanced itinerary
     if (b.itinerarySummary) {
       const it = b.itinerarySummary;
-      document.getElementById('itinPassenger').textContent = it.passenger || 'Mark Scout';
+      document.getElementById('itinPassenger').textContent = it.passenger || (storedPassenger ? `${storedPassenger.firstName} ${storedPassenger.lastName}` : 'Passenger');
       const itinTier = document.getElementById('itinTier');
       itinTier.textContent = it.tier || 'Platinum';
       itinTier.className = `tier-badge ${it.tier || 'Platinum'}`;

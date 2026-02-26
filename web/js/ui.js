@@ -131,7 +131,7 @@ function showNotification(notification, passenger) {
   if (homeTripDeparts) homeTripDeparts.textContent = '6:00 AM';
   if (homeTripGate) homeTripGate.textContent = '--';
   if (homeTripTerminal) homeTripTerminal.textContent = '--';
-  if (homeTripSeat) homeTripSeat.textContent = '3A';
+  if (homeTripSeat) homeTripSeat.textContent = passenger.seat || '3A';
   if (homeTripCause) homeTripCause.textContent = storedDisruptionCause || notification.cause || 'Operational disruption';
 }
 
