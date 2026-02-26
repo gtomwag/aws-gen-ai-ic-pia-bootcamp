@@ -841,6 +841,89 @@ async function handleOpenRebookings() {
 }
 
 // ──────────────────────────────────────────────
+// POST /test-data — Generate sample disrupted bookings for testing
+// ──────────────────────────────────────────────
+
+async function handleGenerateTestData() {
+  const testPassengers = [
+    { firstName: 'Alice', lastName: 'Anderson', tier: 'Platinum', origin: 'FRA', destination: 'JFK' },
+    { firstName: 'Bob', lastName: 'Brown', tier: 'Gold', origin: 'LHR', destination: 'LAX' },
+    { firstName: 'Carol', lastName: 'Chen', tier: 'Silver', origin: 'CDG', destination: 'ORD' },
+    { firstName: 'David', lastName: 'Davis', tier: 'General', origin: 'AMS', destination: 'MIA' },
+    { firstName: 'Eve', lastName: 'Evans', tier: 'Platinum', origin: 'LHR', destination: 'SFO' },
+  ];
+
+  const testDisruptions = [
+    { status: 'CANCELLED', reason: 'Weather - Thunderstorms at origin airport', flightNumber: 'UA891', departure: '14:30', arrival: '22:15', originalScheduledTime: '2026-02-26 14:30' },
+    { status: 'DELAYED', reason: 'Aircraft maintenance required', flightNumber: 'BA447', departure: '16:00', arrival: '00:45', originalScheduledTime: '2026-02-26 16:00' },
+    { status: 'CANCELLED', reason: 'Crew unavailability - Scheduling conflict', flightNumber: 'AF198', departure: '09:15', arrival: '17:45', originalScheduledTime: '2026-02-26 09:15' },
+    { status: 'DELAYED', reason: 'Air traffic control delay', flightNumber: 'KL645', departure: '18:45', arrival: '02:30', originalScheduledTime: '2026-02-26 18:45' },
+    { status: 'CANCELLED', reason: 'Mechanical issue - Engine inspection required', flightNumber: 'LH203', departure: '11:00', arrival: '19:30', originalScheduledTime: '2026-02-26 11:00' },
+  ];
+
+  const created = [];
+
+  for (let i = 0; i < testPassengers.length; i++) {
+    const passenger = testPassengers[i];
+    const disruption = testDisruptions[i % testDisruptions.length];
+    const sessionId = `TEST-${generateId('SES')}`;
+    const disruptionId = `DISR-${generateId('D')}`;
+
+    // Create disruption record
+    await store.upsertJson(`DISRUPTION#${disruptionId}`, 'META', {
+      disruptionId,
+      ...disruption,
+      createdAt: new Date().toISOString(),
+    });
+
+    // Create session META with disruption info
+    await store.upsertJson(`SESSION#${sessionId}`, 'META', {
+      sessionId,
+      disruptionId,
+      passenger: {
+        firstName: passenger.firstName,
+        lastName: passenger.lastName,
+        tier: passenger.tier,
+        origin: passenger.origin,
+        destination: passenger.destination,
+        pnr: generatePNR(),
+      },
+      disruption: {
+        status: disruption.status,
+        reason: disruption.reason,
+        flightNumber: disruption.flightNumber,
+        departure: disruption.departure,
+        arrival: disruption.arrival,
+        originalScheduledTime: disruption.originalScheduledTime,
+      },
+      status: 'DISRUPTED',
+      createdAt: new Date().toISOString(),
+    });
+
+    // Create notification
+    await store.upsertJson(`SESSION#${sessionId}`, 'NOTIFICATION', {
+      title: `Flight ${disruption.flightNumber} ${disruption.status}`,
+      body: `Your flight has been ${disruption.status.toLowerCase()}. ${disruption.reason}`,
+      type: disruption.status,
+      timestamp: new Date().toISOString(),
+    });
+
+    created.push({
+      sessionId,
+      customerName: `${passenger.firstName} ${passenger.lastName}`,
+      flightNumber: disruption.flightNumber,
+      status: disruption.status,
+    });
+  }
+
+  logMetric('TEST_DATA_GENERATED', created.length);
+  return respond(200, {
+    message: `Generated ${created.length} test disruption records`,
+    created,
+  });
+}
+
+// ──────────────────────────────────────────────
 // GET /notification?sessionId=... — retrieve notification for a session
 // ──────────────────────────────────────────────
 
@@ -1159,6 +1242,9 @@ exports.handler = async (event) => {
     }
     if (method === 'POST' && path === '/voice/transfer') {
       return await handleVoiceTransfer(body);
+    }
+    if (method === 'POST' && path === '/test-data') {
+      return await handleGenerateTestData();
     }
 
     return respond(404, { error: `Not found: ${method} ${path}` });
