@@ -16,7 +16,20 @@
       color: var(--ios-text);
       min-height: 100vh;
       padding-top: 100px;
+      padding-bottom: 40px;
+      overflow: auto !important;
+      overflow-x: hidden !important;
+      display: block !important;
+      align-items: unset !important;
     }
+    /* Override tokens.css hidden scrollbar for dashboard */
+    html::-webkit-scrollbar, body::-webkit-scrollbar {
+      width: 8px !important; background: transparent;
+    }
+    html::-webkit-scrollbar-thumb, body::-webkit-scrollbar-thumb {
+      background: var(--ios-gray3); border-radius: 4px;
+    }
+    html { overflow: auto !important; }
 
     /* ── Nav Bar ───────────────────────────────────── */
     .dash-nav {
@@ -295,6 +308,183 @@
       .tier-badge.General { color: #ccc; }
     }
 
+    /* ── KB Test Bed ───────────────────────────────── */
+    .kb-testbed {
+      background: var(--ios-card);
+      border-radius: var(--card-radius);
+      box-shadow: var(--card-shadow);
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .kb-testbed::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #34C759, #007AFF, #AF52DE);
+    }
+    .kb-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .kb-status {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 500;
+      color: var(--ios-text2);
+    }
+    .kb-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--ios-green);
+      display: inline-block;
+    }
+    .kb-dot.loading { background: var(--ios-orange); animation: pulse-dot 1s infinite; }
+    .kb-dot.error { background: var(--ios-red); }
+    @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    .kb-desc {
+      font-size: 13px; color: var(--ios-text3);
+      margin-bottom: 14px; line-height: 1.5;
+    }
+    .kb-presets {
+      display: flex; align-items: center; gap: 8px;
+      flex-wrap: wrap; margin-bottom: 14px;
+    }
+    .kb-preset-label {
+      font-size: 12px; font-weight: 600;
+      color: var(--ios-text3); text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .kb-preset {
+      font-family: inherit; font-size: 13px; font-weight: 500;
+      padding: 5px 12px; border-radius: 16px;
+      border: 1px solid var(--ios-blue);
+      background: transparent; color: var(--ios-blue);
+      cursor: pointer; transition: all 0.15s;
+    }
+    .kb-preset:hover {
+      background: var(--ios-blue); color: #fff;
+    }
+    .kb-preset.non-kb {
+      border-color: var(--ios-orange); color: var(--ios-orange);
+    }
+    .kb-preset.non-kb:hover {
+      background: var(--ios-orange); color: #fff;
+    }
+
+    .kb-input-row {
+      display: flex; gap: 10px; margin-bottom: 16px;
+    }
+    .kb-input {
+      flex: 1; font-family: inherit; font-size: 15px;
+      padding: 10px 14px; border-radius: 10px;
+      border: 1px solid var(--ios-separator);
+      background: var(--ios-bg); color: var(--ios-text);
+      outline: none; transition: border 0.15s;
+    }
+    .kb-input:focus { border-color: var(--ios-blue); }
+    .kb-send {
+      font-family: inherit; font-size: 15px; font-weight: 600;
+      padding: 10px 20px; border-radius: 10px; border: none;
+      background: var(--ios-blue); color: #fff;
+      cursor: pointer; white-space: nowrap; transition: opacity 0.15s;
+    }
+    .kb-send:hover { opacity: 0.85; }
+    .kb-send:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .kb-results { margin-top: 4px; }
+    .kb-result-header {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 14px; flex-wrap: wrap;
+    }
+    .kb-source-badge {
+      font-size: 13px; font-weight: 700;
+      padding: 4px 14px; border-radius: 16px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .kb-source-badge.kb { background: #34C75920; color: var(--ios-green); border: 1px solid var(--ios-green); }
+    .kb-source-badge.bedrock { background: #007AFF20; color: var(--ios-blue); border: 1px solid var(--ios-blue); }
+    .kb-source-badge.fallback { background: #FF950020; color: var(--ios-orange); border: 1px solid var(--ios-orange); }
+    .kb-source-badge.error { background: #FF3B3020; color: var(--ios-red); border: 1px solid var(--ios-red); }
+
+    .kb-routing {
+      font-size: 13px; color: var(--ios-text2);
+    }
+    .kb-latency {
+      font-size: 12px; color: var(--ios-text3);
+      margin-left: auto;
+    }
+
+    .kb-response-box, .kb-citations-box {
+      background: var(--ios-bg);
+      border-radius: 10px; padding: 14px;
+      margin-bottom: 12px;
+    }
+    .kb-response-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.5px; color: var(--ios-text3);
+      margin-bottom: 8px;
+    }
+    .kb-response-text {
+      font-size: 14px; line-height: 1.6;
+      color: var(--ios-text); white-space: pre-wrap;
+    }
+
+    .kb-citation {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 8px 0; font-size: 13px;
+    }
+    .kb-citation + .kb-citation { border-top: 1px solid var(--ios-separator); }
+    .kb-citation-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .kb-citation-source {
+      font-weight: 600; color: var(--ios-blue); font-size: 12px;
+      word-break: break-all;
+    }
+    .kb-citation-snippet {
+      font-size: 12px; color: var(--ios-text2); margin-top: 2px;
+      line-height: 1.4;
+    }
+
+    .kb-raw-toggle {
+      margin-top: 8px;
+    }
+    .kb-raw-toggle summary {
+      font-size: 12px; color: var(--ios-text3); cursor: pointer;
+      font-weight: 600; padding: 4px 0;
+    }
+    .kb-raw-json {
+      font-family: 'SF Mono', 'Menlo', monospace;
+      font-size: 11px; line-height: 1.5;
+      background: var(--ios-bg); color: var(--ios-text2);
+      border-radius: 8px; padding: 12px;
+      max-height: 300px; overflow: auto;
+      white-space: pre-wrap; word-break: break-all;
+      margin-top: 8px;
+    }
+
+    .kb-history { margin-top: 16px; }
+    .kb-history-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 0; font-size: 13px; cursor: pointer;
+    }
+    .kb-history-item + .kb-history-item { border-top: 1px solid var(--ios-separator); }
+    .kb-history-item:hover { color: var(--ios-blue); }
+    .kb-history-q { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .kb-history-src {
+      font-size: 11px; font-weight: 700;
+      padding: 2px 8px; border-radius: 10px;
+    }
+    .kb-history-src.kb { background: #34C75920; color: var(--ios-green); }
+    .kb-history-src.bedrock { background: #007AFF20; color: var(--ios-blue); }
+    .kb-history-src.fallback { background: #FF950020; color: var(--ios-orange); }
+    .kb-history-src.error { background: #FF3B3020; color: var(--ios-red); }
+    .kb-history-time { font-size: 11px; color: var(--ios-text3); flex-shrink: 0; }
+
+    @media (prefers-color-scheme: dark) {
+      .kb-input { background: #2C2C2E; border-color: #3A3A3C; }
+      .kb-response-box, .kb-citations-box { background: #2C2C2E; }
+      .kb-raw-json { background: #2C2C2E; }
+    }
+
 
 
     @media (prefers-reduced-motion: no-preference) {
@@ -396,6 +586,75 @@
     <section class="reasons-card">
       <div class="chart-title">Top Escalation Reasons</div>
       <div id="reasonsList"></div>
+    </section>
+
+    <!-- ══════ Knowledge Base Test Bed ══════ -->
+    <section class="kb-testbed" id="kbTestbed">
+      <div class="kb-header">
+        <div class="chart-title" style="margin-bottom:0">🧪 Knowledge Base Test Bed</div>
+        <div class="kb-status" id="kbStatus">
+          <span class="kb-dot" id="kbDot"></span>
+          <span id="kbStatusText">Ready</span>
+        </div>
+      </div>
+      <p class="kb-desc">Send policy questions to verify Knowledge Base (RAG) integration. Responses show the source, citations, and whether the answer came from the real KB or a fallback.</p>
+
+      <!-- Preset Queries -->
+      <div class="kb-presets">
+        <span class="kb-preset-label">Quick tests:</span>
+        <button class="kb-preset" data-q="Am I entitled to compensation for my delayed flight?">Compensation</button>
+        <button class="kb-preset" data-q="What are my rights under EU261?">EU261 Rights</button>
+        <button class="kb-preset" data-q="Can I get a hotel if my flight is delayed overnight?">Hotel/Care</button>
+        <button class="kb-preset" data-q="How is my personal data handled under GDPR?">GDPR</button>
+        <button class="kb-preset" data-q="How long does a refund take?">Refund Time</button>
+        <button class="kb-preset" data-q="I need a new flight">Non-KB (Chat)</button>
+      </div>
+
+      <!-- Input -->
+      <div class="kb-input-row">
+        <select class="dash-select" id="kbTier" style="flex:0 0 auto">
+          <option value="Platinum">Platinum</option>
+          <option value="Gold" selected>Gold</option>
+          <option value="Silver">Silver</option>
+          <option value="General">General</option>
+        </select>
+        <input type="text" class="kb-input" id="kbQuery" placeholder="Type a question to test KB routing…" />
+        <button class="kb-send" id="kbSend">Send →</button>
+      </div>
+
+      <!-- Results -->
+      <div class="kb-results" id="kbResults" style="display:none">
+        <!-- Source Badge -->
+        <div class="kb-result-header">
+          <div class="kb-source-badge" id="kbSourceBadge">—</div>
+          <div class="kb-routing" id="kbRouting">—</div>
+          <div class="kb-latency" id="kbLatency">—</div>
+        </div>
+
+        <!-- Response Text -->
+        <div class="kb-response-box">
+          <div class="kb-response-label">Response</div>
+          <div class="kb-response-text" id="kbResponseText"></div>
+        </div>
+
+        <!-- Citations -->
+        <div class="kb-citations-box" id="kbCitationsBox" style="display:none">
+          <div class="kb-response-label">Citations</div>
+          <div id="kbCitationsList"></div>
+        </div>
+
+        <!-- Raw JSON Toggle -->
+        <details class="kb-raw-toggle">
+          <summary>Raw API Response</summary>
+          <pre class="kb-raw-json" id="kbRawJson"></pre>
+        </details>
+      </div>
+
+      <!-- History -->
+      <div class="kb-history" id="kbHistory" style="display:none">
+        <div class="kb-response-label">Test History</div>
+        <div id="kbHistoryList"></div>
+      </div>
     </section>
 
   </main>
@@ -574,6 +833,202 @@
         e.preventDefault();
         window.location.href = 'index.html';
       }
+    });
+
+    // ══════════════════════════════════════════════════
+    // ── Knowledge Base Test Bed ──────────────────────
+    // ══════════════════════════════════════════════════
+    const kbQuery = document.getElementById('kbQuery');
+    const kbSend = document.getElementById('kbSend');
+    const kbTier = document.getElementById('kbTier');
+    const kbResults = document.getElementById('kbResults');
+    const kbDot = document.getElementById('kbDot');
+    const kbStatusText = document.getElementById('kbStatusText');
+    const kbHistory = document.getElementById('kbHistory');
+    const kbHistoryList = document.getElementById('kbHistoryList');
+
+    let _kbSessionId = null; // reusable session for KB tests
+    const _kbTestHistory = [];
+
+    // Source classification helper
+    function classifySource(source) {
+      if (!source) return { cls: 'fallback', label: 'UNKNOWN', desc: 'No source returned' };
+      if (source === 'knowledge-base') return { cls: 'kb', label: 'KNOWLEDGE BASE', desc: 'Answer from Bedrock KB (RAG) with real document retrieval' };
+      if (source === 'bedrock') return { cls: 'bedrock', label: 'BEDROCK CHAT', desc: 'Direct Claude chat — not routed to KB (not a policy question)' };
+      if (source.includes('error')) return { cls: 'error', label: 'ERROR → FALLBACK', desc: 'KB/Bedrock call failed, using hardcoded fallback' };
+      return { cls: 'fallback', label: 'FALLBACK', desc: 'Hardcoded response — KB not reached (check KNOWLEDGE_BASE_ID env var)' };
+    }
+
+    // Determine if citations are real (S3) or mock (local paths)
+    function citationsAreReal(citations) {
+      if (!citations || citations.length === 0) return false;
+      for (const c of citations) {
+        for (const r of (c.references || [])) {
+          if (r.location && r.location.startsWith('s3://')) return true;
+        }
+        // Also check flat citation format
+        if (c.uri && c.uri.startsWith('s3://')) return true;
+      }
+      return false;
+    }
+
+    // Ensure we have a session for KB testing
+    async function ensureKbSession(tier) {
+      if (_kbSessionId) return _kbSessionId;
+      setKbStatus('loading', 'Creating test session…');
+      const resp = await fetch(`${_API}/disruption`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'delay', reason: 'mechanical', airport: 'FRA',
+          passenger: { firstName: 'KBTest', tier: tier || 'Gold', origin: 'FRA', destination: 'JFK', flightNumber: 'UA9999' }
+        }),
+      });
+      if (!resp.ok) throw new Error(`Disruption API returned ${resp.status}`);
+      const data = await resp.json();
+      _kbSessionId = data.sessionId;
+      return _kbSessionId;
+    }
+
+    function setKbStatus(state, text) {
+      kbDot.className = 'kb-dot' + (state === 'loading' ? ' loading' : state === 'error' ? ' error' : '');
+      kbStatusText.textContent = text || (state === 'loading' ? 'Querying…' : state === 'error' ? 'Error' : 'Ready');
+    }
+
+    // Main send handler
+    async function sendKbTest() {
+      const query = kbQuery.value.trim();
+      if (!query) return;
+      kbSend.disabled = true;
+      kbResults.style.display = 'none';
+      setKbStatus('loading', 'Sending to API…');
+      const t0 = performance.now();
+
+      try {
+        const sessionId = await ensureKbSession(kbTier.value);
+        setKbStatus('loading', 'Waiting for response…');
+
+        const resp = await fetch(`${_API}/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId, message: query }),
+        });
+        const data = await resp.json();
+        const elapsed = Math.round(performance.now() - t0);
+
+        if (!resp.ok) throw new Error(data.error || `HTTP ${resp.status}`);
+
+        // Classify and render
+        const info = classifySource(data.source);
+        const realCitations = citationsAreReal(data.citations);
+
+        // Source badge
+        const badge = document.getElementById('kbSourceBadge');
+        badge.textContent = info.label;
+        badge.className = 'kb-source-badge ' + info.cls;
+
+        // Routing explanation
+        const routing = document.getElementById('kbRouting');
+        let routeHtml = info.desc;
+        if (info.cls === 'kb' && !realCitations) {
+          routeHtml += ' <span style="color:var(--ios-orange);font-weight:600">⚠ Citations are mock (local paths) — KB may not have returned real docs</span>';
+        }
+        if (info.cls === 'kb' && realCitations) {
+          routeHtml += ' <span style="color:var(--ios-green);font-weight:600">✓ Real S3 citations</span>';
+        }
+        routing.innerHTML = routeHtml;
+
+        // Latency
+        document.getElementById('kbLatency').textContent = `${elapsed}ms`;
+
+        // Response text
+        document.getElementById('kbResponseText').textContent = data.assistant || data.text || '(empty response)';
+
+        // Citations
+        const citBox = document.getElementById('kbCitationsBox');
+        const citList = document.getElementById('kbCitationsList');
+        const citations = data.citations || [];
+        if (citations.length > 0) {
+          citBox.style.display = '';
+          citList.innerHTML = citations.map(c => {
+            // Handle both nested (KB real) and flat (fallback) citation formats
+            const refs = c.references || [];
+            if (refs.length > 0) {
+              return refs.map(r => `<div class="kb-citation">
+                <span class="kb-citation-icon">${r.location && r.location.startsWith('s3://') ? '📄' : '📋'}</span>
+                <div>
+                  <div class="kb-citation-source">${r.location || 'unknown'}</div>
+                  ${r.content ? `<div class="kb-citation-snippet">${r.content}</div>` : ''}
+                </div>
+              </div>`).join('');
+            }
+            // Flat citation format (fallback)
+            return `<div class="kb-citation">
+              <span class="kb-citation-icon">📋</span>
+              <div>
+                <div class="kb-citation-source">${c.uri || c.title || 'unknown'}</div>
+                ${c.text ? `<div class="kb-citation-snippet">${c.text}</div>` : ''}
+              </div>
+            </div>`;
+          }).join('');
+        } else {
+          citBox.style.display = 'none';
+          citList.innerHTML = '';
+        }
+
+        // Raw JSON
+        document.getElementById('kbRawJson').textContent = JSON.stringify(data, null, 2);
+
+        kbResults.style.display = '';
+        setKbStatus('ok', `✓ ${info.label} — ${elapsed}ms`);
+
+        // Add to history
+        _kbTestHistory.unshift({ query, source: data.source, cls: info.cls, label: info.label, elapsed, time: new Date() });
+        renderKbHistory();
+
+      } catch (err) {
+        setKbStatus('error', `Error: ${err.message}`);
+        // Show error in results
+        document.getElementById('kbSourceBadge').textContent = 'ERROR';
+        document.getElementById('kbSourceBadge').className = 'kb-source-badge error';
+        document.getElementById('kbRouting').textContent = err.message;
+        document.getElementById('kbLatency').textContent = Math.round(performance.now() - t0) + 'ms';
+        document.getElementById('kbResponseText').textContent = `Request failed: ${err.message}`;
+        document.getElementById('kbCitationsBox').style.display = 'none';
+        document.getElementById('kbRawJson').textContent = JSON.stringify({ error: err.message }, null, 2);
+        kbResults.style.display = '';
+      } finally {
+        kbSend.disabled = false;
+      }
+    }
+
+    function renderKbHistory() {
+      if (_kbTestHistory.length === 0) { kbHistory.style.display = 'none'; return; }
+      kbHistory.style.display = '';
+      kbHistoryList.innerHTML = _kbTestHistory.slice(0, 10).map(h => `
+        <div class="kb-history-item" onclick="document.getElementById('kbQuery').value='${h.query.replace(/'/g, "\\'")}'">
+          <span class="kb-history-src ${h.cls}">${h.label}</span>
+          <span class="kb-history-q">${h.query}</span>
+          <span class="kb-history-time">${h.elapsed}ms · ${h.time.toLocaleTimeString()}</span>
+        </div>
+      `).join('');
+    }
+
+    // Wire events
+    kbSend.addEventListener('click', sendKbTest);
+    kbQuery.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendKbTest(); });
+
+    // Preset buttons
+    document.querySelectorAll('.kb-preset').forEach(btn => {
+      btn.addEventListener('click', () => {
+        kbQuery.value = btn.dataset.q;
+        sendKbTest();
+      });
+    });
+
+    // Style the non-KB preset differently
+    document.querySelectorAll('.kb-preset').forEach(btn => {
+      if (btn.dataset.q === 'I need a new flight') btn.classList.add('non-kb');
     });
 
     // ── Init ─────────────────────────────────────────
