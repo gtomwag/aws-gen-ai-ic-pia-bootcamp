@@ -127,7 +127,10 @@
 
 **Key demo talking points:**
 - The agent runs on **AWS AgentCore Runtime** — a managed service for deploying and scaling AI agents
-- The agent has **6 inline tools**: generate_rebooking_options, query_policy, analyze_passenger_sentiment, translate_message, confirm_booking, create_escalation
+- The agent has **6 inline tools**, with 2 currently active:
+  - ✅ **generate_rebooking_options** - Generates personalized flight options
+  - ✅ **query_policy** - Queries Bedrock Knowledge Base for policy information
+  - 🔧 **analyze_passenger_sentiment, translate_message, confirm_booking, create_escalation** - Coded and ready for testing/integration
 - Tool selection is **automatic** — the agent decides which tool to call based on the user's intent
 - The **query_policy** tool connects to Bedrock Knowledge Base for grounded policy answers
 - The **generate_rebooking_options** tool creates personalized flight options dynamically

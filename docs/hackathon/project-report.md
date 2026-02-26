@@ -7,34 +7,8 @@
 **Project:** DuHast Airlines — AI-Powered Proactive Disruption Management  
 **Client/Domain:** Airline Operations — Irregular Operations (IROPS) Management  
 **Format:** 1-Day Proof of Concept (Hackathon)  
-**Date:** February 25, 2026  
-**Objective:** Demonstrate an AI-driven, proactive disruption management workflow that detects flight disruptions, assesses passenger impact with tier-based prioritization, generates personalized rebooking options, sends proactive notifications, handles booking confirmations, and produces agent escalation packets — all in under 3 seconds per passenger.
-
----
-
-## Rubric Quick-Reference
-
-> **For judges:** This table maps each rubric scoring category to the specific sections and evidence in this report.
-
-| Rubric Category | Key Evidence | Report Sections |
-|---|---|---|
-| **Technical Depth** | 6 AWS AI services (Bedrock Chat, KB/RAG, Guardrails, Comprehend, Translate, Nova Sonic Voice) with intelligent routing, fallback chains, and feature flags | §4 Solution Overview, §4.2 AWS Services, [AI Services Guide](../architecture/ai-services-guide.md) |
-| **Demo Quality** | 7-minute scripted demo with 31 shots across 6 acts; 7 visual AI indicators in the UI; live sentiment + auto-escalation; KB citations | [Demo Script](../demo/demo-script-5min.md), [Storyboard](../demo/demo-storyboard.md) |
-| **Business Impact** | 60% call deflection, $104M ARR proxy, <3s response vs 45-min hold, premium CSAT preservation | §2 Use Case, §8 Estimated ARR, §5.2 Experimental Results |
-| **Ethical Considerations** | GDPR doc-only guardrails, Bedrock Guardrails (PII filter, denied topics, content safety), Comprehend PII detection, consent management field, source attribution transparency, synthetic-only data | §5.1 Security & Compliance, [AI Services Guide](../architecture/ai-services-guide.md) §3 Guardrails |
-| **Path to Production** | 12-week phased roadmap, target PRD architecture with Step Functions + EventBridge, security hardening plan, cost estimates per 1K disruptions | §9 Path to Production, [Next Steps](../recommendations/next-steps.md), [Solution Architecture](../architecture/solution-architecture.md) §3 |
-
----
-
-## Team
-
-| Role | Name |
-|---|---|
-| Tech Lead | _[Name]_ |
-| Backend Engineer | _[Name]_ |
-| Frontend Engineer | _[Name]_ |
-| Solutions Architect | _[Name]_ |
-| Presenter / PM | _[Name]_ |
+**Date:** February 26, 2026  
+**Objective:** Demonstrate an AI-driven, proactive disruption management workflow using AWS AgentCore Runtime with a Bedrock agent that intelligently handles flight disruptions, generates personalized rebooking options, queries policy knowledge bases, and provides seamless customer self-service through an intuitive mobile-first interface.
 
 ---
 
@@ -79,9 +53,7 @@ An AI-driven **proactive** system that:
 | No real ops feed or PSS access | Used synthetic manifest generation (200 passengers with realistic tier distribution) |
 | 1-day time constraint | Focused on end-to-end flow demonstration rather than depth in any one module |
 | No real push notification infrastructure | Simulated notification center in UI with realistic copy and channel logic |
-| Bedrock availability/cost | Made Bedrock optional; deterministic fallback provides full demo without AI |
 | No real booking system | Mock PNR generation with itinerary summary |
-| EU261/GDPR compliance | Documented policy considerations; included in escalation packet as "notional guardrails" |
 
 ---
 
@@ -93,11 +65,9 @@ An AI-driven **proactive** system that:
 | Proactive notification within 5 min of disruption | Notification generated simultaneously with disruption detection | ✅ POC-approx |
 | 60% self-service resolution (call deflection) | Narrative: full self-service flow demonstrated (create → options → confirm) | ✅ POC-approx |
 | <3s response time for option generation | <100ms with rule-based generation | ✅ POC-approx |
-| Premium passenger prioritization | Platinum: 6 options + premium perks + HIGH escalation priority | ✅ Demonstrated |
+| Premium passenger prioritization | Premium perks + HIGH escalation priority | ✅ Demonstrated |
 | Passenger satisfaction >70% | Mock: satisfaction capture shown in metrics log | 🟡 Mocked |
-| EU261/GDPR compliance | Document-only guardrails in escalation packet + architecture docs | 🟡 Doc-only |
 | Agent escalation with full context | Comprehensive escalation packet with AI recommendation | ✅ Demonstrated |
-| Bedrock AI integration | Optional; deterministic fallback fully functional | ✅ Optional |
 
 ---
 
@@ -117,84 +87,97 @@ An AI-driven **proactive** system that:
 ### Solution Overview
 
 **Stack:**
-- **Compute:** AWS Lambda (Node.js 18) — single function, multiple route handlers
-- **API:** Amazon API Gateway (REST) with CORS
+- **Agent Runtime:** AWS AgentCore Runtime hosting Bedrock agent with Claude 3.5 Sonnet
+- **Agent Tools:** 2 active tools (generate_rebooking_options, query_policy), 4 tools ready for testing (analyze_passenger_sentiment, translate_message, confirm_booking, create_escalation)
+- **API Layer:** API Gateway + Lambda proxy forwarding requests to AgentCore Runtime
+- **Compute:** AWS Lambda (Python for agent, Node.js for original backend)
 - **Storage:** Amazon DynamoDB — single-table design (pk/sk composite key)
-- **AI (optional):** Amazon Bedrock (Claude 3 Haiku) for natural-language chat
-- **Frontend:** Dependency-free static HTML/JS/CSS
-- **IaC:** AWS SAM (template.yaml)
-- **Local dev:** Simple Node.js HTTP server (`server-local.js`) with in-memory store
+- **AI Services:** Bedrock Knowledge Base (RAG), AgentCore Runtime
+- **Frontend:** Dependency-free static HTML/JS/CSS with mobile-first design
+- **IaC:** AWS SAM for backend, AgentCore CLI for agent deployment
 
 ### Solution Diagram
 
 ```mermaid
 graph LR
     A["Static Web UI<br>HTML/JS/CSS<br>(DuHast Airlines)"] -->|HTTP| B["API Gateway"]
-    B --> C["Lambda<br>Node.js 18"]
-    C --> D["DynamoDB<br>Single Table"]
-    C -.->|"Chat + Voice"| E["Bedrock<br>Claude 3 Haiku"]
-    C -.->|"Policy Q&A"| KB["Bedrock KB<br>RAG (4 docs)"]
-    E -.->|"Safety"| BG["Bedrock<br>Guardrails"]
-    C -.->|"Sentiment + PII"| CO["Comprehend"]
-    C -.->|"Translate"| TR["Translate"]
-    C -.->|"Voice Sessions"| VS["Nova Sonic<br>Voice Agent"]
-    VS -.->|"Reuses"| E
-    VS -.->|"Reuses"| KB
+    B --> C["Lambda Proxy<br>Python"]
+    C --> D["AgentCore Runtime<br>Bedrock Agent"]
+    D --> E["Claude 3.5 Sonnet"]
+    D --> KB["Bedrock KB<br>RAG (Policy Docs)"]
+    D -.->|"Tool: analyze_sentiment"| CO["Comprehend"]
+    D -.->|"Tool: translate"| TR["Translate"]
+    B --> L["Lambda<br>Node.js<br>(Original Backend)"]
+    L --> DB["DynamoDB<br>Single Table"]
 ```
 
-### AI Service Chaining
+### AI Service Integration
 
-> **Rubric: Technical Depth** — The six AWS AI services don't operate in isolation — they form an intelligent pipeline:
+> **Rubric: Technical Depth** — The system uses AWS AgentCore Runtime to orchestrate AI services through an intelligent agent:
 
 ```
-User Message
-    │
-    ├─► isPolicyQuestion() ──► YES ──► Bedrock Knowledge Base (RAG)
-    │         (30+ keyword triggers)          │
-    │                                         ├─► RetrieveAndGenerate
-    │                                         ├─► Citation extraction
-    │                                         └─► Bedrock Guardrails filter
-    │
-    ├─► NO ──► Bedrock Claude 3 Haiku (Chat)
-    │              │
-    │              ├─► System prompt with passenger context
-    │              ├─► Anti-hallucination instructions
-    │              └─► Bedrock Guardrails filter
-    │
-    ├─► Amazon Comprehend (parallel, every message)
-    │       ├─► DetectSentiment → confidence scores
-    │       ├─► DetectPiiEntities → entity flags
-    │       └─► evaluateEscalationTrigger() → auto-escalation check
-    │
-    ├─► Voice pathway (if voice session):
-    │       ├─► detectTransferIntent() → regex NLU (5 patterns + negation)
-    │       ├─► maybeNovaSonicVoiceReply() → KB or Chat routing
-    │       └─► Voice session lifecycle management
-    │
-    └─► Amazon Translate (notifications)
-            ├─► DetectDominantLanguage
-            ├─► TranslateText (75+ languages)
-            └─► Preserve original for audit
+User Message → API Gateway → Lambda Proxy → AgentCore Runtime
+                                                    │
+                                                    ▼
+                                            Bedrock Agent (Claude 3.5 Sonnet)
+                                                    │
+                                    ┌───────────────┼───────────────┐
+                                    ▼               ▼               ▼
+                            Tool Selection    Tool Selection   Tool Selection
+                                    │               │               │
+                        ┌───────────┴───────┐       │       ┌───────┴────────┐
+                        ▼                   ▼       ▼       ▼                ▼
+            generate_rebooking_options  query_policy  analyze_sentiment  translate_message
+                        │                   │           │                    │
+                        ▼                   ▼           ▼                    ▼
+                Python Function      Bedrock KB    Comprehend          Translate
+                                      (RAG)
 ```
 
-Every AI service has:
-- **Feature flag** (`USE_BEDROCK`, `USE_KNOWLEDGE_BASE`, `USE_GUARDRAILS`, `USE_COMPREHEND`, `USE_TRANSLATE`, `USE_VOICE`)
-- **Deterministic fallback** when disabled (system never breaks)
-- **METRIC: structured logging** (CloudWatch-ready)
-- **Visual UI indicator** (source badges, sentiment bar, PII badge, escalation alert, citations)
+**Agent Tool Capabilities:**
+1. **generate_rebooking_options** ✅ ACTIVE - Dynamically generates personalized flight options based on passenger tier, origin, destination, and constraints
+2. **query_policy** ✅ ACTIVE - Queries Bedrock Knowledge Base for EU261, compensation, GDPR, and airline policy information
+3. **analyze_passenger_sentiment** 🔧 READY - Uses Amazon Comprehend to analyze message sentiment (coded, ready for UI integration and testing)
+4. **translate_message** 🔧 READY - Translates messages between languages using Amazon Translate (coded, ready for testing)
+5. **confirm_booking** 🔧 READY - Confirms rebooking selection and generates PNR (coded, ready for integration)
+6. **create_escalation** 🔧 READY - Creates escalation ticket with priority based on passenger tier (coded, ready for integration)
+
+The agent automatically selects which tools to use based on the user's intent. Currently, the two active tools (generate_rebooking_options and query_policy) handle the core rebooking and policy query workflows. The remaining tools are fully implemented and ready for testing/tweaking as needed. All agent actions and reasoning are visible in AgentCore observability dashboards.
 
 ### Module Breakdown
 
 | Module | File | Responsibility | POC vs Mocked |
 |---|---|---|---|
+| **AgentCore Agent** | `agentcoreCreateManually/src/main.py` | Implements 6 inline tools for the Bedrock agent | Real (deployed to AgentCore Runtime) |
+| **Lambda Proxy** | `backend/api-proxy/handler.py` | Forwards `/chatv2` requests to AgentCore Runtime | Real (deployed) |
 | **Disruption Detection** | `handler.js` → `handleDisruption` | Creates disruption record from API/event trigger | Real (synthetic trigger) |
 | **Impact Assessment** | `handler.js` + `passengers.js` | Generates 200-passenger manifest with tiers, connection risks, consent status | Real (synthetic data) |
 | **Option Generator** | `handler.js` → `generateCandidateOptions` | 4–6 ranked options per passenger with tier-based perks, constraint filtering | Real (rule-based) |
 | **Proactive Notification** | `handler.js` → `generateNotificationCopy` | Personalized notification with tier badge, channel selection, CTA | Real (simulated delivery) |
-| **Chat / Conversational AI** | `bedrock.js` → `maybeBedrockChat` | Natural language option comparison | Real (Bedrock) or Fallback (deterministic) |
+| **Chat / Conversational AI** | AgentCore Runtime | Natural language understanding with automatic tool selection | Real (AgentCore + Bedrock) |
 | **Booking Confirmation** | `handler.js` → `handleConfirm` | Mock PNR with itinerary summary and offline-friendly note | Mocked (no PSS) |
 | **Escalation Packet** | `handler.js` → `handleEscalate` | Full context: passenger, disruption, options, selections, AI recommendation, policy notes | Real (rule-based) |
 | **Metrics** | `util.js` → `logMetric` | METRIC: structured logs for all key events | Real (CloudWatch-ready) |
+
+### Frontend Experience
+
+The UI has been redesigned for optimal user experience:
+
+**Chat Interface:**
+- Suggested prompt cards appear after disruption
+- Users can click suggested prompts or type their own
+- Clean, distraction-free interface
+
+**Trips Tab:**
+- Shows current flight status by default
+- "View Rebooking Options" button appears when flight is disrupted
+- Rebooking options shown as secondary view with close button
+- After booking confirmation, trip card updates to show new flight with "Confirmed" status
+
+**Updates/Notifications:**
+- Notification status updates to "RESOLVED" after successful rebooking
+- Shows confirmation details and new flight information
+- Clear visual feedback throughout the booking flow
 
 ---
 
@@ -202,16 +185,14 @@ Every AI service has:
 
 | Service | Module | How We Use It | Integration Depth | Status |
 |---|---|---|---|---|
-| **Amazon Bedrock — Claude 3 Haiku** | `bedrock.js` | Context-aware chat with custom system prompt (passenger tier, disruption context, EU261 guidance, anti-hallucination instructions); response includes `source` attribution field | System prompt engineering, context injection, source attribution, graceful error fallback | ✅ Active |
-| **Bedrock Knowledge Bases (RAG)** | `bedrock.js` | `RetrieveAndGenerate` for policy questions; auto-routed via `isPolicyQuestion()` with 30+ keyword triggers; returns citation footnotes from 4 indexed documents (EU261, airline policy, GDPR, FAQ) | Automatic query routing, citation extraction, 4 curated knowledge documents, deterministic policy fallback when KB unavailable | ✅ Active |
-| **Bedrock Guardrails** | `bedrock.js` | 5 guardrail policies: PII anonymization, denied topics (legal advice, competitor comparisons, unauthorized promises), content safety filters, word filters ("guaranteed", "we admit fault", "lawsuit"), grounding checks for KB responses | Multi-policy guardrail configuration, applied to all Bedrock output paths | ✅ Active |
-| **Amazon Comprehend** | `comprehend.js` | Dual API call per chat message: (1) `DetectSentiment` → POSITIVE/NEGATIVE/NEUTRAL/MIXED with confidence scores, (2) `DetectPiiEntities` → SSN, credit card, passport flagging; custom `evaluateEscalationTrigger()` fires auto-escalation after 2+ consecutive NEGATIVE at >70% confidence | Two parallel analyses per message, custom business logic for escalation, sentiment trajectory tracking | ✅ Active |
-| **Amazon Translate** | `translate.js` | `TranslateText` + `DetectDominantLanguage` for notification localization; original English preserved as `originalBody` for audit; 75+ language support | Language detection, translation with audit trail preservation, channel-aware notification rendering | ✅ Active |
-| **Amazon Bedrock Nova Sonic (Voice)** | `voice.js` + `bedrock.js` | Voice session orchestration via `maybeNovaSonicVoiceReply()`; reuses KB and Chat pathways for voice queries; transfer intent detection with 5 regex patterns + negation handling; voice session lifecycle management (start → active → transfer → complete) | Voice AI reusing text pipelines, NLU intent detection, human transfer lifecycle management | ✅ Active |
-| **AWS Lambda** | `handler.js` | All backend compute (Node.js 18) — single function, 10+ route handlers | Monolithic Lambda with feature-flag-driven AI service orchestration | ✅ Active |
-| **Amazon API Gateway** | `template.yaml` | REST API with CORS for all endpoints | HTTP routing, CORS configuration | ✅ Active |
-| **Amazon DynamoDB** | `store.js` | Single-table design (pk/sk composite key) for all entities | 8 entity types co-located by session for efficient queries | ✅ Active |
-| **AWS SAM** | `template.yaml` | Infrastructure as Code — 8 AI service parameters, IAM policies for all services | Parameterized deployment with per-service configuration | ✅ Active |
+| **AWS AgentCore Runtime** | `agentcoreCreateManually/` | Managed runtime hosting Bedrock agent with 6 inline tools; handles tool orchestration, context management, and response generation | Full agent deployment with tool definitions, system prompts, and observability | ✅ Deployed |
+| **Amazon Bedrock — Claude 3.5 Sonnet** | Agent foundation model | Powers the agent's reasoning, natural language understanding, and tool selection decisions | Agent-level integration with automatic tool calling | ✅ Active |
+| **Bedrock Knowledge Bases (RAG)** | `query_policy` tool | Agent calls this tool for policy questions; retrieves from EU261, airline policy, GDPR documents | Tool-based integration, actively used by agent | ✅ Active |
+| **Amazon Comprehend** | `analyze_passenger_sentiment` tool | Agent can call this tool to analyze sentiment | Tool implemented, ready for UI integration | 🔧 Ready |
+| **Amazon Translate** | `translate_message` tool | Agent can call this tool for multi-language support | Tool implemented, ready for testing | 🔧 Ready |
+| **AWS Lambda** | `handler.py` (proxy), `handler.js` (backend) | Proxy Lambda forwards chat requests to AgentCore; original Lambda handles disruption creation, options, booking | Dual Lambda architecture: proxy + original backend | ✅ Active |
+| **Amazon API Gateway** | `template.yaml` | REST API with `/chatv2` endpoint for AgentCore, legacy endpoints for original backend | HTTP routing with CORS configuration | ✅ Active |
+| **Amazon DynamoDB** | `store.js` | Single-table design for sessions, disruptions, bookings, escalations | 8 entity types co-located by session | ✅ Active |
 
 ---
 
@@ -232,20 +213,28 @@ Every AI service has:
 
 ### Why This Architecture?
 
-1. **Serverless-first:** Zero infrastructure management; pay-per-use; auto-scaling
-2. **Single-table DynamoDB:** Low latency, predictable performance, all entities co-located by session for efficient queries
-3. **Monolithic Lambda (POC):** Faster iteration for 1-day build; decompose into per-function in production
-4. **Optional Bedrock:** Demonstrates AI capability without hard dependency; deterministic fallback ensures demo reliability
-5. **Static frontend:** No build step, no framework — opens in any browser, maximum demo reliability
+1. **AgentCore Runtime for managed agent hosting:** Eliminates need to build custom agent orchestration; provides built-in observability, context management, and tool calling infrastructure.
+
+2. **Bedrock agent with inline tools:** Agent autonomously selects appropriate tools based on conversation context, reducing hardcoded logic and enabling natural language interaction.
+
+3. **Lambda proxy pattern:** Lightweight proxy forwards chat requests to AgentCore while preserving existing backend for disruption creation and option generation.
+
+4. **Single-table DynamoDB:** Low latency, predictable performance, all entities co-located by session for efficient queries.
+
+5. **Serverless-first:** Zero infrastructure management; pay-per-use; auto-scaling.
+
+6. **Static frontend with dynamic updates:** No build step, maximum demo reliability, with real-time UI updates after booking confirmation.
 
 ### Why Not...?
 
-| Alternative | Why Not (for POC) |
+| Alternative | Why Not (for 4-hour hackathon) |
 |---|---|
+| Custom agent orchestration | AgentCore provides this out-of-box with better observability |
 | Step Functions | Adds complexity; single Lambda sufficient for demo flow |
-| React/Next.js frontend | Build step + dependency risk for 1-day POC |
+| React/Next.js frontend | Build step + dependency risk for rapid POC |
 | ECS/Fargate | Over-engineered for stateless API handlers |
 | RDS/Aurora | DynamoDB simpler for key-value patterns; no schema migration needed |
+| Gateway service | Inline tools in agent simpler for POC; can extract later if needed |
 
 ---
 
@@ -255,22 +244,20 @@ Every AI service has:
 
 | Test | Method | Result |
 |---|---|---|
-| End-to-end flow | Manual: Create disruption → chat → select → confirm → escalate | ✅ All steps complete successfully |
-| Tier prioritization | Create disruption with Platinum vs General passenger | ✅ Platinum gets 6 options + premium perks; General gets 4 |
-| Connection risk filtering | Passenger with 35-min connection | ✅ Tight-connection options filtered out |
-| Constraint filtering | `arrive_before_21_00` constraint | ✅ Late-arriving options excluded |
-| Notification channel logic | Passenger with app vs without app | ✅ Push for app users; SMS/email for others |
-| Escalation completeness | Escalate without selecting an option | ✅ Packet includes "no option selected" + AI recommendation |
-| Bedrock integration | `USE_BEDROCK=true` with valid credentials | ✅ Natural language responses; graceful fallback on error |
-| Local dev server | `node server-local.js` with in-memory store | ✅ All endpoints functional |
+| End-to-end flow | Manual: Create disruption → chat → select → confirm | ✅ All steps complete successfully |
+| Agent tool calling | Natural language queries triggering `generate_rebooking_options` and `query_policy` | ✅ Agent autonomously selects correct tools |
+| Knowledge Base RAG | Policy questions answered with citations from knowledge base | ✅ Relevant answers with source citations |
+| UI feedback loop | Booking confirmation → trip card update → notification status change | ✅ Real-time UI updates working |
+| AgentCore deployment | Agent deployed to AgentCore Runtime with 6 inline tools | ✅ Deployed and accessible via Lambda proxy |
 
 ### What We Validated
 
+- Bedrock agent with AgentCore Runtime = production-ready managed agent hosting
+- Agent autonomous tool selection = reduces hardcoded logic, enables natural conversation
+- Knowledge Base integration via tool = effective RAG for policy questions
 - Proactive notification **before** passenger contacts airline = feasible
-- Tier-based option differentiation = visible and meaningful to passengers
-- Escalation packet with AI recommendation = dramatically reduces agent ramp-up time
-- Rule-based option generation <100ms = well under 3-second SLA target
-- Structured metrics logging = ready for CloudWatch ingestion without code changes
+- UI feedback loop with booking confirmation = clear visual confirmation for users
+- 4 additional tools ready for testing = clear extensibility path
 
 ---
 
@@ -294,15 +281,15 @@ Every AI service has:
 
 ### Key Findings
 
-1. **End-to-end flow works:** The entire disruption → notification → options → booking → escalation pipeline is coherent and demonstrable.
+1. **AgentCore Runtime deployment successful:** Bedrock agent with Claude 3.5 Sonnet deployed to AgentCore Runtime with 6 inline tools, accessible via Lambda proxy architecture.
 
-2. **Tier differentiation is impactful:** Having 6 options with premium perks (lounge, hotel, first-class upgrade) vs 4 basic options is a visible and compelling difference for Platinum passengers.
+2. **Agent tool orchestration works:** Agent successfully selects and calls `generate_rebooking_options` and `query_policy` tools based on natural language input, demonstrating autonomous tool selection.
 
-3. **Proactive notification changes the paradigm:** Instead of "passenger discovers disruption → calls airline → waits 45 min", the flow becomes "airline detects → notifies passenger → passenger self-resolves in <2 min."
+3. **Knowledge Base integration effective:** RAG-based policy queries return relevant answers with citations from EU261, airline policy, and GDPR documents.
 
-4. **Escalation context dramatically helps agents:** The comprehensive packet (passenger summary, options shown, selections, AI recommendation, policy notes) eliminates the "please hold while I look up your record" pattern.
+4. **Proactive notification changes the paradigm:** Instead of "passenger discovers disruption → calls airline → waits 45 min", the flow becomes "airline detects → notifies passenger → passenger self-resolves in <2 min."
 
-5. **Rule-based logic is sufficient for POC:** Bedrock adds natural language capability but is not strictly necessary to demonstrate the core value proposition.
+5. **UI feedback loop complete:** After booking confirmation, trip card updates with new flight details and notification status changes to "RESOLVED", providing clear visual confirmation.
 
 ---
 
@@ -310,15 +297,11 @@ Every AI service has:
 
 ### Why These Results Matter
 
-1. **Six-service AI orchestration validates depth:** The ability to chain Bedrock Chat, Knowledge Base (RAG), Guardrails, Comprehend (sentiment + PII), Translate, and Nova Sonic Voice into a cohesive pipeline demonstrates that multi-service AI integration is not only feasible but adds compounding value at each stage.
+1. **Agent-based architecture validates AI orchestration:** The Bedrock agent autonomously selects and calls appropriate tools (`generate_rebooking_options` for flight options, `query_policy` for policy questions) based on natural language input, demonstrating that agentic AI can handle complex multi-step workflows without hardcoded logic.
 
-2. **Automatic routing proves intelligent orchestration:** The `isPolicyQuestion()` keyword-based router (30+ triggers) successfully directs queries to the right AI pathway without user intervention — a key indicator of production viability.
+2. **AgentCore Runtime simplifies deployment:** Managed runtime eliminates infrastructure complexity while providing built-in observability for agent actions, reasoning traces, and tool invocations.
 
-3. **Sentiment-driven auto-escalation demonstrates proactive AI:** Moving from reactive ("passenger requests agent") to proactive ("system detects frustration and escalates") fundamentally changes the customer experience model.
-
-4. **Feature-flag architecture de-risks production:** Every AI service can be toggled independently, with deterministic fallbacks ensuring the system never breaks. This allows incremental rollout and A/B testing in production.
-
-5. **Voice + text convergence maximizes reuse:** Nova Sonic voice sessions reuse the same KB and Chat pathways as text, avoiding duplicate AI logic and ensuring consistent answers across modalities.
+3. **Tool-based integration is extensible:** 4 additional tools (`analyze_passenger_sentiment`, `translate_message`, `confirm_booking`, `create_escalation`) are implemented and ready for testing, showing clear path to expand capabilities without architectural changes.
 
 ---
 
@@ -328,62 +311,48 @@ Every AI service has:
 
 | Lesson | Detail |
 |---|---|
+| **AgentCore Runtime for rapid deployment** | Managed agent hosting eliminated infrastructure complexity; deployed agent in minutes with built-in observability |
+| **Inline tools over Gateway service** | For 4-hour hackathon, implementing tools directly in agent was faster than building separate Gateway service |
 | **Start with the demo flow** | Building the end-to-end flow first, then enriching each step, was more effective than perfecting any single module |
+| **Hardcoded configuration** | Skipping environment variable complexity and hardcoding values in `config.py` saved significant debugging time |
 | **Synthetic data is underrated** | Realistic synthetic manifests (with tier distributions, connection risks) made the demo compelling without real data access |
-| **Optional AI is a feature** | Making Bedrock optional meant the demo never breaks due to credential or model issues |
-| **Single-table DynamoDB is powerful** | All session data co-located by pk made queries simple and fast |
-| **Static frontend = zero friction** | No build step meant instant iteration; dependency-free = no version conflicts |
+| **Lambda proxy pattern** | Lightweight proxy to AgentCore preserved existing backend while adding agent capabilities |
 
 ### What Did NOT Work / Was Difficult
 
 | Challenge | Detail |
 |---|---|
-| **Knowledge Base setup latency** | Creating and syncing the Bedrock KB required manual console steps; no full IaC support yet |
-| **Guardrail tuning** | Finding the right balance between safety and helpfulness required iterative testing; too aggressive → blocked legitimate responses |
-| **Sentiment threshold calibration** | The 2-consecutive-NEGATIVE / >70% confidence rule is a starting point; real-world calibration needs A/B testing with actual passenger interactions |
-| **Voice session state management** | Managing voice session lifecycle (start → active → transfer → complete) across stateless Lambda invocations required careful DynamoDB state tracking |
+| **AgentCore CLI learning curve** | First-time setup with `agentcore create` and `agentcore launch` required trial and error; documentation could be clearer |
+| **Agent ARN management** | Hardcoding agent ARN in Lambda proxy works but fragile; production needs parameter store or environment variable |
+| **Tool schema definition** | Defining tool input schemas for AgentCore required careful attention to parameter types and descriptions |
+| **Limited tool testing** | Only 2 of 6 tools actively tested due to time constraints; 4 tools ready but need UI integration |
 
 ### Edge Cases to Watch
 
 | Edge Case | Observation |
 |---|---|
-| **Mixed-language input** | Passengers switching languages mid-conversation can confuse sentiment analysis; Translate helps but adds latency |
-| **Sarcasm detection** | Comprehend may classify sarcastic messages as POSITIVE when they're actually negative |
-| **KB keyword false positives** | Generic words like "policy" in non-policy contexts can trigger unnecessary KB routing |
-| **Concurrent voice + text sessions** | Same passenger using both channels simultaneously needs session deduplication |
-
-### Fallback Robustness
-
-| Service | Fallback Tested | Result |
-|---|---|---|
-| Bedrock Chat (OFF) | Deterministic option summary | ✅ Clean, useful response |
-| Knowledge Base (OFF) | `buildPolicyFallback()` hardcoded summaries | ✅ Accurate EU261/GDPR info |
-| Guardrails (OFF) | No filtering | ✅ System works; content unfiltered |
-| Comprehend (OFF) | Returns NEUTRAL, no PII | ✅ No false escalations |
-| Translate (OFF) | Returns English original | ✅ Graceful degradation |
-| Voice (OFF) | Returns "unavailable" message | ✅ Clean error handling |
+| **Agent tool selection accuracy** | Agent needs clear tool descriptions to select correct tool; ambiguous queries may trigger wrong tool |
+| **Knowledge Base retrieval quality** | Generic words like "policy" in non-policy contexts can trigger unnecessary KB routing |
+| **Tool error handling** | Agent needs graceful fallback when tools fail (e.g., Comprehend API error) |
+| **Concurrent sessions** | Same passenger using multiple channels simultaneously needs session deduplication |
 
 ---
 
 ## Future Work / What We Did Not Look At
 
-See [/docs/recommendations/next-steps.md](../recommendations/next-steps.md) for the full prioritized roadmap.
-
 **Key gaps between POC and PRD:**
 
-1. Real ops feed and PSS/GDS integration
-2. Step Functions orchestration for parallel passenger processing
-3. Bedrock Agents with Guardrails and Knowledge Bases
-4. Real push/SMS/email notification delivery
-5. Observability: CloudWatch dashboards, X-Ray tracing, alerting
-6. Security: Cognito auth, KMS encryption, WAF, IAM least privilege
-7. Scale testing: 5,000 passengers per disruption
-8. Data retention, consent management, GDPR right-to-erasure
-9. Multi-language notification templates
-10. Revenue optimization and dynamic pricing
-11. Expanded voice capabilities: full-duplex voice, real-time STT/TTS, expanded NLU
-
-> **Code Review Status:** Code was developed during a 1-day hackathon. Formal code review and security clearance are pending for production deployment. All code follows AWS Lambda best practices and uses the AWS SDK v3.
+1. **Test and integrate remaining 4 tools:** `analyze_passenger_sentiment`, `translate_message`, `confirm_booking`, `create_escalation` are coded but need UI integration and testing
+2. **Real ops feed and PSS/GDS integration:** Currently using synthetic disruptions and mock flight options
+3. **Agent prompt optimization:** Refine system prompts and tool descriptions for better tool selection accuracy
+4. **Step Functions orchestration:** Parallel passenger processing for large-scale disruptions
+5. **Real push/SMS/email notification delivery:** Currently simulated in UI
+6. **Enhanced observability:** CloudWatch dashboards, X-Ray tracing, alerting for agent actions
+7. **Security hardening:** Cognito auth, KMS encryption, WAF, IAM least privilege
+8. **Scale testing:** 5,000 passengers per disruption
+9. **Data retention, consent management, GDPR right-to-erasure**
+10. **Multi-language notification templates**
+11. **Revenue optimization and dynamic pricing**
 
 ---
 
@@ -391,8 +360,10 @@ See [/docs/recommendations/next-steps.md](../recommendations/next-steps.md) for 
 
 | Asset | Path | Description |
 |---|---|---|
-| **Backend** | `/backend/` | SAM template, Lambda handler, DynamoDB store, Bedrock integration, passenger manifest generator |
-| **Frontend** | `/web/` | Static HTML/JS/CSS with notification center, option cards, booking panel, escalation panel, metrics log |
+| **AgentCore Agent** | `/backend/agent/agentcoreCreateManually/` | Bedrock agent with 6 inline tools deployed to AgentCore Runtime |
+| **Lambda Proxy** | `/backend/api-proxy/handler.py` | Forwards `/chatv2` requests to AgentCore Runtime |
+| **Backend** | `/backend/` | SAM template, Lambda handler, DynamoDB store, passenger manifest generator |
+| **Frontend** | `/web/` | Static HTML/JS/CSS with chat interface, trip cards, rebooking options, notification center |
 | **Project Report** | `/docs/hackathon/project-report.md` | This document |
 | **Architecture Docs** | `/docs/architecture/` | Solution architecture + Mermaid diagrams (POC + target) |
 | **Demo Script** | `/docs/demo/demo-script-5min.md` | 5-minute timed demo script |
@@ -400,6 +371,7 @@ See [/docs/recommendations/next-steps.md](../recommendations/next-steps.md) for 
 | **Sample Scenarios** | `/docs/demo/sample-scenarios.md` | 3 runnable scenarios with curl commands |
 | **Next Steps** | `/docs/recommendations/next-steps.md` | Prioritized POC → PRD roadmap |
 | **Local Dev Runbook** | `/docs/runbook/local-dev.md` | Setup + run instructions |
+| **Knowledge Base** | `/knowledge-base/` | Airline policy, EU261, GDPR documents for RAG |
 
 ---
 
@@ -436,15 +408,15 @@ See [/docs/recommendations/next-steps.md](../recommendations/next-steps.md) for 
 
 ## Path to Production
 
-1. **Week 1–2:** Stand up staging environment; integrate real ops feed (even read-only)
-2. **Week 3–4:** PSS/GDS integration for live inventory queries
-3. **Week 4–5:** Step Functions workflow; parallel passenger processing
-4. **Week 5–6:** Bedrock Agents + Guardrails deployment
-5. **Week 6–7:** Real notification channels (push, SMS, email)
-6. **Week 7–8:** Security hardening (Cognito, KMS, WAF)
-7. **Week 8–9:** CloudWatch dashboards + X-Ray + alerting
-8. **Week 9–10:** Load testing (5,000 passengers); multi-region prep
-9. **Week 10–12:** UAT with airline stakeholders; compliance review
-10. **Week 12+:** Phased production rollout (single route → hub → network)
+1. **Week 1–2:** Test and integrate remaining 4 agent tools; refine agent prompts for better tool selection
+2. **Week 2–3:** Stand up staging environment; integrate real ops feed (even read-only)
+3. **Week 3–4:** PSS/GDS integration for live inventory queries
+4. **Week 4–5:** Step Functions workflow; parallel passenger processing
+5. **Week 5–6:** Real notification channels (push, SMS, email)
+6. **Week 6–7:** Security hardening (Cognito, KMS, WAF); move agent ARN to Parameter Store
+7. **Week 7–8:** CloudWatch dashboards + X-Ray + alerting for agent observability
+8. **Week 8–9:** Load testing (5,000 passengers); multi-region prep
+9. **Week 9–10:** UAT with airline stakeholders; compliance review
+10. **Week 10+:** Phased production rollout (single route → hub → network)
 
 > See [/docs/recommendations/next-steps.md](../recommendations/next-steps.md) for detailed breakdown per step.
