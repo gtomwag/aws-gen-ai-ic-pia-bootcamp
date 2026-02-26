@@ -26,11 +26,11 @@ function applyFiltersAndSort() {
 
   currentOptions = opts;
 
-  // Update tab badge
+  // Don't show badge on Trips tab
   const badge = document.getElementById('tabBadgeOptions');
-  if (allOptions.length > 0) {
-    badge.textContent = allOptions.length;
-    badge.classList.add('visible');
+  if (badge) {
+    badge.textContent = '';
+    badge.classList.remove('visible');
   }
 
   if (currentOptions.length === 0) {
