@@ -73,6 +73,14 @@ body {
   overflow: hidden;
   background: var(--bg);
 }
+/* iOS Safari: -webkit-fill-available gives the true visible viewport,
+   avoiding overlap with the bottom address bar.  Scoped via
+   -webkit-touch-callout (WebKit-only) so Chrome is unaffected. */
+@supports (-webkit-touch-callout: none) {
+  .app-shell {
+    height: -webkit-fill-available;
+  }
+}
 
 /* ── Scrollbar Styling ─────────────────────────────── */
 ::-webkit-scrollbar { width: 0; background: transparent; }
