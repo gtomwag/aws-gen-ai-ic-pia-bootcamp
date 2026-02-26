@@ -1,0 +1,119 @@
+name: agentcoreCreateManually_Agent
+description: Flight disruption management agent with rebooking capabilities
+region: us-east-1
+
+foundation_model: anthropic.claude-3-5-sonnet-20241022-v2:0
+
+instruction: |
+  You are a helpful flight disruption assistant for an airline. Your role is to:
+  1. Help passengers rebook flights when disruptions occur
+  2. Answer questions about passenger rights and policies using the knowledge base
+  3. Analyze passenger sentiment and escalate when needed
+  4. Provide clear, empathetic communication
+  
+  When a passenger asks about rebooking, use the generate_rebooking_options tool to find alternatives.
+  When asked about policies or rights (especially EU261), query the knowledge base.
+  Always be professional, empathetic, and solution-oriented.
+
+tools:
+  - name: generate_rebooking_options
+    description: Generate rebooking flight options for a disrupted passenger
+    input_schema:
+      type: object
+      properties:
+        passenger_id:
+          type: string
+          description: Unique passenger identifier
+        origin:
+          type: string
+          description: Origin airport code (e.g., FRA)
+        destination:
+          type: string
+          description: Destination airport code (e.g., JFK)
+        tier:
+          type: string
+          description: Passenger loyalty tier (Platinum, Gold, Silver, General)
+        constraints:
+          type: array
+          items:
+            type: string
+          description: Passenger constraints like arrive_before_21_00
+      required:
+        - passenger_id
+        - origin
+        - destination
+        - tier
+
+  - name: query_policy
+    description: Query the airline policy knowledge base for passenger rights, compensation, and regulations
+    input_schema:
+      type: object
+      properties:
+        query:
+          type: string
+          description: The policy question to search for
+      required:
+        - query
+
+  - name: analyze_passenger_sentiment
+    description: Analyze the sentiment of passenger messages
+    input_schema:
+      type: object
+      properties:
+        text:
+          type: string
+          description: The passenger message text to analyze
+      required:
+        - text
+
+  - name: translate_message
+    description: Translate a message to or from English
+    input_schema:
+      type: object
+      properties:
+        text:
+          type: string
+          description: Text to translate
+        source_language:
+          type: string
+          description: Source language code (e.g., en, de, es)
+        target_language:
+          type: string
+          description: Target language code (e.g., en, de, es)
+      required:
+        - text
+        - target_language
+
+  - name: confirm_booking
+    description: Confirm a rebooking selection and generate PNR
+    input_schema:
+      type: object
+      properties:
+        passenger_id:
+          type: string
+          description: Passenger identifier
+        option_id:
+          type: string
+          description: Selected flight option ID
+      required:
+        - passenger_id
+        - option_id
+
+  - name: create_escalation
+    description: Create an escalation ticket for human agent review
+    input_schema:
+      type: object
+      properties:
+        passenger_id:
+          type: string
+          description: Passenger identifier
+        reason:
+          type: string
+          description: Reason for escalation
+        priority:
+          type: string
+          description: Priority level (HIGH, MEDIUM, NORMAL)
+      required:
+        - passenger_id
+        - reason
+        - priority

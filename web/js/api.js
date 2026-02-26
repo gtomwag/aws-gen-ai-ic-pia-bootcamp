@@ -8,7 +8,9 @@ async function apiCall(path, body) {
   setStatus(`Calling ${path}...`);
   try {
     const isGet = !body && (path.includes('?') || path === '/health' || path.startsWith('/notification') || (path === '/disruption' && !body));
-    const res = await fetch(`${API_BASE_URL}${path}`, {
+    const fullUrl = `${API_BASE_URL}${path}`;
+    console.log(`[API] ${isGet ? 'GET' : 'POST'} ${fullUrl}`, body ? { body } : '');
+    const res = await fetch(fullUrl, {
       method: isGet ? 'GET' : 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: body ? JSON.stringify(body) : undefined,
