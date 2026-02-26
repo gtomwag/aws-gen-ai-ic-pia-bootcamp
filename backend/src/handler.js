@@ -996,7 +996,7 @@ async function handleBoardingPass(event) {
 }
 
 function generateSimpleBoardingPassPDF(data) {
-  // Create a professional airline boarding pass PDF
+  // Create a professional airline boarding pass PDF with proper spacing
   const pdf = `%PDF-1.4
 1 0 obj
 << /Type /Catalog /Pages 2 0 R >>
@@ -1008,181 +1008,165 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R /F3 7 0 R >> >> >>
 endobj
 4 0 obj
-<< /Length 2800 >>
+<< /Length 3200 >>
 stream
 BT
 /F3 32 Tf
-50 730 Td
+50 750 Td
 (BOARDING PASS) Tj
 ET
 q
-1 0 0 1 50 710 cm
+1 0 0 1 50 740 cm
 0 0 m
 512 0 l
-512 2 l
-0 2 l
+2 0 l
+2 -1 l
+0 -1 l
 f
 Q
 BT
-/F1 11 Tf
-50 695 Td
-(Passenger Name:) Tj
-/F3 18 Tf
-0 -25 Td
-(${data.passengerName}) Tj
-/F1 11 Tf
-0 -30 Td
-(PNR / Confirmation) Tj
-/F3 14 Tf
+/F1 10 Tf
+50 720 Td
+(Passenger Name) Tj
+/F3 16 Tf
 0 -20 Td
+(${data.passengerName}) Tj
+/F1 10 Tf
+0 -25 Td
+(PNR) Tj
+/F3 12 Tf
+0 -18 Td
 (${data.pnr}) Tj
 ET
 q
-1 0 0 1 300 695 cm
+1 0 0 1 280 720 cm
 0 0 m
-0 -60 l
-2 -60 l
-2 0 l
+0 -75 l
+1 0 l
+1 -75 l
 f
 Q
 BT
-/F1 10 Tf
-320 695 Td
+/F1 9 Tf
+295 720 Td
 (Status) Tj
-/F3 12 Tf
-0 -15 Td
+/F3 11 Tf
+0 -16 Td
 (${data.tier}) Tj
-/F1 10 Tf
-0 -25 Td
-(Class of Service) Tj
-/F3 12 Tf
-0 -15 Td
+/F1 9 Tf
+0 -22 Td
+(Class) Tj
+/F3 11 Tf
+0 -16 Td
 (${data.classType}) Tj
-/F1 10 Tf
-0 -25 Td
-(Frequent Flyer) Tj
-/F3 12 Tf
-0 -15 Td
-(Not Enrolled) Tj
+/F1 9 Tf
+0 -22 Td
+(FF #) Tj
+/F3 11 Tf
+0 -16 Td
+(--) Tj
 ET
 q
-1 0 0 1 450 695 cm
+1 0 0 1 420 720 cm
 0 0 m
-0 -60 l
-2 -60 l
-2 0 l
+0 -75 l
+1 0 l
+1 -75 l
 f
 Q
 BT
-/F1 10 Tf
-470 695 Td
+/F1 9 Tf
+435 720 Td
 (Seat) Tj
-/F3 16 Tf
-0 -18 Td
-(${data.seat}) Tj
-/F1 10 Tf
-0 -30 Td
-(Gate) Tj
 /F3 14 Tf
+0 -16 Td
+(${data.seat}) Tj
+/F1 9 Tf
+0 -24 Td
+(Gate) Tj
+/F3 12 Tf
 0 -16 Td
 (${data.gate}) Tj
 ET
 q
-1 0 0 1 50 600 cm
+1 0 0 1 50 620 cm
 0 0 m
 512 0 l
-512 2 l
-0 2 l
+2 0 l
+2 -1 l
+0 -1 l
 f
 Q
 BT
-/F3 48 Tf
-50 560 Td
+/F3 52 Tf
+60 580 Td
 (${data.origin}) Tj
-/F1 18 Tf
-180 568 Td
+/F1 16 Tf
+200 588 Td
 (to) Tj
-/F3 48 Tf
-220 560 Td
+/F3 52 Tf
+250 580 Td
 (${data.destination}) Tj
 ET
 q
-1 0 0 1 50 530 cm
+1 0 0 1 50 550 cm
 0 0 m
 512 0 l
-512 2 l
-0 2 l
+2 0 l
+2 -1 l
+0 -1 l
 f
 Q
 BT
-/F1 11 Tf
-50 510 Td
+/F1 10 Tf
+50 530 Td
 (Flight) Tj
-/F3 18 Tf
-0 -22 Td
+/F3 16 Tf
+0 -18 Td
 (${data.flightNumber}) Tj
-/F1 11 Tf
-180 532 Td
-(Departure Date) Tj
+/F1 10 Tf
+200 548 Td
+(Date) Tj
 /F3 14 Tf
 0 -18 Td
 (${data.date}) Tj
-/F1 11 Tf
-320 532 Td
-(Departure Time) Tj
+/F1 10 Tf
+350 548 Td
+(Departure) Tj
 /F3 14 Tf
 0 -18 Td
 (${data.boardingTime}) Tj
-/F1 11 Tf
-450 532 Td
-(Boarding) Tj
-/F3 12 Tf
-0 -16 Td
-(${data.boardingTime}) Tj
 ET
 q
-1 0 0 1 50 460 cm
+1 0 0 1 50 480 cm
 0 0 m
 512 0 l
-512 2 l
-0 2 l
+2 0 l
+2 -1 l
+0 -1 l
 f
 Q
 BT
-/F1 10 Tf
-50 435 Td
+/F1 9 Tf
+50 460 Td
+(Boarding Group: A) Tj
+/F1 9 Tf
+200 460 Td
+(Boarding Order: 001) Tj
+/F1 9 Tf
+350 460 Td
+(Aircraft: Boeing 737) Tj
+/F1 8 Tf
+50 440 Td
 (Please arrive at the gate at least 30 minutes before departure.) Tj
-/F1 10 Tf
-0 -20 Td
-(This pass grants boarding to the aircraft. Present at gate when requested.) Tj
-/F1 9 Tf
-0 -25 Td
-(Boarding Group:) Tj
-/F3 11 Tf
-80 -25 Td
-(A) Tj
-/F1 9 Tf
-120 -25 Td
-(Boarding Order:) Tj
-/F3 11 Tf
-200 -25 Td
-(001) Tj
-/F1 9 Tf
-50 -25 Td
-(Flight: ${data.flightNumber} | Aircraft: Boeing 737 | Duration: 6h 15m) Tj
+/F1 8 Tf
+50 425 Td
+(This boarding pass grants access to the aircraft. Present at gate when requested.) Tj
 ET
-q
-1 0 0 1 50 340 cm
-0 0 m
-512 0 l
-512 1 l
-0 1 l
-f
-Q
 BT
-/F3 10 Tf
-50 320 Td
-(||||| |||||| ||||||) Tj
+/F1 10 Tf
+50 390 Td
+(|||||||||||||||||||||||||) Tj
 ET
 endstream
 endobj
@@ -1190,7 +1174,7 @@ endobj
 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
 endobj
 6 0 obj
-<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
 endobj
 7 0 obj
 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
@@ -1202,13 +1186,13 @@ xref
 0000000058 00000 n 
 0000000115 00000 n 
 0000000267 00000 n 
-0000003128 00000 n 
-0000003206 00000 n 
-0000003288 00000 n 
+0000003530 00000 n 
+0000003608 00000 n 
+0000003686 00000 n 
 trailer
 << /Size 8 /Root 1 0 R >>
 startxref
-3370
+3768
 %%EOF`;
 
   return Buffer.from(pdf);
