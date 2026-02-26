@@ -2,7 +2,6 @@
 
 async function createDisruption() {
   btnDisruption.disabled = true;
-  addMessage('system', 'Creating disruption event...');
   addMetric('disruption_request', 'type=CANCELLATION airport=FRA');
 
   storedDisruptionType = 'CANCELLATION';
@@ -32,8 +31,12 @@ async function createDisruption() {
     });
 
     sessionId = data.sessionId;
-    addMessage('system', data.message);
     addMetric('disruption_detected', `disruptionId=${data.disruptionId} passengers=${data.manifestSummary?.totalPassengers}`);
+
+    // Update trip card with disruption status
+    if (data.passenger) {
+      updateTripCard(data.passenger, storedDisruptionType);
+    }
 
     // Show notification
     if (data.notification) {
@@ -59,21 +62,8 @@ async function createDisruption() {
       addMetric('options_generated', `count=${data.options.length}`);
     }
 
-    // Auto-chat to get assistant response
-    addMessage('user', 'Show me the best options and tradeoffs.');
-    const chatData = await apiCall('/chat', {
-      sessionId,
-      message: 'Show me the best options and tradeoffs.',
-    });
-
-    addMessage('assistant', chatData.assistant, {
-      source: chatData.source,
-      citations: chatData.citations,
-    });
-    handleChatMeta(chatData);
-    if (chatData.options && chatData.options.length > 0) {
-      renderOptions(chatData.options);
-    }
+    // Show suggested prompts instead of auto-chat
+    showSuggestedPrompts();
 
   } catch (err) {
     btnDisruption.disabled = false;
@@ -125,10 +115,17 @@ async function sendChat() {
   if (!message || !sessionId) return;
 
   chatInput.value = '';
+  
+  // Remove suggested prompts if they exist
+  const suggestedPrompts = document.getElementById('suggestedPrompts');
+  if (suggestedPrompts) {
+    suggestedPrompts.remove();
+  }
+  
   addMessage('user', message);
 
   try {
-    const data = await apiCall('/chat', { sessionId, message });
+    const data = await apiCall('/chatv2', { sessionId, message });
 
     // PII: retroactively mark the user message
     if (data.piiDetected) {
@@ -223,6 +220,20 @@ async function confirmSelection() {
 
     addMessage('system', `✅ Booking confirmed! PNR: ${b.pnr}`);
     addMetric('booking_confirmed', `pnr=${b.pnr}`);
+
+    // Store confirmed booking data for trip card update
+    if (b.itinerarySummary) {
+      storedConfirmedBooking = {
+        pnr: b.pnr,
+        flightNumber: b.itinerarySummary.flights?.[0] || b.selected?.flights?.[0] || storedPassenger?.flightNumber,
+        origin: storedPassenger?.origin,
+        destination: storedPassenger?.destination,
+        departure: b.itinerarySummary.departure,
+        arrival: b.itinerarySummary.arrival,
+        class: b.itinerarySummary.class,
+        date: storedPassenger?.date
+      };
+    }
 
     // Show booking screen
     showScreen('screenBooking');
@@ -472,4 +483,39 @@ async function startVoiceConversation() {
     }
     stopVoiceConversation();
   }
+}
+
+
+// ── Suggested Prompts ─────────────────────────────────────
+
+function showSuggestedPrompts() {
+  const promptsContainer = document.createElement('div');
+  promptsContainer.className = 'suggested-prompts';
+  promptsContainer.id = 'suggestedPrompts';
+  
+  const prompts = [
+    'I need to rebook my flight',
+    'What are my EU261 rights?',
+    'Show me the fastest route',
+    'What compensation am I entitled to?'
+  ];
+  
+  prompts.forEach(prompt => {
+    const button = document.createElement('button');
+    button.className = 'prompt-card';
+    button.textContent = prompt;
+    button.onclick = () => {
+      // Remove suggested prompts
+      const container = document.getElementById('suggestedPrompts');
+      if (container) container.remove();
+      
+      // Send the selected prompt
+      chatInput.value = prompt;
+      sendChat();
+    };
+    promptsContainer.appendChild(button);
+  });
+  
+  chatMessages.appendChild(promptsContainer);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
 }

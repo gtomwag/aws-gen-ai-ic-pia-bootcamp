@@ -119,33 +119,64 @@
       </div>
     </div>
 
-    <!-- ══════ Screen 3: Options (Tab) ══════ -->
+    <!-- ══════ Screen 3: Trips (Tab) ══════ -->
     <div class="screen" id="screenOptions">
       <div class="ios-nav-bar">
         <span class="nav-title" id="navTitleOptions">DuHast</span>
       </div>
       <div class="options-header">
-        <div class="options-large-title">Rebooking Options</div>
+        <div class="options-large-title">My Trips</div>
       </div>
-      <div class="filter-pills">
-        <button class="filter-pill active" id="sortTime" aria-label="Sort by earliest">Earliest</button>
-        <button class="filter-pill" id="sortCost" aria-label="Sort by lowest cost">Lowest Cost</button>
-        <button class="filter-pill" id="filterRecommended" aria-label="Show recommended only">Recommended</button>
+      
+      <!-- Current Trip Card -->
+      <div class="current-trip-container" id="currentTripContainer">
+        <div class="current-trip-card" id="currentTripCard">
+          <div class="trip-header">
+            <span class="trip-label">Current Trip</span>
+            <span class="trip-status-badge" id="tripStatusBadge">Scheduled</span>
+          </div>
+          <div class="trip-flight-number" id="tripFlightNumber">UA891</div>
+          <div class="trip-route">
+            <div class="trip-airport">
+              <div class="trip-airport-code" id="tripOriginCode">FRA</div>
+              <div class="trip-airport-name">Frankfurt</div>
+            </div>
+            <div class="trip-arrow">→</div>
+            <div class="trip-airport">
+              <div class="trip-airport-code" id="tripDestCode">JFK</div>
+              <div class="trip-airport-name">New York</div>
+            </div>
+          </div>
+          <div class="trip-date" id="tripDate">Feb 25, 2026</div>
+          <button class="trip-action-btn hidden" id="btnViewRebookingOptions">View Rebooking Options</button>
+        </div>
       </div>
-      <div class="options-scroll" id="optionsList">
-        <div class="options-no-items">Create a disruption to see options.</div>
-      </div>
-      <div class="options-confirm-bar">
-        <button class="ios-btn ios-btn-success" id="btnConfirm" disabled aria-label="Confirm selection">Confirm Selection</button>
+      
+      <!-- Rebooking Options (hidden by default) -->
+      <div class="rebooking-section hidden" id="rebookingSection">
+        <div class="rebooking-header">
+          <div class="rebooking-title">Rebooking Options</div>
+          <button class="rebooking-close" id="btnCloseRebooking">✕</button>
+        </div>
+        <div class="filter-pills">
+          <button class="filter-pill active" id="sortTime" aria-label="Sort by earliest">Earliest</button>
+          <button class="filter-pill" id="sortCost" aria-label="Sort by lowest cost">Lowest Cost</button>
+          <button class="filter-pill" id="filterRecommended" aria-label="Show recommended only">Recommended</button>
+        </div>
+        <div class="options-scroll" id="optionsList">
+          <div class="options-no-items">No rebooking options available.</div>
+        </div>
+        <div class="options-confirm-bar">
+          <button class="ios-btn ios-btn-success" id="btnConfirm" disabled aria-label="Confirm selection">Confirm Selection</button>
+        </div>
       </div>
     </div>
 
     <!-- ══════ Screen 4: Chat (Tab) ══════ -->
     <div class="screen" id="screenChat">
       <div class="ios-nav-bar">
-        <span class="nav-title">Assistant<span class="chat-nav-sentiment NEUTRAL" id="sentimentDot"></span></span>
+        <span class="nav-title">AI Assistant<span class="chat-nav-sentiment NEUTRAL" id="sentimentDot"></span></span>
         <div class="nav-right">
-          <button class="nav-icon-btn" id="btnVoiceAgent" aria-label="Call Agent" title="Call Agent">📞</button>
           <button class="nav-back" id="btnEscalate" style="position:static;transform:none;color:var(--danger);font-size:14px;font-weight:600;" aria-label="Escalate to agent" disabled>Escalate</button>
         </div>
       </div>
@@ -154,7 +185,7 @@
         <span class="escalation-text" id="autoEscalationDetail">Routing to live agent...</span>
       </div>
       <div class="chat-messages" id="chatMessages">
-        <div class="msg system">Welcome! Simulate a disruption to begin.</div>
+        <!-- Messages will appear here -->
       </div>
       <div class="chat-input-area">
         <div class="chat-input-wrapper">
@@ -258,13 +289,9 @@
         <span class="tab-icon">💬<span class="tab-badge" id="tabBadgeChat"></span></span>
         <span class="tab-label">Chat</span>
       </button>
-      <button class="tab-item" id="btnVoiceTab" aria-label="Call agent">
-        <span class="tab-icon">📞</span>
-        <span class="tab-label">Call</span>
-      </button>
-      <button class="tab-item" data-tab="options" aria-label="Flights tab">
+      <button class="tab-item" data-tab="options" aria-label="Trips tab">
         <span class="tab-icon">✈️<span class="tab-badge" id="tabBadgeOptions"></span></span>
-        <span class="tab-label">Flights</span>
+        <span class="tab-label">Trips</span>
       </button>
     </nav>
 

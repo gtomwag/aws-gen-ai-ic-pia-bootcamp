@@ -16,7 +16,7 @@ function addMessage(role, text, meta) {
       badge.textContent = '🤖 AI Assistant';
     } else {
       badge.className = 'msg-source-badge source-fallback';
-      badge.textContent = '💬 Quick Reply';
+      badge.textContent = '🤖 AI Assistant';
     }
     div.appendChild(badge);
   }
@@ -121,4 +121,100 @@ function showManifestSummary(summary) {
   document.getElementById('mGold').textContent = summary.tierBreakdown.Gold;
   document.getElementById('mConnRisk').textContent = summary.connectionAtRisk;
   document.getElementById('mProactive').textContent = summary.proactiveEligible;
+}
+
+
+// ── Trip Card Management ──────────────────────────────────
+
+function updateTripCard(passenger, disruptionType) {
+  const tripCard = document.getElementById('currentTripCard');
+  const statusBadge = document.getElementById('tripStatusBadge');
+  const viewRebookingBtn = document.getElementById('btnViewRebookingOptions');
+  
+  // Update trip details
+  document.getElementById('tripFlightNumber').textContent = passenger.flightNumber || 'UA891';
+  document.getElementById('tripOriginCode').textContent = passenger.origin || 'FRA';
+  document.getElementById('tripDestCode').textContent = passenger.destination || 'JFK';
+  document.getElementById('tripDate').textContent = passenger.date || 'Feb 25, 2026';
+  
+  // Update status based on disruption
+  if (disruptionType === 'CANCELLATION') {
+    statusBadge.textContent = 'Cancelled';
+    statusBadge.className = 'trip-status-badge cancelled';
+    viewRebookingBtn.classList.remove('hidden');
+  } else if (disruptionType === 'DELAY') {
+    statusBadge.textContent = 'Delayed';
+    statusBadge.className = 'trip-status-badge cancelled';
+    viewRebookingBtn.classList.remove('hidden');
+  } else {
+    statusBadge.textContent = 'Scheduled';
+    statusBadge.className = 'trip-status-badge';
+    viewRebookingBtn.classList.add('hidden');
+  }
+}
+
+function showRebookingOptions() {
+  document.getElementById('currentTripContainer').style.display = 'none';
+  document.getElementById('rebookingSection').classList.remove('hidden');
+  
+  // Re-render options to ensure they're visible
+  if (allOptions && allOptions.length > 0) {
+    applyFiltersAndSort();
+  }
+}
+
+function hideRebookingOptions() {
+  document.getElementById('currentTripContainer').style.display = 'block';
+  document.getElementById('rebookingSection').classList.add('hidden');
+}
+
+
+function updateTripCardWithConfirmedBooking(booking) {
+  const statusBadge = document.getElementById('tripStatusBadge');
+  const viewRebookingBtn = document.getElementById('btnViewRebookingOptions');
+  
+  // Update trip details with new booking
+  document.getElementById('tripFlightNumber').textContent = booking.flightNumber || 'UA891';
+  document.getElementById('tripOriginCode').textContent = booking.origin || 'FRA';
+  document.getElementById('tripDestCode').textContent = booking.destination || 'JFK';
+  document.getElementById('tripDate').textContent = booking.date || 'Feb 25, 2026';
+  
+  // Update status to Confirmed
+  statusBadge.textContent = 'Confirmed';
+  statusBadge.className = 'trip-status-badge confirmed';
+  
+  // Hide rebooking button
+  viewRebookingBtn.classList.add('hidden');
+  
+  // Make sure we're showing the trip card, not rebooking section
+  hideRebookingOptions();
+}
+
+function updateNotificationToResolved() {
+  // Update the alert banner on detail screen
+  const alertBanner = document.getElementById('alertBanner');
+  const alertType = document.getElementById('alertType');
+  const alertCause = document.getElementById('alertCause');
+  
+  alertType.textContent = 'RESOLVED';
+  alertCause.textContent = 'Your new flight has been confirmed';
+  alertBanner.style.borderLeftColor = 'var(--success)';
+  alertBanner.style.background = '#ecfdf5';
+  
+  // Update flight status pill
+  const statusPill = document.getElementById('flightStatus');
+  statusPill.textContent = 'CONFIRMED';
+  statusPill.className = 'status-pill confirmed';
+  
+  // Update notification body
+  const notifBody = document.getElementById('notifBodyCard');
+  if (storedConfirmedBooking) {
+    notifBody.textContent = `Your rebooking has been confirmed. Your new flight ${storedConfirmedBooking.flightNumber} departs at ${storedConfirmedBooking.departure}. Confirmation code: ${storedConfirmedBooking.pnr}`;
+  } else {
+    notifBody.textContent = 'Your rebooking has been confirmed. Check your email for details.';
+  }
+  
+  // Update lock screen notification
+  document.getElementById('lockNotifTitle').textContent = 'Rebooking Confirmed';
+  document.getElementById('lockNotifBody').textContent = 'Your new flight has been confirmed. Tap for details.';
 }
