@@ -371,6 +371,10 @@
       font-weight: 700;
     }
 
+    .trip-state.cancelled {
+      background: #b91c1c;
+    }
+
     .trip-time {
       font-size: 21px;
       color: var(--pearl);
@@ -595,6 +599,11 @@
       border-bottom-left-radius: 4px;
     }
 
+    .msg.assistant.msg-trip-options {
+      max-width: 97%;
+      width: 97%;
+    }
+
     .msg.system {
       align-self: center;
       max-width: 100%;
@@ -660,6 +669,8 @@
 
     .typing-indicator {
       display: inline-flex;
+      align-items: center;
+      gap: 6px;
       margin: 0 10px 8px;
       font-size: 11px;
       color: #334155;
@@ -672,6 +683,15 @@
       transform: translateY(4px);
       pointer-events: none;
       transition: opacity 320ms ease, transform 320ms ease;
+    }
+
+    .typing-indicator .icon {
+      animation: typing-spin 1.2s linear infinite;
+    }
+
+    @keyframes typing-spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
     }
 
     .typing-indicator.visible {
@@ -752,96 +772,394 @@
     }
 
     .chat-options-list {
-      margin-top: 6px;
+      margin-top: 4px;
       display: grid;
-      gap: 7px;
+      gap: 8px;
     }
 
     .chat-option-card {
       border: 1px solid var(--line);
       border-radius: 10px;
-      padding: 8px;
+      padding: 0;
       background: #fff;
       cursor: pointer;
-      transition: 0.15s ease;
+      overflow: hidden;
+      transition: border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
     }
 
     .chat-option-card:hover {
-      border-color: #93c5fd;
-      background: #f8fbff;
+      border-color: var(--bronze);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(26, 31, 40, 0.08);
     }
 
     .chat-option-card.selected {
-      border-color: #60a5fa;
-      background: #eff6ff;
+      border-color: var(--charcoal);
+      box-shadow: 0 10px 20px rgba(26, 31, 40, 0.12);
     }
 
-    .chat-option-top {
+    .chat-option-card.isolated-pass {
+      border: 1px solid #cfc9bf;
+      border-radius: 12px;
+      background: #ececec;
+      overflow: hidden;
+      max-height: none;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .chat-option-card.isolated-pass:hover {
+      border-color: #bfa88d;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(26, 31, 40, 0.1);
+    }
+
+    .chat-option-card.isolated-pass.selected {
+      border-color: #b8936d;
+      box-shadow: 0 10px 20px rgba(26, 31, 40, 0.12);
+    }
+
+    .chat-option-card.isolated-pass .iso-pass-top {
+      background: linear-gradient(135deg, #151d2c 0%, #1f2b43 100%);
+      color: #fff;
       display: flex;
       justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+    }
+
+    .chat-option-card.isolated-pass .iso-pass-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .chat-option-card.isolated-pass .iso-pass-brand {
+      font-family: var(--font-display);
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      color: #f3f4f6;
+      white-space: nowrap;
+    }
+
+    .chat-option-card.isolated-pass .iso-pass-status {
+      background: #16a34a;
+      color: #ffffff;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .chat-option-card.isolated-pass .iso-pass-depart {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: #f8fafc;
+      white-space: nowrap;
+    }
+
+    .chat-option-card.isolated-pass .iso-pass-middle {
+      padding: 1px 12px 3px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      align-items: end;
+      gap: 8px;
+      border-bottom: 1px solid #1f2430;
+    }
+
+    .chat-option-card.isolated-pass .iso-pass-airport {
+      text-align: center;
+      display: grid;
+      gap: 0;
+      min-width: 0;
+      align-content: end;
+    }
+
+    .chat-option-card.isolated-pass .iso-pass-airport.to {
+      text-align: center;
+    }
+
+    .chat-option-card.isolated-pass .iso-pass-code {
+      font-size: 42px;
+      line-height: 0.88;
+      letter-spacing: -0.02em;
+      color: #0b0f16;
+      font-family: var(--font-body);
+      font-weight: 500;
+      margin: 0;
+    }
+
+    .chat-option-card.isolated-pass .iso-pass-city {
+      font-size: 9px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #1f2937;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.05;
+    }
+
+    .chat-option-card.isolated-pass .iso-pass-plane-row {
+      display: flex;
       align-items: center;
       gap: 6px;
       margin-bottom: 2px;
     }
 
-    .chat-option-id {
-      font-size: 12px;
-      font-weight: 700;
-      color: #1d4ed8;
+    .chat-option-card.isolated-pass .iso-pass-line {
+      display: inline-block;
+      width: 34px;
+      height: 2px;
+      background: #1f2430;
+      border-radius: 99px;
     }
 
-    .chat-option-badge {
-      display: inline-block;
-      margin-left: 6px;
-      border-radius: 999px;
-      border: 1px solid #bfdbfe;
-      background: #eff6ff;
-      color: #1e40af;
-      font-size: 10px;
+    .chat-option-card.isolated-pass .iso-pass-plane-row .icon {
+      width: 24px;
+      height: 24px;
+      color: #0b0f16;
+      transform: rotate(45deg);
+    }
+
+    .chat-option-card.isolated-pass .iso-pass-bottom {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      padding: 0 12px 6px;
+      align-items: start;
+    }
+
+    .chat-option-card.isolated-pass .iso-pass-stat {
+      text-align: center;
+      display: grid;
+      gap: 2px;
+    }
+
+    .chat-option-card.isolated-pass .iso-pass-label {
+      font-size: 9px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #1f2937;
+    }
+
+    .chat-option-card.isolated-pass .iso-pass-value {
+      font-size: 22px;
+      line-height: 1;
       font-weight: 700;
-      padding: 1px 6px;
-      vertical-align: middle;
+      color: #050607;
+    }
+
+    .chat-option-card.isolated-pass .iso-pass-stat:first-child .iso-pass-value {
+      letter-spacing: 0.01em;
+    }
+
+    .chat-option-card.home-card.trip-card {
+      border-radius: 22px;
+      border: 1px solid rgba(184, 147, 109, 0.45);
+      background: linear-gradient(180deg, var(--charcoal) 0%, var(--slate) 100%);
+      backdrop-filter: none;
+      max-height: none;
+    }
+
+    .chat-option-card.home-card.trip-card:hover {
+      border-color: rgba(184, 147, 109, 0.45);
+      background: linear-gradient(180deg, var(--charcoal) 0%, var(--slate) 100%);
+    }
+
+    .chat-option-card.home-card.trip-card.selected {
+      border-color: #d4b896;
+      background: linear-gradient(180deg, var(--charcoal) 0%, var(--slate) 100%);
+    }
+
+    .chat-option-card.home-card.trip-card .trip-header,
+    .chat-option-card.home-card.trip-card .trip-body,
+    .chat-option-card.home-card.trip-card .trip-footer {
+      padding: 8px 10px;
+    }
+
+    .chat-option-card.home-card.trip-card .trip-flight {
+      font-size: 13px;
+    }
+
+    .chat-option-card.home-card.trip-card .trip-state {
+      font-size: 10px;
+      padding: 3px 7px;
+    }
+
+    .chat-option-card.home-card.trip-card .trip-time {
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .chat-option-card.home-card.trip-card .trip-route {
+      font-size: 13px;
+    }
+
+    .chat-option-card.home-card.trip-card .trip-meta {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      font-size: 10px;
+      gap: 4px;
+    }
+
+    .chat-option-card.home-card.trip-card .trip-footer.compact-meta {
+      padding-top: 6px;
+    }
+
+    .chat-trip-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 9px;
+      background: linear-gradient(135deg, var(--charcoal) 0%, var(--slate) 100%);
+      color: var(--pearl);
+    }
+
+    .chat-trip-head-right {
+      display: grid;
+      justify-items: end;
+      gap: 2px;
+    }
+
+    .chat-trip-brand {
+      font-family: var(--font-display);
+      letter-spacing: 0.11em;
+      font-size: 9px;
+      text-transform: uppercase;
+      line-height: 1.2;
+    }
+
+    .chat-trip-subhead {
+      font-size: 8px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: rgba(248, 247, 244, 0.78);
+      margin-top: 1px;
     }
 
     .chat-option-time {
-      font-size: 11px;
-      color: #334155;
+      font-size: 8px;
+      color: rgba(248, 247, 244, 0.9);
+      text-align: right;
+      white-space: nowrap;
+      margin-top: 1px;
     }
 
-    .chat-option-route {
-      font-size: 12px;
-      color: #0f172a;
+    .chat-trip-body {
+      padding: 6px 9px;
+    }
+
+    .chat-trip-route {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 4px;
+    }
+
+    .chat-trip-airport {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .chat-trip-airport.to {
+      text-align: right;
+    }
+
+    .chat-trip-code {
+      font-family: var(--font-display);
+      font-size: 17px;
+      line-height: 1;
+      color: var(--charcoal);
+      letter-spacing: 0.02em;
+    }
+
+    .chat-trip-city {
+      font-size: 7px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .chat-trip-arrow {
+      color: var(--bronze);
+      display: grid;
+      place-items: center;
+    }
+
+    .chat-trip-divider {
+      border-top: 1px dashed var(--line);
+      margin-bottom: 4px;
+    }
+
+    .chat-trip-meta {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 4px;
+    }
+
+    .chat-trip-meta-item {
+      display: grid;
+      gap: 1px;
+    }
+
+    .chat-trip-label {
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .chat-trip-value {
+      font-size: 10px;
+      color: var(--charcoal);
+      font-family: var(--font-secondary);
+      font-weight: 500;
+      line-height: 1.15;
+    }
+
+    .chat-option-badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      border: 1px solid rgba(184, 147, 109, 0.55);
+      color: var(--bronze);
+      font-size: 8px;
+      font-weight: 700;
+      padding: 1px 6px;
+      background: rgba(248, 247, 244, 0.14);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .chat-option-notes {
+      margin-top: 3px;
+      color: var(--text-muted);
+      font-size: 8px;
+      line-height: 1.1;
     }
 
     .chat-options-title {
       margin-top: 6px;
       font-size: 11px;
       font-weight: 700;
-      color: #1e40af;
+      color: var(--bronze);
       text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-
-    .chat-option-meta {
-      display: flex;
-      gap: 5px;
-      flex-wrap: wrap;
-      margin-top: 5px;
-    }
-
-    .chat-option-meta span {
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      font-size: 10px;
-      padding: 1px 6px;
-      color: #334155;
-      background: #fff;
-    }
-
-    .chat-option-notes {
-      margin-top: 4px;
-      color: #64748b;
-      font-size: 10px;
+      letter-spacing: 0.08em;
     }
 
     .actions {
@@ -1345,27 +1663,73 @@
       width: 100%;
       aspect-ratio: 1;
       border-radius: 6px;
-      background: 
-        linear-gradient(90deg, #d1d5db 1px, transparent 1px),
-        linear-gradient(#d1d5db 1px, transparent 1px);
-      background-size: 12px 12px;
-      background-color: #f9fafb;
+      background: #ffffff;
       border: 1px solid #d1d5db;
       margin-bottom: 8px;
       position: relative;
       overflow: hidden;
+      padding: 7px;
     }
 
-    .wallet-qr-box::after {
+    .wallet-qr-pattern {
+      width: 100%;
+      height: 100%;
+      border-radius: 2px;
+      position: relative;
+      background:
+        repeating-conic-gradient(#111827 0% 25%, #ffffff 0% 50%) 0 0 / 8px 8px,
+        linear-gradient(90deg, rgba(17, 24, 39, 0.25) 1px, transparent 1px) 0 0 / 16px 16px,
+        linear-gradient(rgba(17, 24, 39, 0.25) 1px, transparent 1px) 0 0 / 16px 16px,
+        #ffffff;
+      overflow: hidden;
+    }
+
+    .wallet-qr-pattern::before,
+    .wallet-qr-pattern::after {
       content: '';
-      width: 48px;
-      height: 48px;
-      border: 2px solid #cbd5e1;
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      border: 4px solid #111827;
+      background: #ffffff;
+      box-shadow: inset 0 0 0 5px #ffffff, inset 0 0 0 9px #111827;
+    }
+
+    .wallet-qr-pattern::before {
+      top: 3px;
+      left: 3px;
+    }
+
+    .wallet-qr-pattern::after {
+      top: 3px;
+      right: 3px;
+    }
+
+    .wallet-qr-center {
+      position: absolute;
+      bottom: 3px;
+      left: 3px;
+      width: 24px;
+      height: 24px;
+      border: 4px solid #111827;
+      background: #ffffff;
+      box-shadow: inset 0 0 0 5px #ffffff, inset 0 0 0 9px #111827;
+    }
+
+    .wallet-qr-center::after {
+      content: '';
       position: absolute;
       top: 50%;
       left: 50%;
+      width: 34px;
+      height: 34px;
       transform: translate(-50%, -50%);
-      background: rgba(255, 255, 255, 0.6);
+      background:
+        radial-gradient(circle at 22% 18%, #111827 2px, transparent 3px),
+        radial-gradient(circle at 68% 28%, #111827 2px, transparent 3px),
+        radial-gradient(circle at 38% 64%, #111827 2px, transparent 3px),
+        radial-gradient(circle at 76% 78%, #111827 2px, transparent 3px),
+        radial-gradient(circle at 52% 50%, #111827 3px, transparent 4px);
     }
 
     .wallet-qr-text {
@@ -1460,19 +1824,19 @@
 
               <div class="home-card trip-card">
                 <div class="trip-header">
-                  <div class="trip-flight">UA 891</div>
-                  <div class="trip-state">ON TIME</div>
+                  <div class="trip-flight" id="homeTripFlight">UA 891</div>
+                  <div class="trip-state cancelled" id="homeTripState">CANCELLED</div>
                 </div>
                 <div class="trip-body">
-                  <div class="trip-time">Departs Fri, 6:00 AM</div>
-                  <div class="trip-route">FRA → JFK</div>
+                  <div class="trip-time" id="homeTripTime">Departs Fri, 6:00 AM</div>
+                  <div class="trip-route" id="homeTripRoute">FRA → JFK</div>
                 </div>
                 <div class="trip-footer">
                   <div class="trip-meta">
-                    <div><span class="label">Departs</span><span>6:00 AM</span></div>
-                    <div><span class="label">Gate</span><span>--</span></div>
-                    <div><span class="label">Terminal</span><span>--</span></div>
-                    <div><span class="label">Seat</span><span>3A</span></div>
+                    <div><span class="label">Departs</span><span id="homeTripDeparts">6:00 AM</span></div>
+                    <div><span class="label">Gate</span><span id="homeTripGate">--</span></div>
+                    <div><span class="label">Terminal</span><span id="homeTripTerminal">--</span></div>
+                    <div><span class="label">Seat</span><span id="homeTripSeat">3A</span></div>
                   </div>
                   <div class="trip-btn">Manage Trip</div>
                 </div>
@@ -1597,7 +1961,7 @@
                 <button class="btn-send" onclick="closeWalletDrawer()">Back</button>
                 <div class="wallet-actions">
                   <button class="btn-send">Share</button>
-                  <button class="btn-send" onclick="closeWalletDrawer()">Done</button>
+                  <button class="btn-send" onclick="closeWalletDrawer(true)">Done</button>
                 </div>
               </div>
               <div class="wallet-content">
@@ -1642,10 +2006,6 @@
                       <div class="label">Boards</div>
                       <div class="value" id="walletBoards">17:15</div>
                     </div>
-                    <div class="wallet-data-item">
-                      <div class="label">Status</div>
-                      <div class="value" id="walletStatus">On Time</div>
-                    </div>
                   </div>
 
                   <div class="wallet-passenger-row">
@@ -1657,7 +2017,11 @@
                   </div>
 
                   <div class="wallet-qr">
-                    <div class="wallet-qr-box"></div>
+                    <div class="wallet-qr-box">
+                      <div class="wallet-qr-pattern">
+                        <div class="wallet-qr-center"></div>
+                      </div>
+                    </div>
                     <div class="wallet-qr-text">PNR <span id="walletPnr">------</span></div>
                   </div>
 

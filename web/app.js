@@ -23,6 +23,10 @@ const CHAT_PRE_THINK_MS = 950;
 const CHAT_THINK_MS = 3800;
 const CHAT_BETWEEN_MSG_MS = 440;
 const CHAT_POST_OPTIONS_PROMPT_MS = 1800;
+const CHAT_MIN_REPLY_MS = 1200;
+const CHAT_MAX_REPLY_MS = 2600;
+const CHAT_REPLY_PER_CHAR_MS = 13;
+const CHAT_SELECT_THINK_MS = 1050;
 
 // ── DOM refs ──────────────────────────────────────────────
 const chatMessages = document.getElementById('chatMessages');
@@ -75,8 +79,15 @@ const walletGate = document.getElementById('walletGate');
 const walletSeat = document.getElementById('walletSeat');
 const walletGroup = document.getElementById('walletGroup');
 const walletBoards = document.getElementById('walletBoards');
-const walletStatus = document.getElementById('walletStatus');
 const walletTier = document.getElementById('walletTier');
+const homeTripFlight = document.getElementById('homeTripFlight');
+const homeTripState = document.getElementById('homeTripState');
+const homeTripTime = document.getElementById('homeTripTime');
+const homeTripRoute = document.getElementById('homeTripRoute');
+const homeTripDeparts = document.getElementById('homeTripDeparts');
+const homeTripGate = document.getElementById('homeTripGate');
+const homeTripTerminal = document.getElementById('homeTripTerminal');
+const homeTripSeat = document.getElementById('homeTripSeat');
 
 // ── Helpers ───────────────────────────────────────────────
 
@@ -88,10 +99,19 @@ function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function shortThinkingPause(ms = 700) {
+async function shortThinkingPause(ms = 900) {
   setTypingIndicator(true);
   await wait(ms);
   setTypingIndicator(false);
+}
+
+function bounded(number, min, max) {
+  return Math.max(min, Math.min(max, number));
+}
+
+function computeReplyPaceMs(text) {
+  const len = (text || '').trim().length;
+  return bounded(CHAT_MIN_REPLY_MS + len * CHAT_REPLY_PER_CHAR_MS, CHAT_MIN_REPLY_MS, CHAT_MAX_REPLY_MS);
 }
 
 function refreshLucideIcons() {
@@ -340,8 +360,8 @@ function openWalletDrawer() {
     const flights = itinerary.flights || [];
     const route = confirmedBooking.selected?.routing || 'FRA→JFK';
     const routeParts = route.includes('→') ? route.split('→').map((r) => r.trim()) : route.split('-').map((r) => r.trim());
-    const from = routeParts[0] || 'FRA';
-    const to = routeParts[routeParts.length - 1] || 'JFK';
+    const from = ((routeParts[0] || '').toUpperCase().match(/\b[A-Z]{3}\b/) || [])[0] || 'FRA';
+    const to = ((routeParts[routeParts.length - 1] || '').toUpperCase().match(/\b[A-Z]{3}\b/) || [])[0] || 'JFK';
 
     const departure = itinerary.departure || confirmedBooking.selected?.depart || '';
     let boardTime = '17:15';
@@ -364,7 +384,6 @@ function openWalletDrawer() {
     if (walletSeat) walletSeat.textContent = confirmedBooking.selected?.seat || '3A';
     if (walletGroup) walletGroup.textContent = confirmedBooking.selected?.boardingGroup || '1';
     if (walletBoards) walletBoards.textContent = boardTime;
-    if (walletStatus) walletStatus.textContent = confirmedBooking.status === 'CONFIRMED' ? 'On Time' : (confirmedBooking.status || 'Confirmed');
     if (walletTier) walletTier.textContent = 'DuHast Signature Platinum';
   }
 
@@ -373,9 +392,45 @@ function openWalletDrawer() {
   }
 }
 
-function closeWalletDrawer() {
+function updateHomeTripCardFromBooking() {
+  if (!confirmedBooking) return;
+
+  const itinerary = confirmedBooking.itinerarySummary || {};
+  const selected = confirmedBooking.selected || {};
+  const flights = itinerary.flights || [];
+  const route = selected.routing || 'FRA→JFK';
+  const routeParts = route.includes('→') ? route.split('→').map((r) => r.trim()) : route.split('-').map((r) => r.trim());
+  const from = ((routeParts[0] || '').toUpperCase().match(/\b[A-Z]{3}\b/) || [])[0] || 'FRA';
+  const to = ((routeParts[routeParts.length - 1] || '').toUpperCase().match(/\b[A-Z]{3}\b/) || [])[0] || 'JFK';
+
+  const departTime = itinerary.departure || selected.depart || '--';
+  const flightNumber = flights[0] || selected.flightNumber || `DH ${selected.optionId || '401'}`;
+
+  if (homeTripFlight) homeTripFlight.textContent = flightNumber;
+  if (homeTripState) {
+    const status = confirmedBooking.status === 'CONFIRMED' ? 'CONFIRMED' : (confirmedBooking.status || 'ON TIME');
+    homeTripState.textContent = status;
+    homeTripState.classList.toggle('cancelled', status.toUpperCase() === 'CANCELLED');
+  }
+  if (homeTripRoute) homeTripRoute.textContent = `${from} → ${to}`;
+  if (homeTripTime) homeTripTime.textContent = `Departs ${departTime}`;
+  if (homeTripDeparts) homeTripDeparts.textContent = departTime;
+  if (homeTripGate) homeTripGate.textContent = selected.gate || 'C18';
+  if (homeTripTerminal) homeTripTerminal.textContent = selected.terminal || '--';
+  if (homeTripSeat) homeTripSeat.textContent = selected.seat || '3A';
+}
+
+function closeWalletDrawer(returnToHome = false) {
   if (walletOverlay) {
     walletOverlay.classList.remove('visible');
+  }
+
+  if (returnToHome) {
+    updateHomeTripCardFromBooking();
+    setMobileScreen('app');
+    setHomeLoadingState(false);
+    setChatTakeoverVisible(false);
+    setActiveFlowStep(3);
   }
 }
 
@@ -428,6 +483,59 @@ function formatOptionCostText(delta) {
   if (delta === undefined || delta === 0) return '$0 fare difference';
   if (delta > 0) return `+$${delta}`;
   return `-$${Math.abs(delta)}`;
+}
+
+function formatStopSummary(stops) {
+  const stopCount = Number(stops) || 0;
+  return stopCount === 0 ? 'Nonstop' : `${stopCount} stop${stopCount > 1 ? 's' : ''}`;
+}
+
+function getRouteDetails(routing) {
+  const value = (routing || '').trim();
+  const matches = value.match(/\b[A-Z]{3}\b/g) || [];
+
+  if (matches.length >= 2) {
+    return {
+      fromCode: matches[0],
+      toCode: matches[matches.length - 1],
+      routeLabel: value,
+    };
+  }
+
+  const parts = value.includes('→')
+    ? value.split('→').map((part) => part.trim())
+    : value.split('-').map((part) => part.trim());
+
+  return {
+    fromCode: parts[0] || 'FRA',
+    toCode: parts[parts.length - 1] || 'JFK',
+    routeLabel: value || 'FRA → JFK',
+  };
+}
+
+function airportDisplayName(code) {
+  const names = {
+    FRA: 'FRANKFURT',
+    JFK: 'NEW YORK',
+    MUC: 'MUNICH',
+    LHR: 'LONDON',
+    CDG: 'PARIS',
+  };
+  return names[code] || code;
+}
+
+function formatDepartBadgeTime(timeValue) {
+  const value = String(timeValue || '').trim();
+  const match = value.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return value || '--';
+
+  const hour24 = Number(match[1]);
+  const minute = match[2];
+  if (!Number.isFinite(hour24)) return value;
+
+  const ampm = hour24 >= 12 ? 'PM' : 'AM';
+  const hour12 = ((hour24 + 11) % 12) + 1;
+  return `${hour12}:${minute}${ampm}`;
 }
 
 function toNumberOrFallback(value, fallback) {
@@ -502,8 +610,9 @@ function clearOptionsMessage() {
   latestOptionsMessage = null;
 }
 
-function showMoreChoices() {
+async function showMoreChoices() {
   if (!currentOptions || currentOptions.length === 0) return;
+  await shortThinkingPause(980);
   showingSuggestedOnly = false;
   addMessage('assistant', 'Absolutely — here are more choices for you to review.');
   renderOptionsInChat(currentOptions, {
@@ -524,7 +633,7 @@ function renderOptionsInChat(options, config = {}) {
   if (!options || options.length === 0) return;
 
   const wrapper = document.createElement('div');
-  wrapper.className = 'msg assistant';
+  wrapper.className = 'msg assistant msg-trip-options';
 
   const metaRow = document.createElement('div');
   metaRow.className = 'msg-meta';
@@ -552,30 +661,58 @@ function renderOptionsInChat(options, config = {}) {
   list.className = 'chat-options-list';
 
   options.forEach((o) => {
-    const isSuggested = config.suggestedOptionId && o.optionId === config.suggestedOptionId;
     const isHighlighted = config.highlightedOptionId && o.optionId === config.highlightedOptionId;
+    const route = getRouteDetails(o.routing);
+    const flightCode = (o.flightNumber || `DH ${String(o.optionId || o.rank || '').toUpperCase()}`).replace(/^DH\s*/i, '');
+    const departs = o.depart || '--';
+    const departBadge = formatDepartBadgeTime(departs);
+    const gate = o.gate || '--';
+    const seat = o.seat || '--';
+    const fromCity = airportDisplayName(route.fromCode);
+    const toCity = airportDisplayName(route.toCode);
     const card = document.createElement('div');
-    card.className = `chat-option-card ${(selectedOptionId === o.optionId || isHighlighted) ? 'selected' : ''}`;
+    card.className = `chat-option-card isolated-pass ${(selectedOptionId === o.optionId || isHighlighted) ? 'selected' : ''}`;
     card.dataset.optionId = o.optionId;
     card.onclick = () => selectOption(o.optionId);
 
-    const titleWithBadge = isSuggested
-      ? `Option ${o.optionId}<span class="chat-option-badge">Suggested booking</span>`
-      : `Option ${o.optionId}`;
-
     card.innerHTML = `
-      <div class="chat-option-top">
-        <span class="chat-option-id">${titleWithBadge}</span>
-        <span class="chat-option-time">${o.depart} → ${o.arrive}</span>
+      <div class="iso-pass-top">
+        <div class="iso-pass-left">
+          <div class="iso-pass-brand">DUHAST</div>
+          <div class="iso-pass-status">ON TIME</div>
+        </div>
+        <div class="iso-pass-depart">DEPARTS ${departBadge}</div>
       </div>
-      <div class="chat-option-route">${o.routing}</div>
-      <div class="chat-option-meta">
-        <span>${o.class || 'Economy'}</span>
-        <span>${formatOptionCostText(o.costDelta)}</span>
-        <span>${o.stops} stop(s)</span>
+      <div class="iso-pass-middle">
+        <div class="iso-pass-airport">
+          <div class="iso-pass-code">${route.fromCode}</div>
+          <div class="iso-pass-city">${fromCity}</div>
+        </div>
+        <div class="iso-pass-plane-row">
+          <span class="iso-pass-line"></span>
+          <i data-lucide="plane" class="icon"></i>
+          <span class="iso-pass-line"></span>
+        </div>
+        <div class="iso-pass-airport to">
+          <div class="iso-pass-code">${route.toCode}</div>
+          <div class="iso-pass-city">${toCity}</div>
+        </div>
       </div>
-      <div class="chat-option-notes">${o.notes || 'Tap to select this itinerary.'}</div>
-    `;
+      <div class="iso-pass-bottom">
+        <div class="iso-pass-stat">
+          <div class="iso-pass-label">Flight</div>
+          <div class="iso-pass-value">${flightCode}</div>
+        </div>
+        <div class="iso-pass-stat">
+          <div class="iso-pass-label">Gate</div>
+          <div class="iso-pass-value">${gate}</div>
+        </div>
+        <div class="iso-pass-stat">
+          <div class="iso-pass-label">Seat</div>
+          <div class="iso-pass-value">${seat}</div>
+        </div>
+      </div>
+    `.trim();
     list.appendChild(card);
   });
 
@@ -586,6 +723,7 @@ function renderOptionsInChat(options, config = {}) {
   });
   latestOptionsMessage = wrapper;
   chatMessages.scrollTop = chatMessages.scrollHeight;
+  refreshLucideIcons();
 }
 
 function addMessage(role, text, meta) {
@@ -950,7 +1088,8 @@ async function sendChat() {
 
   chatInput.value = '';
   addMessage('user', message);
-  setTypingIndicator(true);
+  const requestStartAt = Date.now();
+  setTypingIndicator(true, 'Reviewing your request...');
 
   try {
     const data = await apiCall('/chat', { sessionId, message });
@@ -968,7 +1107,14 @@ async function sendChat() {
       addMetric('PII_DETECTED', 'in user message');
     }
 
-    await shortThinkingPause(820);
+    const elapsed = Date.now() - requestStartAt;
+    const targetPace = computeReplyPaceMs(data.assistant);
+    if (elapsed < targetPace) {
+      await wait(targetPace - elapsed);
+    }
+
+    setTypingIndicator(false);
+    await wait(220);
 
     addMessage('assistant', data.assistant, {
       source: data.source,
@@ -990,8 +1136,16 @@ async function selectOption(optionId) {
   if (!sessionId) return;
 
   try {
-    await shortThinkingPause(650);
+    const startedAt = Date.now();
+    setTypingIndicator(true, 'Locking this itinerary and confirming availability...');
     const data = await apiCall('/select-option', { sessionId, optionId });
+    const elapsed = Date.now() - startedAt;
+    if (elapsed < CHAT_SELECT_THINK_MS) {
+      await wait(CHAT_SELECT_THINK_MS - elapsed);
+    }
+    setTypingIndicator(false);
+    await wait(240);
+
     showingSuggestedOnly = false;
     selectedOptionId = optionId;
     applyFiltersAndSort();
@@ -1000,6 +1154,7 @@ async function selectOption(optionId) {
     updateQuickRepliesForContext('confirm booking now');
     addMetric('option_selected', `optionId=${optionId}`);
   } catch (err) {
+    setTypingIndicator(false);
     console.error('selectOption error:', err);
   }
 }
