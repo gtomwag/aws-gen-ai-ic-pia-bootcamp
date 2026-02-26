@@ -1,4 +1,4 @@
-# 🎬 7-Minute Demo Script — GenAI Disruption Management POC
+# 🎬 7-Minute Demo Script — DuHast Airlines AI Disruption Management
 
 > **Total runtime:** 7:00  
 > **Format:** Screen recording with voiceover  
@@ -13,11 +13,11 @@
 
 **Script:**
 
-> "Welcome to the GenAI Airline Disruption Management POC. Today's airlines face a critical challenge: when a flight is cancelled or delayed, the current process is reactive — passengers flood call centers, wait times spike to hours, and premium customers get the same experience as everyone else.
+> "Welcome to the DuHast Airlines AI Disruption Management POC. When a DuHast Airlines flight is cancelled or delayed, the current process is reactive — passengers flood call centers, wait times spike to hours, and premium customers get the same experience as everyone else.
 >
 > Our PRD defines a proactive, AI-driven approach: detect a disruption, instantly assess all 200+ affected passengers, generate personalized rebooking options — with premium tier prioritization — send proactive notifications before passengers even know there's a problem, and handle confirmations automatically. Only complex cases escalate to human agents, with full AI-prepared context.
 >
-> We've integrated five AWS AI services: **Amazon Bedrock** for intelligent chat, **Bedrock Knowledge Bases** for policy/rights RAG lookups, **Bedrock Guardrails** for content safety, **Amazon Comprehend** for real-time sentiment analysis, and **Amazon Translate** for multi-language support.
+> We've integrated **six** AWS AI services: **Amazon Bedrock** for intelligent chat, **Bedrock Knowledge Bases** for policy/rights RAG lookups, **Bedrock Guardrails** for content safety, **Amazon Comprehend** for real-time sentiment analysis, **Amazon Translate** for multi-language support, and **Amazon Bedrock Nova Sonic** for voice-based customer interaction with human transfer capability.
 >
 > Let's see this in action."
 
@@ -31,7 +31,7 @@
 
 **Script:**
 
-> "I'm creating a weather-related cancellation at Frankfurt Airport affecting 200 passengers on flight UA891 to JFK.
+> "I'm creating a weather-related cancellation at Frankfurt Airport affecting 200 passengers on DuHast Airlines flight DH891 to JFK.
 >
 > Notice the system immediately does three things:
 > 1. **Detects the disruption** and creates a disruption record
@@ -56,7 +56,7 @@
 > - Channel: Push notification (primary), with SMS and email as fallback
 > - Two CTAs: View Options, or Speak to Agent
 >
-> In production, this would be a real push notification via APNS/FCM. Here it's simulated, but the copy and channel logic are real."
+> In production, DuHast's mobile app would deliver this as a real push notification via APNS/FCM. Here it's simulated, but the copy and channel logic are real."
 
 ---
 
@@ -131,6 +131,8 @@
 
 > "Even data privacy questions route through the Knowledge Base. The 📚 badge and citations confirm it. The system retrieves our GDPR data handling policy and explains retention periods, data subject rights, and how to request erasure. This demonstrates that _any_ curated knowledge domain can be added to the KB."
 
+> "Notice what's happening under the hood: the system is making **three parallel AI calls** — Bedrock for the response, Comprehend for sentiment analysis, and Comprehend again for PII detection. Plus Guardrails are filtering the output. Four AWS AI services working together on every single message."
+
 **Key demo talking points:**
 - The routing is **automatic** — no user action needed to pick KB vs chat
 - **Source badges** make the routing visible: 📚 Knowledge Base (green), 🤖 Bedrock AI (blue), 💬 Fallback (amber)
@@ -164,7 +166,21 @@
 
 ---
 
-## Minute 5:30 – 6:00 | Escalation Packet with Sentiment Context
+## Minute 5:30 – 5:50 | Voice Agent with Nova Sonic
+
+**Screen:** Click "Speak to Agent" voice button.
+
+**Script:**
+
+> "DuHast Airlines also integrates **Amazon Bedrock Nova Sonic** for voice-based AI interaction. When a passenger presses 'Speak to Agent', a voice session starts.
+>
+> The voice agent reuses the same AI pipelines — policy questions route to the Knowledge Base, general questions go to Bedrock Claude. But it adds **transfer intent detection**: if the passenger says 'connect me to a human', the system uses NLU pattern matching (5 intent patterns with negation handling) to detect the request and initiate a human handoff with full context.
+>
+> This is our **sixth AWS AI service** — layered on top of the existing five to provide a multi-modal customer experience."
+
+---
+
+## Minute 5:50 – 6:00 | Escalation Packet with Sentiment Context
 
 ## Minute 6:00 – 6:00 | Escalation with AI Context
 
@@ -222,7 +238,7 @@
 
 **Script:**
 
-> "This POC demonstrates the core disruption management flow integrated with five AWS AI services — all deployed as a single SAM stack.
+> "This POC demonstrates the core disruption management flow integrated with six AWS AI services — all deployed as a single SAM stack.
 >
 > What you've seen working:
 > - **Bedrock Claude** for intelligent, context-aware chat
@@ -230,8 +246,9 @@
 > - **Amazon Comprehend** for real-time sentiment analysis and auto-escalation
 > - **Bedrock Guardrails** for content safety and PII protection
 > - **Amazon Translate** ready for multi-language notifications (75+ languages)
+> - **Bedrock Nova Sonic** for voice-based AI interaction with human transfer capability
 >
-> The path to production involves:
+> The path to production for DuHast Airlines involves:
 > - Replacing synthetic data with real ops feeds and PSS integration
 > - Adding Step Functions for orchestrated workflows
 > - Expanding the Knowledge Base with real airline SOPs and policy documents
