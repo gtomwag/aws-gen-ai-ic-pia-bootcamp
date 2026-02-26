@@ -12,12 +12,13 @@
     "deploy:auto": "powershell -ExecutionPolicy Bypass -File deploy.ps1"
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.400.0",
-    "@aws-sdk/lib-dynamodb": "^3.400.0",
-    "@aws-sdk/client-bedrock-runtime": "^3.400.0",
     "@aws-sdk/client-bedrock-agent-runtime": "^3.400.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.400.0",
     "@aws-sdk/client-comprehend": "^3.400.0",
+    "@aws-sdk/client-dynamodb": "^3.400.0",
     "@aws-sdk/client-translate": "^3.400.0",
+    "@aws-sdk/lib-dynamodb": "^3.400.0",
+    "pdfkit": "^0.17.2",
     "uuid": "^9.0.0"
   },
   "engines": {

@@ -17,13 +17,26 @@ process.env.USE_BEDROCK = process.env.USE_BEDROCK || 'false';
 const server = http.createServer(async (req, res) => {
   // ── Static file serving for web/ assets ──
   const urlPath = req.url.split('?')[0];
-  if (urlPath.match(/\.(html|css|js)$/) || urlPath === '/') {
+  if (urlPath.match(/\.(html|css|js|pdf)$/) || urlPath === '/') {
     const filePath = path.join(__dirname, '..', 'web', urlPath === '/' ? 'index.html' : urlPath);
     if (fs.existsSync(filePath)) {
       const ext = path.extname(filePath).slice(1);
-      const mimeTypes = { html: 'text/html', css: 'text/css', js: 'application/javascript' };
-      res.writeHead(200, { 'Content-Type': mimeTypes[ext] || 'text/plain' });
-      fs.createReadStream(filePath).pipe(res);
+      const mimeTypes = { 
+        html: 'text/html', 
+        css: 'text/css', 
+        js: 'application/javascript',
+        pdf: 'application/pdf'
+      };
+      const contentType = mimeTypes[ext] || 'text/plain';
+      res.writeHead(200, { 'Content-Type': contentType });
+      
+      // Stream file for text-based files, read binary for PDFs
+      if (ext === 'pdf') {
+        const fileContent = fs.readFileSync(filePath);
+        res.end(fileContent);
+      } else {
+        fs.createReadStream(filePath).pipe(res);
+      }
       return;
     }
   }

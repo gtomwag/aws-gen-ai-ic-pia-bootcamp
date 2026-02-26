@@ -1,0 +1,2 @@
+This is a placeholder .pkpass file for local demo.
+In production, generate a signed PassKit .pkpass bundle for Apple Wallet.

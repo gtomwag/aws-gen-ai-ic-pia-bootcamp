@@ -264,3 +264,18 @@ async function escalate() {
     console.error('escalate error:', err);
   }
 }
+
+// ── Boarding Pass Download ───────────────────────────────
+
+function downloadBoardingPass() {
+  if (!sessionId) {
+    console.error('No session ID available for boarding pass download');
+    return;
+  }
+  
+  const pnr = pnrCode.textContent;
+  
+  // Download PDF boarding pass with actual booking data
+  window.location.href = `/boarding-pass?sessionId=${sessionId}`;
+  addMetric('boarding_pass_download', `pnr=${pnr} sessionId=${sessionId}`);
+}

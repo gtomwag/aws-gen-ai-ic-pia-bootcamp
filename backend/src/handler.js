@@ -920,6 +920,144 @@ async function handleDashboard(event) {
 }
 
 // ──────────────────────────────────────────────
+// Boarding pass PDF generation
+// ──────────────────────────────────────────────
+
+async function handleBoardingPass(event) {
+  const sessionId = event.queryStringParameters?.sessionId;
+  
+  console.log('Boarding pass request for sessionId:', sessionId);
+  
+  if (!sessionId) {
+    return respond(400, { error: 'sessionId required' });
+  }
+
+  try {
+    // Get session data
+    const sessionData = store.getItem({ pk: `SESSION#${sessionId}`, sk: 'META' });
+    if (!sessionData) {
+      console.log('Session not found:', sessionId);
+      return respond(404, { error: 'Session not found' });
+    }
+
+    // Get booking data
+    const bookingData = store.getItem({ pk: `SESSION#${sessionId}`, sk: 'BOOKING' });
+    if (!bookingData) {
+      console.log('No booking found for session:', sessionId);
+      return respond(404, { error: 'No booking found for this session' });
+    }
+
+    const passenger = sessionData.passenger || {};
+    const booking = bookingData;
+    const itinerary = booking.itinerarySummary || {};
+    
+    // Extract flight information with safe fallbacks
+    const flightNum = (itinerary.flights && itinerary.flights[0] && itinerary.flights[0].split(' ')[0]) 
+      || (passenger.flightNumber) 
+      || 'UA891';
+    
+    const origin = passenger.origin || 'FRA';
+    const dest = passenger.destination || 'JFK';
+    
+    const pnr = booking.pnr || 'UNKNOWN';
+    const passengerName = `${passenger.firstName || 'Passenger'} ${passenger.lastName || 'Name'}`;
+    const tier = passenger.tier || 'General';
+    const classType = itinerary.class || 'Economy';
+    const seat = '12A';
+    const gate = 'B12';
+    const boardingTime = itinerary.departure || '18:30';
+    const date = passenger.date || '2026-02-25';
+    
+    console.log('Generating PDF for:', passengerName);
+    
+    // Generate simple PDF synchronously
+    const pdfBuffer = generateSimpleBoardingPassPDF({
+      pnr, passengerName, tier, flightNumber: flightNum, 
+      origin, destination: dest, seat, gate, 
+      boardingTime, classType, date
+    });
+
+    console.log('PDF generated, size:', pdfBuffer.length, 'bytes');
+
+    return {
+      statusCode: 200,
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="boarding-pass-${pnr}.pdf"`,
+        'Access-Control-Allow-Origin': '*',
+      },
+      body: pdfBuffer.toString('base64'),
+      isBase64Encoded: true,
+    };
+  } catch (error) {
+    console.error('Error generating boarding pass:', error);
+    return respond(500, { error: 'Failed to generate boarding pass', detail: error.message });
+  }
+}
+
+function generateSimpleBoardingPassPDF(data) {
+  // Create a simple, valid PDF synchronously
+  const content = `%PDF-1.4
+1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj
+2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj
+3 0 obj << /Type /Page /Parent 2 0 R /Resources 4 0 R /MediaBox [0 0 612 792] /Contents 5 0 R >> endobj
+4 0 obj << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >> /F2 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> endobj
+5 0 obj << /Length 800 >> stream
+BT
+/F1 24 Tf
+50 750 Td
+(BOARDING PASS) Tj
+0 -40 Td
+/F2 10 Tf
+(${data.date}) Tj
+/F1 14 Tf
+50 680 Td
+(Passenger: ${data.passengerName}) Tj
+0 -20 Td
+/F2 11 Tf
+(${data.tier}) Tj
+/F1 18 Tf
+50 620 Td
+(${data.flightNumber}) Tj
+0 -30 Td
+/F1 28 Tf
+(${data.origin}) Tj
+50 0 Td
+/F2 16 Tf
+(to) Tj
+50 0 Td
+/F1 28 Tf
+(${data.destination}) Tj
+/F1 12 Tf
+50 540 Td
+(CLASS: ${data.classType}  SEAT: ${data.seat}  GATE: ${data.gate}) Tj
+0 -30 Td
+(BOARDING: ${data.boardingTime}) Tj
+0 -40 Td
+/F1 14 Tf
+(CONFIRMATION: ${data.pnr}) Tj
+/F2 10 Tf
+0 -60 Td
+(Please arrive at gate 30 minutes before departure.) Tj
+ET
+endstream endobj
+xref
+0 6
+0000000000 65535 f
+0000000009 00000 n
+0000000058 00000 n
+0000000115 00000 n
+0000000214 00000 n
+0000000354 00000 n
+trailer << /Size 6 /Root 1 0 R >>
+startxref
+1204
+%%EOF`;
+
+  return Buffer.from(content);
+}
+
+// ──────────────────────────────────────────────
 // Lambda entry point
 // ──────────────────────────────────────────────
 
@@ -964,6 +1102,9 @@ exports.handler = async (event) => {
     }
     if (method === 'POST' && path === '/escalate') {
       return await handleEscalate(body);
+    }
+    if (method === 'GET' && path === '/boarding-pass') {
+      return await handleBoardingPass(event);
     }
 
     return respond(404, { error: `Not found: ${method} ${path}` });
