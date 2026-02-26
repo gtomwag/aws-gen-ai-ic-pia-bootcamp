@@ -1,6 +1,6 @@
 /* ── Screen 1: Lock Screen ─────────────────────────── */
 #screenLock {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--charcoal) 0%, var(--slate) 60%, var(--bronze) 100%);
   color: #fff;
   justify-content: flex-start;
   padding-top: calc(var(--safe-top) + 60px);
@@ -9,6 +9,7 @@
 .lock-time {
   font-size: 72px;
   font-weight: 200;
+  font-family: var(--font-display);
   text-align: center;
   letter-spacing: -2px;
   line-height: 1;
@@ -16,6 +17,7 @@
 .lock-date {
   font-size: 17px;
   font-weight: 400;
+  font-family: var(--font-secondary);
   text-align: center;
   margin-top: 4px;
   opacity: 0.8;

@@ -10,18 +10,18 @@
   display: inline-block;
   margin-left: 6px;
 }
-.chat-nav-sentiment.POSITIVE { background: var(--ios-green); }
-.chat-nav-sentiment.NEGATIVE { background: var(--ios-red); }
-.chat-nav-sentiment.NEUTRAL { background: var(--ios-gray3); }
-.chat-nav-sentiment.MIXED { background: var(--ios-orange); }
+.chat-nav-sentiment.POSITIVE { background: var(--success); }
+.chat-nav-sentiment.NEGATIVE { background: var(--danger); }
+.chat-nav-sentiment.NEUTRAL { background: var(--line); }
+.chat-nav-sentiment.MIXED { background: var(--warning); }
 
 .nav-icon-btn {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  border: 1px solid var(--ios-gray4);
-  background: var(--ios-gray6);
-  color: var(--ios-blue);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--primary);
   font-size: 16px;
   cursor: pointer;
   display: inline-flex;
@@ -36,9 +36,9 @@
 }
 
 .nav-icon-btn.active {
-  background: var(--ios-blue);
+  background: var(--primary);
   color: #fff;
-  border-color: var(--ios-blue);
+  border-color: var(--primary);
 }
 
 .auto-escalation-banner {
@@ -46,15 +46,15 @@
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
-  background: #FFF0F0;
-  border-bottom: 0.5px solid #FFD4D4;
+  background: #fff1f2;
+  border-bottom: 0.5px solid #fecdd3;
 }
 .auto-escalation-banner.visible { display: flex; }
 .auto-escalation-banner .pulse-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--ios-red);
+  background: var(--danger);
   animation: pulseDot 1.5s ease-in-out infinite;
 }
 @keyframes pulseDot {
@@ -64,7 +64,7 @@
 .auto-escalation-banner .escalation-text {
   font-size: 14px;
   font-weight: 600;
-  color: var(--ios-red);
+  color: var(--danger);
 }
 
 .chat-messages {
@@ -87,20 +87,21 @@
 }
 .msg.user {
   align-self: flex-end;
-  background: var(--ios-blue);
+  background: var(--primary);
   color: #fff;
-  border-radius: 18px 18px 4px 18px;
+  border-radius: 12px 12px 4px 12px;
 }
 .msg.assistant {
   align-self: flex-start;
-  background: #E9E9EB;
-  color: var(--ios-text);
-  border-radius: 18px 18px 18px 4px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 12px 12px 12px 4px;
 }
 .msg.system {
   align-self: center;
-  background: none;
-  color: var(--ios-text3);
+  background: #f1f5f9;
+  color: #475569;
   font-size: 13px;
   padding: 6px 0;
   max-width: 100%;
@@ -116,9 +117,9 @@
   letter-spacing: 0.2px;
   margin-bottom: 4px;
 }
-.msg-source-badge.source-kb { background: #E8F8EE; color: #1B7A3D; }
-.msg-source-badge.source-bedrock { background: #E8F0FE; color: #1A56DB; }
-.msg-source-badge.source-fallback { background: #FFF8E1; color: #B8860B; }
+.msg-source-badge.source-kb { background: #ecfdf5; color: #065f46; border: 1px solid #99f6e4; }
+.msg-source-badge.source-bedrock { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+.msg-source-badge.source-fallback { background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; }
 
 .msg-citations {
   margin-top: 8px;
@@ -127,7 +128,7 @@
   font-size: 12px;
 }
 .msg-citations .citation-toggle {
-  color: var(--ios-blue);
+  color: var(--primary);
   font-weight: 600;
   cursor: pointer;
   font-size: 13px;
@@ -159,10 +160,10 @@
 .chat-input-area {
   padding: 8px 12px;
   padding-bottom: calc(8px + var(--safe-bottom));
-  background: rgba(255,255,255,0.95);
+  background: rgba(248,247,244,0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-top: 0.5px solid var(--ios-separator);
+  border-top: 0.5px solid var(--line);
   display: flex;
   align-items: flex-end;
   gap: 8px;
@@ -174,22 +175,22 @@
 .chat-input-wrapper input {
   width: 100%;
   padding: 10px 16px;
-  border: 1px solid var(--ios-gray4);
+  border: 1px solid var(--line);
   border-radius: 20px;
-  background: var(--ios-gray6);
+  background: var(--surface);
   font-size: 16px;
-  color: var(--ios-text);
+  color: var(--text);
   outline: none;
   font-family: inherit;
   min-height: 40px;
 }
-.chat-input-wrapper input:focus { border-color: var(--ios-blue); }
-.chat-input-wrapper input::placeholder { color: var(--ios-gray); }
+.chat-input-wrapper input:focus { border-color: var(--primary); }
+.chat-input-wrapper input::placeholder { color: var(--text-muted); }
 .chat-send-btn {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: var(--ios-blue);
+  background: var(--primary);
   border: none;
   color: #fff;
   font-size: 18px;

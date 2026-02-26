@@ -1,50 +1,59 @@
 /* ── Dark Mode Support ─────────────────────────────── */
 @media (prefers-color-scheme: dark) {
   :root {
-    --ios-bg: #000000;
-    --ios-card: #1C1C1E;
-    --ios-text: #FFFFFF;
-    --ios-text2: #EBEBF5;
-    --ios-text3: #8E8E93;
-    --ios-separator: #38383A;
-    --ios-gray5: #2C2C2E;
-    --ios-gray6: #1C1C1E;
+    --bg: var(--charcoal);
+    --surface: var(--slate);
+    --surface-muted: #3a3f4a;
+    --text: var(--pearl);
+    --text-muted: #a0aec0;
+    --line: rgba(184, 147, 109, 0.32);
+    --ios-bg: var(--charcoal);
+    --ios-card: var(--slate);
+    --ios-text: var(--pearl);
+    --ios-text2: var(--pearl);
+    --ios-text3: #a0aec0;
+    --ios-separator: rgba(184, 147, 109, 0.32);
+    --ios-gray5: #3a3f4a;
+    --ios-gray6: var(--slate);
   }
-  body { background: #000; }
+  body { background: var(--charcoal); }
   .ios-nav-bar {
-    background: rgba(28,28,30,0.92);
-    border-bottom-color: #38383A;
+    background: rgba(44,52,64,0.92);
+    border-bottom-color: rgba(184, 147, 109, 0.32);
   }
-  .msg.assistant { background: #2C2C2E; color: #fff; }
-  .option-card.selected { background: #1A2A40; }
+  .msg.assistant { background: var(--slate); color: var(--pearl); border-color: rgba(184, 147, 109, 0.32); }
+  .option-card { background: rgba(248,247,244,0.08); border-color: rgba(184, 147, 109, 0.32); }
+  .option-card.selected { background: rgba(184, 147, 109, 0.15); border-color: #d4b896; }
   .chat-input-wrapper input {
-    background: #2C2C2E;
-    border-color: #38383A;
-    color: #fff;
+    background: var(--slate);
+    border-color: rgba(184, 147, 109, 0.32);
+    color: var(--pearl);
   }
-  .chat-input-area { background: rgba(28,28,30,0.95); border-top-color: #38383A; }
-  .tab-bar { background: rgba(28,28,30,0.92); border-top-color: #38383A; }
-  .filter-pill { background: #2C2C2E; border-color: #38383A; color: #EBEBF5; }
-  .options-confirm-bar { background: rgba(28,28,30,0.92); border-top-color: #38383A; }
-  .pnr-card { background: #1C1C1E; }
-  .itinerary-card { background: #1C1C1E; }
-  .escalation-sheet { background: #1C1C1E; }
-  .meta-pill.class-pill { background: #1A2A40; }
-  .meta-pill.cost-positive { background: #3A1E1E; }
-  .meta-pill.cost-negative { background: #1E3A2F; }
-  .meta-pill.cost-zero { background: #2C2C2E; }
-  .meta-pill.stops-pill { background: #2C2C2E; }
-  .msg-source-badge.source-kb { background: #1E3A2F; color: #34C759; }
-  .msg-source-badge.source-bedrock { background: #1A2A40; color: #64B5F6; }
-  .msg-source-badge.source-fallback { background: #3A351E; color: #FFB74D; }
-  .auto-escalation-banner { background: #3A1E1E; border-bottom-color: #5A2020; }
-  .status-pill.cancelled { background: #3A1E1E; }
-  .status-pill.delayed { background: #3A351E; }
-  .offline-note-card { background: #1A2A40; }
-  .alert-banner { background: #1C1C1E; }
-  .flight-card { background: #1C1C1E; }
-  .passenger-card { background: #1C1C1E; }
-  .notif-body-card { background: #1C1C1E; color: #EBEBF5; }
-  .booking-scroll { background: #000; }
-  .skeleton { background: linear-gradient(90deg, #2C2C2E 25%, #3A3A3C 50%, #2C2C2E 75%); background-size: 200% 100%; }
+  .chat-input-area { background: rgba(44,52,64,0.95); border-top-color: rgba(184, 147, 109, 0.32); }
+  .tab-bar { background: rgba(44,52,64,0.92); border-top-color: rgba(184, 147, 109, 0.32); }
+  .filter-pill { background: var(--slate); border-color: rgba(184, 147, 109, 0.32); color: var(--pearl); }
+  .options-confirm-bar { background: rgba(44,52,64,0.92); border-top-color: rgba(184, 147, 109, 0.32); }
+  .pnr-card { background: var(--slate); border-color: rgba(184, 147, 109, 0.32); }
+  .itinerary-card { background: var(--slate); }
+  .escalation-sheet { background: var(--slate); }
+  .meta-pill.class-pill { background: rgba(184, 147, 109, 0.15); }
+  .meta-pill.cost-positive { background: rgba(155, 107, 107, 0.2); }
+  .meta-pill.cost-negative { background: rgba(95, 122, 97, 0.2); }
+  .meta-pill.cost-zero { background: var(--slate); }
+  .meta-pill.stops-pill { background: var(--slate); }
+  .msg-source-badge.source-kb { background: rgba(95, 122, 97, 0.2); color: #86efac; }
+  .msg-source-badge.source-bedrock { background: rgba(184, 147, 109, 0.15); color: #93c5fd; }
+  .msg-source-badge.source-fallback { background: rgba(201, 166, 107, 0.2); color: #fed7aa; }
+  .auto-escalation-banner { background: rgba(155, 107, 107, 0.2); border-bottom-color: rgba(155, 107, 107, 0.4); }
+  .status-pill.cancelled { background: rgba(155, 107, 107, 0.2); }
+  .status-pill.delayed { background: rgba(201, 166, 107, 0.2); }
+  .offline-note-card { background: rgba(184, 147, 109, 0.15); }
+  .alert-banner { background: var(--slate); }
+  .flight-card { background: var(--slate); }
+  .passenger-card { background: var(--slate); }
+  .notif-body-card { background: var(--slate); color: var(--pearl); }
+  .booking-scroll { background: var(--charcoal); }
+  .skeleton { background: linear-gradient(90deg, var(--slate) 25%, #3a3f4a 50%, var(--slate) 75%); background-size: 200% 100%; }
+  .tab-item.active .tab-icon,
+  .tab-item.active .tab-label { color: #d4b896; }
 }

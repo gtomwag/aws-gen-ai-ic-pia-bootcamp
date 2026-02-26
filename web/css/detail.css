@@ -17,7 +17,7 @@
   border-radius: var(--card-radius);
   box-shadow: var(--card-shadow);
   padding: 14px 16px;
-  border-left: 4px solid var(--ios-red);
+  border-left: 4px solid var(--danger);
   display: flex;
   align-items: flex-start;
   gap: 10px;
@@ -27,7 +27,7 @@
 .alert-banner .alert-type {
   font-size: 15px;
   font-weight: 700;
-  color: var(--ios-red);
+  color: var(--danger);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -96,7 +96,7 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--ios-blue), var(--ios-purple));
+  background: linear-gradient(135deg, var(--primary), var(--warning));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -105,7 +105,7 @@
   color: #fff;
 }
 .passenger-info { flex: 1; }
-.passenger-name { font-size: 17px; font-weight: 600; }
+.passenger-name { font-size: 17px; font-weight: 600; font-family: var(--font-secondary); }
 .passenger-pnr { font-size: 13px; color: var(--ios-text3); margin-top: 1px; }
 
 .notif-body-card {

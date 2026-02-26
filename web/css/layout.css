@@ -26,10 +26,10 @@
   padding: 10px 16px;
   padding-top: calc(var(--safe-top) + 10px);
   min-height: 44px;
-  background: rgba(255,255,255,0.92);
+  background: rgba(248,247,244,0.92);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom: 0.5px solid var(--ios-separator);
+  border-bottom: 0.5px solid var(--line);
   position: relative;
   z-index: 10;
 }
@@ -40,7 +40,7 @@
   transform: translateY(-50%);
   background: none;
   border: none;
-  color: var(--ios-blue);
+  color: var(--primary);
   font-size: 17px;
   cursor: pointer;
   padding: 8px 4px;
@@ -52,7 +52,8 @@
 .ios-nav-bar .nav-title {
   font-size: 17px;
   font-weight: 600;
-  color: var(--ios-text);
+  color: var(--text);
+  font-family: var(--font-display);
   user-select: none;
 }
 .ios-nav-bar .nav-right {
@@ -65,28 +66,29 @@
   gap: 6px;
 }
 
-/* ── iOS Buttons ───────────────────────────────────── */
+/* ── DuHast Buttons ─────────────────────────────────── */
 .ios-btn {
   width: 100%;
-  padding: 15px;
-  border: none;
-  border-radius: 14px;
-  font-size: 17px;
-  font-weight: 600;
+  padding: 8px 11px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-body);
   cursor: pointer;
   min-height: 50px;
   transition: opacity 0.15s ease, transform 0.1s ease;
 }
 .ios-btn:active { transform: scale(0.98); opacity: 0.85; }
 .ios-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-.ios-btn-primary { background: var(--ios-blue); color: #fff; }
+.ios-btn-primary { background: var(--primary); color: #fff; }
 .ios-btn-secondary {
   background: transparent;
-  color: var(--ios-blue);
-  border: 1.5px solid var(--ios-blue);
+  color: var(--primary);
+  border: 1.5px solid var(--primary);
 }
-.ios-btn-success { background: var(--ios-green); color: #fff; }
-.ios-btn-danger { background: var(--ios-red); color: #fff; }
+.ios-btn-success { background: var(--success); color: #fff; }
+.ios-btn-danger { background: var(--danger); color: #fff; }
 
 /* ── Tier Badge ────────────────────────────────────── */
 .tier-badge {
@@ -98,10 +100,10 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
-.tier-badge.Platinum { background: linear-gradient(135deg, #9B59B6, #8E44AD); color: #fff; }
-.tier-badge.Gold { background: linear-gradient(135deg, #F39C12, #E67E22); color: #fff; }
-.tier-badge.Silver { background: linear-gradient(135deg, #BDC3C7, #95A5A6); color: #fff; }
-.tier-badge.General { background: var(--ios-gray5); color: var(--ios-text3); }
+.tier-badge.Platinum { background: #e2e8f0; color: #1e293b; }
+.tier-badge.Gold { background: #fef3c7; color: #92400e; }
+.tier-badge.Silver { background: #eef2ff; color: #3730a3; }
+.tier-badge.General { background: #f1f5f9; color: #334155; }
 
 /* ── Status Pill ───────────────────────────────────── */
 .status-pill {
@@ -113,12 +115,12 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
-.status-pill.cancelled { background: #FFE5E5; color: var(--ios-red); }
-.status-pill.delayed { background: #FFF3E0; color: var(--ios-orange); }
+.status-pill.cancelled { background: #fff1f2; color: var(--danger); }
+.status-pill.delayed { background: #fff7ed; color: var(--warning); }
 
 /* ── Skeleton Loading ──────────────────────────────── */
 .skeleton {
-  background: linear-gradient(90deg, #E5E5EA 25%, #F2F2F7 50%, #E5E5EA 75%);
+  background: linear-gradient(90deg, var(--surface-muted) 25%, var(--surface) 50%, var(--surface-muted) 75%);
   background-size: 200% 100%;
   border-radius: 8px;
   min-height: 20px;

@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <title>FlyAssist</title>
+  <title>DuHast Airlines</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/tokens.css" />
   <link rel="stylesheet" href="css/layout.css" />
   <link rel="stylesheet" href="css/lock.css" />
@@ -19,7 +20,7 @@
 </head>
 <body>
   <header>
-    <h1>✈ GenAI Disruption Management</h1>
+    <h1>✈ DuHast Disruption Management</h1>
     <div style="display: flex; align-items: center; gap: 16px;">
       <span class="status" id="statusText">Ready</span>
     </div>
@@ -38,7 +39,7 @@
           <div class="lock-notif-card" id="lockNotifCard" aria-label="Flight notification — tap to view details">
             <div class="lock-notif-header">
               <div class="lock-notif-icon">✈️</div>
-              <div class="lock-notif-app">FlyAssist</div>
+              <div class="lock-notif-app">DuHast Airlines</div>
               <div class="lock-notif-time">now</div>
             </div>
             <div class="lock-notif-title" id="lockNotifTitle">Flight Update</div>
@@ -103,7 +104,7 @@
     <!-- ══════ Screen 3: Options (Tab) ══════ -->
     <div class="screen" id="screenOptions">
       <div class="ios-nav-bar">
-        <span class="nav-title" id="navTitleOptions">FlyAssist</span>
+        <span class="nav-title" id="navTitleOptions">DuHast</span>
       </div>
       <div class="options-header">
         <div class="options-large-title">Rebooking Options</div>
@@ -127,7 +128,7 @@
         <span class="nav-title">Assistant<span class="chat-nav-sentiment NEUTRAL" id="sentimentDot"></span></span>
         <div class="nav-right">
           <button class="nav-icon-btn" id="btnVoiceAgent" aria-label="Call Agent" title="Call Agent">📞</button>
-          <button class="nav-back" id="btnEscalate" style="position:static;transform:none;color:var(--ios-red);font-size:14px;font-weight:600;" aria-label="Escalate to agent" disabled>Escalate</button>
+          <button class="nav-back" id="btnEscalate" style="position:static;transform:none;color:var(--danger);font-size:14px;font-weight:600;" aria-label="Escalate to agent" disabled>Escalate</button>
         </div>
       </div>
       <div class="auto-escalation-banner" id="autoEscalationAlert">
@@ -165,9 +166,9 @@
           <div class="itin-route">
             <span class="itin-airport" id="itinOrigin">FRA</span>
             <div class="route-line" style="flex:1;display:flex;align-items:center;gap:6px;">
-              <div class="line" style="flex:1;height:1px;background:var(--ios-gray4)"></div>
-              <span style="font-size:16px;color:var(--ios-blue)">✈</span>
-              <div class="line" style="flex:1;height:1px;background:var(--ios-gray4)"></div>
+              <div class="line" style="flex:1;height:1px;background:var(--line)"></div>
+              <span style="font-size:16px;color:var(--primary)">✈</span>
+              <div class="line" style="flex:1;height:1px;background:var(--line)"></div>
             </div>
             <span class="itin-airport" id="itinDest">JFK</span>
           </div>

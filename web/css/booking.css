@@ -17,7 +17,7 @@
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: var(--ios-green);
+  background: var(--success);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -37,12 +37,14 @@
 .booking-success-text {
   font-size: 22px;
   font-weight: 700;
-  color: var(--ios-text);
+  font-family: var(--font-display);
+  color: var(--text);
 }
 .pnr-card {
   width: 100%;
-  background: var(--ios-card);
+  background: #ecfdf5;
   border-radius: 16px;
+  border: 1px solid #86efac;
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   padding: 24px;
   text-align: center;
@@ -57,11 +59,11 @@
   margin-bottom: 6px;
 }
 .pnr-code {
-  font-size: 32px;
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 800;
   letter-spacing: 4px;
   font-family: 'SF Mono', 'Menlo', 'Courier New', monospace;
-  color: var(--ios-text);
+  color: #065f46;
 }
 .pnr-card::before {
   content: '';
@@ -70,7 +72,7 @@
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, var(--ios-blue), var(--ios-purple));
+  background: linear-gradient(90deg, var(--primary), var(--success));
 }
 
 .itinerary-card {
@@ -131,11 +133,12 @@
   width: 100%;
   padding: 14px;
   border: none;
-  border-radius: 14px;
-  background: #1C1C1E;
+  border-radius: 10px;
+  background: var(--charcoal);
   color: #fff;
   font-size: 17px;
   font-weight: 600;
+  font-family: var(--font-body);
   cursor: pointer;
   min-height: 50px;
   display: flex;
