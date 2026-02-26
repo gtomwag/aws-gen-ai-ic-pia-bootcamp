@@ -1,8 +1,8 @@
 /* ── Bottom Tab Bar ────────────────────────────────── */
 .tab-bar {
   display: none;
-  height: 83px;
-  padding-bottom: 34px;
+  height: calc(49px + var(--safe-bottom, 34px));
+  padding-bottom: var(--safe-bottom, 34px);
   background: rgba(248,247,244,0.92);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
