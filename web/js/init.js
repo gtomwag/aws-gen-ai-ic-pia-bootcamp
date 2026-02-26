@@ -10,7 +10,9 @@ btnConfirm.addEventListener('click', confirmSelection);
 btnEscalate.addEventListener('click', escalate);
 btnVoiceAgent.addEventListener('click', startVoiceConversation);
 btnVoiceTab.addEventListener('click', () => {
-  showScreen('screenChat');
+  if (!isVoiceCallActive) {
+    showScreen('screenChat');
+  }
   startVoiceConversation();
 });
 

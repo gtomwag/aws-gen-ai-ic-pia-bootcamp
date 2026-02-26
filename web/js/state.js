@@ -16,6 +16,8 @@ let voiceTurnSequence = 1;
 let isVoiceListening = false;
 let activeSpeechRecognition = null;
 let voiceTransferRequestId = null;
+let isVoiceCallActive = false;
+let isVoiceTurnInFlight = false;
 
 // ── DOM refs ──────────────────────────────────────────────
 const chatMessages = document.getElementById('chatMessages');
