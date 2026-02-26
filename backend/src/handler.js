@@ -585,6 +585,139 @@ async function handleEscalate(body) {
 }
 
 /**
+ * Handle dashboard metrics request
+ */
+async function handleDashboard(event) {
+  try {
+    // Get time filter from query params (default to 7 days)
+    const timeRange = event?.queryStringParameters?.timeRange || '7d';
+    const now = Date.now();
+    let cutoffTime;
+    
+    switch(timeRange) {
+      case '1h':
+        cutoffTime = now - (60 * 60 * 1000);
+        break;
+      case '24h':
+        cutoffTime = now - (24 * 60 * 60 * 1000);
+        break;
+      case '7d':
+        cutoffTime = now - (7 * 24 * 60 * 60 * 1000);
+        break;
+      case '30d':
+        cutoffTime = now - (30 * 24 * 60 * 60 * 1000);
+        break;
+      default:
+        cutoffTime = now - (7 * 24 * 60 * 60 * 1000);
+    }
+
+    // Scan for all escalations (queries all sessions)
+    const allSessions = await store.scanByPkPrefix('SESSION#');
+    
+    let escalationCount = 0;
+    let escalationsByTier = { Platinum: 0, Gold: 0, Silver: 0, General: 0 };
+    let escalationsByReason = {};
+    
+    for (const session of allSessions) {
+      if (session.sk === 'ESCALATION') {
+        // Filter by time
+        const escalatedAt = new Date(session.escalatedAt).getTime();
+        if (escalatedAt < cutoffTime) continue;
+        
+        escalationCount++;
+        const tier = session.priority === 'HIGH' ? 'Platinum' : session.priority === 'MEDIUM' ? 'Gold' : 'General';
+        if (tier in escalationsByTier) {
+          escalationsByTier[tier]++;
+        }
+        const reason = session.escalationReason || 'Unknown';
+        escalationsByReason[reason] = (escalationsByReason[reason] || 0) + 1;
+      }
+    }
+
+    // Count successful rebookings (confirmed bookings)
+    let bookingCount = 0;
+    let failedBookingCount = 0;
+    let bookingsByTier = { Platinum: 0, Gold: 0, Silver: 0, General: 0 };
+    let failedBookingsByTier = { Platinum: 0, Gold: 0, Silver: 0, General: 0 };
+    let bookingsByChannel = { chat: 0, voice: 0, web: 0 };
+
+    for (const session of allSessions) {
+      if (session.sk === 'BOOKING') {
+        // Filter by time
+        const bookedAt = new Date(session.bookedAt).getTime();
+        if (bookedAt < cutoffTime) continue;
+        
+        const tier = session.itinerarySummary?.tier || 'General';
+        const status = session.status || 'CONFIRMED';
+        
+        if (status === 'CONFIRMED') {
+          bookingCount++;
+          if (tier in bookingsByTier) {
+            bookingsByTier[tier]++;
+          }
+          // Simulate channel - in real system, this would be tracked separately
+          bookingsByChannel.chat++;
+        } else if (status === 'FAILED' || status === 'CANCELLED') {
+          failedBookingCount++;
+          if (tier in failedBookingsByTier) {
+            failedBookingsByTier[tier]++;
+          }
+        }
+      }
+    }
+
+    // Get disruption statistics
+    const allDisruptions = await store.scanByPkPrefix('DISRUPTION#');
+    let disruptionStats = { total: 0, byType: {} };
+    
+    for (const disruption of allDisruptions) {
+      if (disruption.sk === 'META') {
+        // Filter by time
+        const createdAt = new Date(disruption.createdAt).getTime();
+        if (createdAt < cutoffTime) continue;
+        
+        disruptionStats.total++;
+        const type = disruption.type || 'Unknown';
+        disruptionStats.byType[type] = (disruptionStats.byType[type] || 0) + 1;
+      }
+    }
+
+    const dashboardData = {
+      timestamp: new Date().toISOString(),
+      escalations: {
+        total: escalationCount,
+        byTier: escalationsByTier,
+        byReason: escalationsByReason,
+        avgResponseTime: 45, // Mock value
+      },
+      rebookings: {
+        total: bookingCount,
+        byTier: bookingsByTier,
+        byChannel: bookingsByChannel,
+        successRate: bookingCount > 0 ? ((bookingCount / Math.max(escalationCount + bookingCount, 1)) * 100).toFixed(2) : '0.00',
+      },
+      failedRebookings: {
+        total: failedBookingCount,
+        byTier: failedBookingsByTier,
+        failureRate: (bookingCount + failedBookingCount) > 0 ? ((failedBookingCount / (bookingCount + failedBookingCount)) * 100).toFixed(2) : '0.00',
+      },
+      disruptions: disruptionStats,
+      summary: {
+        totalSessions: allSessions.filter(s => s.sk === 'META').length,
+        agentRequestsPercentage: escalationCount > 0 ? ((escalationCount / Math.max(allSessions.filter(s => s.sk === 'META').length, 1)) * 100).toFixed(2) : '0.00',
+      },
+    };
+
+    logMetric('DASHBOARD_VIEW', 1, { escalations: escalationCount, bookings: bookingCount });
+
+    return respond(200, dashboardData);
+  } catch (err) {
+    console.error('Dashboard error:', err);
+    return respond(500, { error: 'Failed to generate dashboard', detail: err.message });
+  }
+}
+
+/**
  * Generate a rule-based AI recommendation for escalation agents.
  */
 function generateEscalationRecommendation(passenger, options, selection, reason) {
@@ -688,6 +821,9 @@ exports.handler = async (event) => {
     }
     if (method === 'GET' && path === '/notification') {
       return await handleGetNotification(event);
+    }
+    if (method === 'GET' && path === '/dashboard') {
+      return await handleDashboard(event);
     }
 
     const body = parseBody(event);

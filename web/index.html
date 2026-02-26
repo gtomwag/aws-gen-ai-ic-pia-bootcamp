@@ -18,7 +18,13 @@
   <link rel="stylesheet" href="css/dark.css" />
 </head>
 <body>
-  <span id="statusText" aria-hidden="true"></span>
+  <header>
+    <h1>✈ GenAI Disruption Management</h1>
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <a href="dashboard.html" style="color: #7aa2f7; text-decoration: none; font-size: 14px; font-weight: 500; transition: color 0.3s;" onmouseover="this.style.color='#9ece6a'" onmouseout="this.style.color='#7aa2f7'">📊 Support Dashboard</a>
+      <span class="status" id="statusText">Ready</span>
+    </div>
+  </header>
 
   <div class="app-shell">
 
