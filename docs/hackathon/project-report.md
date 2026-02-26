@@ -213,20 +213,28 @@ The UI has been redesigned for optimal user experience:
 
 ### Why This Architecture?
 
-1. **Serverless-first:** Zero infrastructure management; pay-per-use; auto-scaling
-2. **Single-table DynamoDB:** Low latency, predictable performance, all entities co-located by session for efficient queries
-3. **Monolithic Lambda (POC):** Faster iteration for 1-day build; decompose into per-function in production
-4. **Optional Bedrock:** Demonstrates AI capability without hard dependency; deterministic fallback ensures demo reliability
-5. **Static frontend:** No build step, no framework — opens in any browser, maximum demo reliability
+1. **AgentCore Runtime for managed agent hosting:** Eliminates need to build custom agent orchestration; provides built-in observability, context management, and tool calling infrastructure.
+
+2. **Bedrock agent with inline tools:** Agent autonomously selects appropriate tools based on conversation context, reducing hardcoded logic and enabling natural language interaction.
+
+3. **Lambda proxy pattern:** Lightweight proxy forwards chat requests to AgentCore while preserving existing backend for disruption creation and option generation.
+
+4. **Single-table DynamoDB:** Low latency, predictable performance, all entities co-located by session for efficient queries.
+
+5. **Serverless-first:** Zero infrastructure management; pay-per-use; auto-scaling.
+
+6. **Static frontend with dynamic updates:** No build step, maximum demo reliability, with real-time UI updates after booking confirmation.
 
 ### Why Not...?
 
-| Alternative | Why Not (for POC) |
+| Alternative | Why Not (for 4-hour hackathon) |
 |---|---|
+| Custom agent orchestration | AgentCore provides this out-of-box with better observability |
 | Step Functions | Adds complexity; single Lambda sufficient for demo flow |
-| React/Next.js frontend | Build step + dependency risk for 1-day POC |
+| React/Next.js frontend | Build step + dependency risk for rapid POC |
 | ECS/Fargate | Over-engineered for stateless API handlers |
 | RDS/Aurora | DynamoDB simpler for key-value patterns; no schema migration needed |
+| Gateway service | Inline tools in agent simpler for POC; can extract later if needed |
 
 ---
 
@@ -236,16 +244,20 @@ The UI has been redesigned for optimal user experience:
 
 | Test | Method | Result |
 |---|---|---|
-| End-to-end flow | Manual: Create disruption → chat → select → confirm → escalate | ✅ All steps complete successfully |
-| Bedrock integration | `USE_BEDROCK=true` with valid credentials | ✅ Natural language responses; graceful fallback on error |
-| Local dev server | `node server-local.js` with in-memory store | ✅ All endpoints functional |
+| End-to-end flow | Manual: Create disruption → chat → select → confirm | ✅ All steps complete successfully |
+| Agent tool calling | Natural language queries triggering `generate_rebooking_options` and `query_policy` | ✅ Agent autonomously selects correct tools |
+| Knowledge Base RAG | Policy questions answered with citations from knowledge base | ✅ Relevant answers with source citations |
+| UI feedback loop | Booking confirmation → trip card update → notification status change | ✅ Real-time UI updates working |
+| AgentCore deployment | Agent deployed to AgentCore Runtime with 6 inline tools | ✅ Deployed and accessible via Lambda proxy |
 
 ### What We Validated
 
+- Bedrock agent with AgentCore Runtime = production-ready managed agent hosting
+- Agent autonomous tool selection = reduces hardcoded logic, enables natural conversation
+- Knowledge Base integration via tool = effective RAG for policy questions
 - Proactive notification **before** passenger contacts airline = feasible
-- Escalation packet with AI recommendation = dramatically reduces agent ramp-up time
-- Rule-based option generation <100ms = well under 3-second SLA target
-- Structured metrics logging = ready for CloudWatch ingestion without code changes
+- UI feedback loop with booking confirmation = clear visual confirmation for users
+- 4 additional tools ready for testing = clear extensibility path
 
 ---
 
@@ -269,11 +281,15 @@ The UI has been redesigned for optimal user experience:
 
 ### Key Findings
 
-1. **End-to-end flow works:** The entire disruption → notification → options → booking → escalation pipeline is coherent and demonstrable.
+1. **AgentCore Runtime deployment successful:** Bedrock agent with Claude 3.5 Sonnet deployed to AgentCore Runtime with 6 inline tools, accessible via Lambda proxy architecture.
 
-2. **Proactive notification changes the paradigm:** Instead of "passenger discovers disruption → calls airline → waits 45 min", the flow becomes "airline detects → notifies passenger → passenger self-resolves in <2 min."
+2. **Agent tool orchestration works:** Agent successfully selects and calls `generate_rebooking_options` and `query_policy` tools based on natural language input, demonstrating autonomous tool selection.
 
-3. **Escalation context dramatically helps agents:** The comprehensive packet (passenger summary, options shown, slections, AI recommendation, policy notes) eliminates the "please hold while I look up your record" pattern.
+3. **Knowledge Base integration effective:** RAG-based policy queries return relevant answers with citations from EU261, airline policy, and GDPR documents.
+
+4. **Proactive notification changes the paradigm:** Instead of "passenger discovers disruption → calls airline → waits 45 min", the flow becomes "airline detects → notifies passenger → passenger self-resolves in <2 min."
+
+5. **UI feedback loop complete:** After booking confirmation, trip card updates with new flight details and notification status changes to "RESOLVED", providing clear visual confirmation.
 
 ---
 
@@ -281,7 +297,11 @@ The UI has been redesigned for optimal user experience:
 
 ### Why These Results Matter
 
-1. **AI orchestration validates depth:** The ability to chain Bedrock Chat, Knowledge Base (RAG), Guardrails, Comprehend (sentiment + PII), and Translate into a cohesive pipeline demonstrates that multi-service AI integration is not only feasible but adds compounding value at each stage.
+1. **Agent-based architecture validates AI orchestration:** The Bedrock agent autonomously selects and calls appropriate tools (`generate_rebooking_options` for flight options, `query_policy` for policy questions) based on natural language input, demonstrating that agentic AI can handle complex multi-step workflows without hardcoded logic.
+
+2. **AgentCore Runtime simplifies deployment:** Managed runtime eliminates infrastructure complexity while providing built-in observability for agent actions, reasoning traces, and tool invocations.
+
+3. **Tool-based integration is extensible:** 4 additional tools (`analyze_passenger_sentiment`, `translate_message`, `confirm_booking`, `create_escalation`) are implemented and ready for testing, showing clear path to expand capabilities without architectural changes.
 
 ---
 
@@ -291,23 +311,30 @@ The UI has been redesigned for optimal user experience:
 
 | Lesson | Detail |
 |---|---|
+| **AgentCore Runtime for rapid deployment** | Managed agent hosting eliminated infrastructure complexity; deployed agent in minutes with built-in observability |
+| **Inline tools over Gateway service** | For 4-hour hackathon, implementing tools directly in agent was faster than building separate Gateway service |
 | **Start with the demo flow** | Building the end-to-end flow first, then enriching each step, was more effective than perfecting any single module |
+| **Hardcoded configuration** | Skipping environment variable complexity and hardcoding values in `config.py` saved significant debugging time |
 | **Synthetic data is underrated** | Realistic synthetic manifests (with tier distributions, connection risks) made the demo compelling without real data access |
-| **Single-table DynamoDB is powerful** | All session data co-located by pk made queries simple and fast |
+| **Lambda proxy pattern** | Lightweight proxy to AgentCore preserved existing backend while adding agent capabilities |
 
 ### What Did NOT Work / Was Difficult
 
 | Challenge | Detail |
 |---|---|
+| **AgentCore CLI learning curve** | First-time setup with `agentcore create` and `agentcore launch` required trial and error; documentation could be clearer |
+| **Agent ARN management** | Hardcoding agent ARN in Lambda proxy works but fragile; production needs parameter store or environment variable |
+| **Tool schema definition** | Defining tool input schemas for AgentCore required careful attention to parameter types and descriptions |
+| **Limited tool testing** | Only 2 of 6 tools actively tested due to time constraints; 4 tools ready but need UI integration |
 
 ### Edge Cases to Watch
 
 | Edge Case | Observation |
 |---|---|
-| **Mixed-language input** | Passengers switching languages mid-conversation can confuse sentiment analysis; Translate helps but adds latency |
-| **Sarcasm detection** | Comprehend may classify sarcastic messages as POSITIVE when they're actually negative |
-| **KB keyword false positives** | Generic words like "policy" in non-policy contexts can trigger unnecessary KB routing |
-| **Concurrent voice + text sessions** | Same passenger using both channels simultaneously needs session deduplication |
+| **Agent tool selection accuracy** | Agent needs clear tool descriptions to select correct tool; ambiguous queries may trigger wrong tool |
+| **Knowledge Base retrieval quality** | Generic words like "policy" in non-policy contexts can trigger unnecessary KB routing |
+| **Tool error handling** | Agent needs graceful fallback when tools fail (e.g., Comprehend API error) |
+| **Concurrent sessions** | Same passenger using multiple channels simultaneously needs session deduplication |
 
 ---
 
@@ -315,17 +342,17 @@ The UI has been redesigned for optimal user experience:
 
 **Key gaps between POC and PRD:**
 
-1. Real ops feed and PSS/GDS integration
-2. Step Functions orchestration for parallel passenger processing
-3. Bedrock Agents with Guardrails and Knowledge Bases
-4. Real push/SMS/email notification delivery
-5. Observability: CloudWatch dashboards, X-Ray tracing, alerting
-6. Security: Cognito auth, KMS encryption, WAF, IAM least privilege
-7. Scale testing: 5,000 passengers per disruption
-8. Data retention, consent management, GDPR right-to-erasure
-9. Multi-language notification templates
-10. Revenue optimization and dynamic pricing
-11. Expanded voice capabilities: full-duplex voice, real-time STT/TTS, expanded NLU
+1. **Test and integrate remaining 4 tools:** `analyze_passenger_sentiment`, `translate_message`, `confirm_booking`, `create_escalation` are coded but need UI integration and testing
+2. **Real ops feed and PSS/GDS integration:** Currently using synthetic disruptions and mock flight options
+3. **Agent prompt optimization:** Refine system prompts and tool descriptions for better tool selection accuracy
+4. **Step Functions orchestration:** Parallel passenger processing for large-scale disruptions
+5. **Real push/SMS/email notification delivery:** Currently simulated in UI
+6. **Enhanced observability:** CloudWatch dashboards, X-Ray tracing, alerting for agent actions
+7. **Security hardening:** Cognito auth, KMS encryption, WAF, IAM least privilege
+8. **Scale testing:** 5,000 passengers per disruption
+9. **Data retention, consent management, GDPR right-to-erasure**
+10. **Multi-language notification templates**
+11. **Revenue optimization and dynamic pricing**
 
 ---
 
@@ -333,8 +360,10 @@ The UI has been redesigned for optimal user experience:
 
 | Asset | Path | Description |
 |---|---|---|
-| **Backend** | `/backend/` | SAM template, Lambda handler, DynamoDB store, Bedrock integration, passenger manifest generator |
-| **Frontend** | `/web/` | Static HTML/JS/CSS with notification center, option cards, booking panel, escalation panel, metrics log |
+| **AgentCore Agent** | `/backend/agent/agentcoreCreateManually/` | Bedrock agent with 6 inline tools deployed to AgentCore Runtime |
+| **Lambda Proxy** | `/backend/api-proxy/handler.py` | Forwards `/chatv2` requests to AgentCore Runtime |
+| **Backend** | `/backend/` | SAM template, Lambda handler, DynamoDB store, passenger manifest generator |
+| **Frontend** | `/web/` | Static HTML/JS/CSS with chat interface, trip cards, rebooking options, notification center |
 | **Project Report** | `/docs/hackathon/project-report.md` | This document |
 | **Architecture Docs** | `/docs/architecture/` | Solution architecture + Mermaid diagrams (POC + target) |
 | **Demo Script** | `/docs/demo/demo-script-5min.md` | 5-minute timed demo script |
@@ -342,6 +371,7 @@ The UI has been redesigned for optimal user experience:
 | **Sample Scenarios** | `/docs/demo/sample-scenarios.md` | 3 runnable scenarios with curl commands |
 | **Next Steps** | `/docs/recommendations/next-steps.md` | Prioritized POC → PRD roadmap |
 | **Local Dev Runbook** | `/docs/runbook/local-dev.md` | Setup + run instructions |
+| **Knowledge Base** | `/knowledge-base/` | Airline policy, EU261, GDPR documents for RAG |
 
 ---
 
@@ -378,15 +408,15 @@ The UI has been redesigned for optimal user experience:
 
 ## Path to Production
 
-1. **Week 1–2:** Stand up staging environment; integrate real ops feed (even read-only)
-2. **Week 3–4:** PSS/GDS integration for live inventory queries
-3. **Week 4–5:** Step Functions workflow; parallel passenger processing
-4. **Week 5–6:** Bedrock Agents + Guardrails deployment
-5. **Week 6–7:** Real notification channels (push, SMS, email)
-6. **Week 7–8:** Security hardening (Cognito, KMS, WAF)
-7. **Week 8–9:** CloudWatch dashboards + X-Ray + alerting
-8. **Week 9–10:** Load testing (5,000 passengers); multi-region prep
-9. **Week 10–12:** UAT with airline stakeholders; compliance review
-10. **Week 12+:** Phased production rollout (single route → hub → network)
+1. **Week 1–2:** Test and integrate remaining 4 agent tools; refine agent prompts for better tool selection
+2. **Week 2–3:** Stand up staging environment; integrate real ops feed (even read-only)
+3. **Week 3–4:** PSS/GDS integration for live inventory queries
+4. **Week 4–5:** Step Functions workflow; parallel passenger processing
+5. **Week 5–6:** Real notification channels (push, SMS, email)
+6. **Week 6–7:** Security hardening (Cognito, KMS, WAF); move agent ARN to Parameter Store
+7. **Week 7–8:** CloudWatch dashboards + X-Ray + alerting for agent observability
+8. **Week 8–9:** Load testing (5,000 passengers); multi-region prep
+9. **Week 9–10:** UAT with airline stakeholders; compliance review
+10. **Week 10+:** Phased production rollout (single route → hub → network)
 
 > See [/docs/recommendations/next-steps.md](../recommendations/next-steps.md) for detailed breakdown per step.
