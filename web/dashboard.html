@@ -544,6 +544,12 @@
         </div>
         <div id="failTiers"></div>
       </div>
+      <!-- Open Rebookings Card -->
+      <div class="kpi-card failed" id="openRebookingsCard" style="cursor: pointer;">
+        <div class="kpi-label">Open Rebookings</div>
+        <div class="kpi-value red" id="openRebookingsCount">—</div>
+        <div style="font-size: 12px; color: var(--ios-text2); margin-top: 8px;">Click to view pending customers →</div>
+      </div>
       <!-- Key Metrics Card -->
       <div class="kpi-card summary">
         <div class="kpi-label">Key Metrics</div>
@@ -1026,14 +1032,120 @@
       });
     });
 
+    // ── Open Rebookings Modal ────────────────────────
+    const openRebookingsCard = document.getElementById('openRebookingsCard');
+    
+    async function showOpenRebookings() {
+      try {
+        const resp = await fetch(`${API_BASE_URL}/open-rebookings`);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        
+        // Create modal
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+          position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+          background: rgba(0,0,0,0.5); z-index: 1000;
+          display: flex; align-items: center; justify-content: center;
+          backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+        `;
+        
+        const modalContent = document.createElement('div');
+        modalContent.style.cssText = `
+          background: var(--ios-card); max-width: 800px; max-height: 600px;
+          border-radius: 12px; overflow: hidden;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+          display: flex; flex-direction: column;
+        `;
+        
+        const header = document.createElement('div');
+        header.style.cssText = `
+          padding: 16px 20px; border-bottom: 1px solid var(--ios-separator);
+          display: flex; justify-content: space-between; align-items: center;
+        `;
+        header.innerHTML = `
+          <div style="font-size:16px;font-weight:600;">Open Rebookings (${data.openRebookingsCount})</div>
+          <button style="background:none;border:none;font-size:20px;cursor:pointer;padding:0;width:24px;height:24px;" id="closeModal">✕</button>
+        `;
+        
+        const listContainer = document.createElement('div');
+        listContainer.style.cssText = `
+          flex: 1; overflow-y: auto; padding: 12px;
+        `;
+        
+        if (data.openRebookings.length === 0) {
+          listContainer.innerHTML = '<div style="padding:20px;text-align:center;color:var(--ios-text2);">No open rebookings</div>';
+        } else {
+          listContainer.innerHTML = data.openRebookings.map(item => `
+            <div style="
+              background: var(--ios-bg); padding: 12px;
+              margin-bottom: 8px; border-radius: 8px;
+              border-left: 4px solid var(--ios-red);
+            ">
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                <div style="font-weight:600;font-size:14px;">${item.customerName}</div>
+                <span style="font-size:12px;background:var(--ios-red);color:white;padding:2px 6px;border-radius:4px;">${item.status}</span>
+              </div>
+              <div style="font-size:13px;color:var(--ios-text2);margin-bottom:4px;">
+                ${item.originCode} → ${item.destCode} • ${item.flightNumber}
+              </div>
+              <div style="font-size:12px;color:var(--ios-text3);">
+                Scheduled: ${item.originalScheduledTime}
+              </div>
+              <div style="font-size:12px;color:var(--ios-text3);">
+                Tier: <span style="font-weight:500;">${item.passengerTier}</span>
+              </div>
+            </div>
+          `).join('');
+        }
+        
+        modalContent.appendChild(header);
+        modalContent.appendChild(listContainer);
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+        
+        // Close handlers
+        const closeBtn = header.querySelector('#closeModal');
+        closeBtn.addEventListener('click', () => modal.remove());
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) modal.remove();
+        });
+      } catch (err) {
+        console.error('Failed to load open rebookings:', err);
+        alert('Failed to load open rebookings');
+      }
+    }
+    
+    if (openRebookingsCard) {
+      openRebookingsCard.addEventListener('click', showOpenRebookings);
+    }
+
     // Style the non-KB preset differently
     document.querySelectorAll('.kb-preset').forEach(btn => {
       if (btn.dataset.q === 'I need a new flight') btn.classList.add('non-kb');
     });
 
     // ── Init ─────────────────────────────────────────
-    document.addEventListener('DOMContentLoaded', loadDashboard);
-    setInterval(loadDashboard, 30000);
+    async function loadOpenRebookingsCount() {
+      try {
+        const resp = await fetch(`${API_BASE_URL}/open-rebookings`);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        const el = document.getElementById('openRebookingsCount');
+        if (el) el.textContent = data.openRebookingsCount;
+      } catch (err) {
+        console.warn('Failed to load open rebookings count:', err);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadDashboard();
+      loadOpenRebookingsCount();
+    });
+    setInterval(() => {
+      loadDashboard();
+      loadOpenRebookingsCount();
+    }, 30000);
   </script>
 </body>
 </html>

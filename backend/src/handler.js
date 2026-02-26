@@ -794,6 +794,53 @@ async function handleGetDisruptions() {
 }
 
 // ──────────────────────────────────────────────
+// GET /open-rebookings — list disrupted customers with pending rebookings
+// ──────────────────────────────────────────────
+
+async function handleOpenRebookings() {
+  // Find all sessions that have disruption metadata and no booking confirmation
+  const sessions = await store.scanByPkPrefix('SESSION#');
+  
+  // Filter to get sessions that have META and DISRUPTION data
+  const sessionMetas = sessions.filter((s) => s.sk === 'META');
+  
+  const openRebookings = [];
+  
+  for (const meta of sessionMetas) {
+    const sessionId = meta.sessionId;
+    
+    // Check if session has a booking confirmation
+    const booking = await store.getJson(`SESSION#${sessionId}`, 'BOOKING');
+    
+    // We want disruptions that DON'T have bookings (open rebookings)
+    if (!booking && meta.disruption) {
+      const passenger = meta.passenger || {};
+      const disruption = meta.disruption || {};
+      
+      openRebookings.push({
+        sessionId,
+        customerName: `${passenger.firstName || ''} ${passenger.lastName || ''}`.trim() || 'Unknown',
+        passengerTier: passenger.tier || 'General',
+        originCode: passenger.origin || 'N/A',
+        destCode: passenger.destination || 'N/A',
+        departure: disruption.departure || 'N/A',
+        arrival: disruption.arrival || 'N/A',
+        originalScheduledTime: disruption.originalScheduledTime || 'N/A',
+        status: disruption.status || 'DISRUPTED',
+        reason: disruption.reason || 'No reason provided',
+        flightNumber: disruption.flightNumber || 'N/A',
+      });
+    }
+  }
+  
+  logMetric('GET_OPEN_REBOOKINGS', openRebookings.length);
+  return respond(200, { 
+    openRebookingsCount: openRebookings.length,
+    openRebookings 
+  });
+}
+
+// ──────────────────────────────────────────────
 // GET /notification?sessionId=... — retrieve notification for a session
 // ──────────────────────────────────────────────
 
@@ -1073,6 +1120,9 @@ exports.handler = async (event) => {
     }
     if (method === 'GET' && path === '/disruption') {
       return await handleGetDisruptions();
+    }
+    if (method === 'GET' && path === '/open-rebookings') {
+      return await handleOpenRebookings();
     }
     if (method === 'GET' && path === '/notification') {
       return await handleGetNotification(event);
