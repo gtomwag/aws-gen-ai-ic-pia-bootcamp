@@ -12,32 +12,6 @@
 
 ---
 
-## Rubric Quick-Reference
-
-> **For judges:** This table maps each rubric scoring category to the specific sections and evidence in this report.
-
-| Rubric Category | Key Evidence | Report Sections |
-|---|---|---|
-| **Technical Depth** | 6 AWS AI services (Bedrock Chat, KB/RAG, Guardrails, Comprehend, Translate, Nova Sonic Voice) with intelligent routing, fallback chains, and feature flags | §4 Solution Overview, §4.2 AWS Services, [AI Services Guide](../architecture/ai-services-guide.md) |
-| **Demo Quality** | 7-minute scripted demo with 31 shots across 6 acts; 7 visual AI indicators in the UI; live sentiment + auto-escalation; KB citations | [Demo Script](../demo/demo-script-5min.md), [Storyboard](../demo/demo-storyboard.md) |
-| **Business Impact** | 60% call deflection, $104M ARR proxy, <3s response vs 45-min hold, premium CSAT preservation | §2 Use Case, §8 Estimated ARR, §5.2 Experimental Results |
-| **Ethical Considerations** | GDPR doc-only guardrails, Bedrock Guardrails (PII filter, denied topics, content safety), Comprehend PII detection, consent management field, source attribution transparency, synthetic-only data | §5.1 Security & Compliance, [AI Services Guide](../architecture/ai-services-guide.md) §3 Guardrails |
-| **Path to Production** | 12-week phased roadmap, target PRD architecture with Step Functions + EventBridge, security hardening plan, cost estimates per 1K disruptions | §9 Path to Production, [Next Steps](../recommendations/next-steps.md), [Solution Architecture](../architecture/solution-architecture.md) §3 |
-
----
-
-## Team
-
-| Role | Name |
-|---|---|
-| Tech Lead | _[Name]_ |
-| Backend Engineer | _[Name]_ |
-| Frontend Engineer | _[Name]_ |
-| Solutions Architect | _[Name]_ |
-| Presenter / PM | _[Name]_ |
-
----
-
 ## Use Case Description
 
 ### Problem
@@ -79,9 +53,7 @@ An AI-driven **proactive** system that:
 | No real ops feed or PSS access | Used synthetic manifest generation (200 passengers with realistic tier distribution) |
 | 1-day time constraint | Focused on end-to-end flow demonstration rather than depth in any one module |
 | No real push notification infrastructure | Simulated notification center in UI with realistic copy and channel logic |
-| Bedrock availability/cost | Made Bedrock optional; deterministic fallback provides full demo without AI |
 | No real booking system | Mock PNR generation with itinerary summary |
-| EU261/GDPR compliance | Documented policy considerations; included in escalation packet as "notional guardrails" |
 
 ---
 
@@ -93,11 +65,9 @@ An AI-driven **proactive** system that:
 | Proactive notification within 5 min of disruption | Notification generated simultaneously with disruption detection | ✅ POC-approx |
 | 60% self-service resolution (call deflection) | Narrative: full self-service flow demonstrated (create → options → confirm) | ✅ POC-approx |
 | <3s response time for option generation | <100ms with rule-based generation | ✅ POC-approx |
-| Premium passenger prioritization | Platinum: 6 options + premium perks + HIGH escalation priority | ✅ Demonstrated |
+| Premium passenger prioritization | Premium perks + HIGH escalation priority | ✅ Demonstrated |
 | Passenger satisfaction >70% | Mock: satisfaction capture shown in metrics log | 🟡 Mocked |
-| EU261/GDPR compliance | Document-only guardrails in escalation packet + architecture docs | 🟡 Doc-only |
 | Agent escalation with full context | Comprehensive escalation packet with AI recommendation | ✅ Demonstrated |
-| Bedrock AI integration | Optional; deterministic fallback fully functional | ✅ Optional |
 
 ---
 
@@ -194,9 +164,8 @@ The agent automatically selects which tools to use based on the user's intent. C
 The UI has been redesigned for optimal user experience:
 
 **Chat Interface:**
-- Suggested prompt cards appear after disruption (no auto-messages)
+- Suggested prompt cards appear after disruption
 - Users can click suggested prompts or type their own
-- Clear "AI Assistant" labeling with source badges
 - Clean, distraction-free interface
 
 **Trips Tab:**
@@ -268,18 +237,12 @@ The UI has been redesigned for optimal user experience:
 | Test | Method | Result |
 |---|---|---|
 | End-to-end flow | Manual: Create disruption → chat → select → confirm → escalate | ✅ All steps complete successfully |
-| Tier prioritization | Create disruption with Platinum vs General passenger | ✅ Platinum gets 6 options + premium perks; General gets 4 |
-| Connection risk filtering | Passenger with 35-min connection | ✅ Tight-connection options filtered out |
-| Constraint filtering | `arrive_before_21_00` constraint | ✅ Late-arriving options excluded |
-| Notification channel logic | Passenger with app vs without app | ✅ Push for app users; SMS/email for others |
-| Escalation completeness | Escalate without selecting an option | ✅ Packet includes "no option selected" + AI recommendation |
 | Bedrock integration | `USE_BEDROCK=true` with valid credentials | ✅ Natural language responses; graceful fallback on error |
 | Local dev server | `node server-local.js` with in-memory store | ✅ All endpoints functional |
 
 ### What We Validated
 
 - Proactive notification **before** passenger contacts airline = feasible
-- Tier-based option differentiation = visible and meaningful to passengers
 - Escalation packet with AI recommendation = dramatically reduces agent ramp-up time
 - Rule-based option generation <100ms = well under 3-second SLA target
 - Structured metrics logging = ready for CloudWatch ingestion without code changes
@@ -308,13 +271,9 @@ The UI has been redesigned for optimal user experience:
 
 1. **End-to-end flow works:** The entire disruption → notification → options → booking → escalation pipeline is coherent and demonstrable.
 
-2. **Tier differentiation is impactful:** Having 6 options with premium perks (lounge, hotel, first-class upgrade) vs 4 basic options is a visible and compelling difference for Platinum passengers.
+2. **Proactive notification changes the paradigm:** Instead of "passenger discovers disruption → calls airline → waits 45 min", the flow becomes "airline detects → notifies passenger → passenger self-resolves in <2 min."
 
-3. **Proactive notification changes the paradigm:** Instead of "passenger discovers disruption → calls airline → waits 45 min", the flow becomes "airline detects → notifies passenger → passenger self-resolves in <2 min."
-
-4. **Escalation context dramatically helps agents:** The comprehensive packet (passenger summary, options shown, selections, AI recommendation, policy notes) eliminates the "please hold while I look up your record" pattern.
-
-5. **Rule-based logic is sufficient for POC:** Bedrock adds natural language capability but is not strictly necessary to demonstrate the core value proposition.
+3. **Escalation context dramatically helps agents:** The comprehensive packet (passenger summary, options shown, slections, AI recommendation, policy notes) eliminates the "please hold while I look up your record" pattern.
 
 ---
 
@@ -322,15 +281,7 @@ The UI has been redesigned for optimal user experience:
 
 ### Why These Results Matter
 
-1. **Six-service AI orchestration validates depth:** The ability to chain Bedrock Chat, Knowledge Base (RAG), Guardrails, Comprehend (sentiment + PII), Translate, and Nova Sonic Voice into a cohesive pipeline demonstrates that multi-service AI integration is not only feasible but adds compounding value at each stage.
-
-2. **Automatic routing proves intelligent orchestration:** The `isPolicyQuestion()` keyword-based router (30+ triggers) successfully directs queries to the right AI pathway without user intervention — a key indicator of production viability.
-
-3. **Sentiment-driven auto-escalation demonstrates proactive AI:** Moving from reactive ("passenger requests agent") to proactive ("system detects frustration and escalates") fundamentally changes the customer experience model.
-
-4. **Feature-flag architecture de-risks production:** Every AI service can be toggled independently, with deterministic fallbacks ensuring the system never breaks. This allows incremental rollout and A/B testing in production.
-
-5. **Voice + text convergence maximizes reuse:** Nova Sonic voice sessions reuse the same KB and Chat pathways as text, avoiding duplicate AI logic and ensuring consistent answers across modalities.
+1. **AI orchestration validates depth:** The ability to chain Bedrock Chat, Knowledge Base (RAG), Guardrails, Comprehend (sentiment + PII), and Translate into a cohesive pipeline demonstrates that multi-service AI integration is not only feasible but adds compounding value at each stage.
 
 ---
 
@@ -342,18 +293,12 @@ The UI has been redesigned for optimal user experience:
 |---|---|
 | **Start with the demo flow** | Building the end-to-end flow first, then enriching each step, was more effective than perfecting any single module |
 | **Synthetic data is underrated** | Realistic synthetic manifests (with tier distributions, connection risks) made the demo compelling without real data access |
-| **Optional AI is a feature** | Making Bedrock optional meant the demo never breaks due to credential or model issues |
 | **Single-table DynamoDB is powerful** | All session data co-located by pk made queries simple and fast |
-| **Static frontend = zero friction** | No build step meant instant iteration; dependency-free = no version conflicts |
 
 ### What Did NOT Work / Was Difficult
 
 | Challenge | Detail |
 |---|---|
-| **Knowledge Base setup latency** | Creating and syncing the Bedrock KB required manual console steps; no full IaC support yet |
-| **Guardrail tuning** | Finding the right balance between safety and helpfulness required iterative testing; too aggressive → blocked legitimate responses |
-| **Sentiment threshold calibration** | The 2-consecutive-NEGATIVE / >70% confidence rule is a starting point; real-world calibration needs A/B testing with actual passenger interactions |
-| **Voice session state management** | Managing voice session lifecycle (start → active → transfer → complete) across stateless Lambda invocations required careful DynamoDB state tracking |
 
 ### Edge Cases to Watch
 
@@ -364,22 +309,9 @@ The UI has been redesigned for optimal user experience:
 | **KB keyword false positives** | Generic words like "policy" in non-policy contexts can trigger unnecessary KB routing |
 | **Concurrent voice + text sessions** | Same passenger using both channels simultaneously needs session deduplication |
 
-### Fallback Robustness
-
-| Service | Fallback Tested | Result |
-|---|---|---|
-| Bedrock Chat (OFF) | Deterministic option summary | ✅ Clean, useful response |
-| Knowledge Base (OFF) | `buildPolicyFallback()` hardcoded summaries | ✅ Accurate EU261/GDPR info |
-| Guardrails (OFF) | No filtering | ✅ System works; content unfiltered |
-| Comprehend (OFF) | Returns NEUTRAL, no PII | ✅ No false escalations |
-| Translate (OFF) | Returns English original | ✅ Graceful degradation |
-| Voice (OFF) | Returns "unavailable" message | ✅ Clean error handling |
-
 ---
 
 ## Future Work / What We Did Not Look At
-
-See [/docs/recommendations/next-steps.md](../recommendations/next-steps.md) for the full prioritized roadmap.
 
 **Key gaps between POC and PRD:**
 
@@ -394,8 +326,6 @@ See [/docs/recommendations/next-steps.md](../recommendations/next-steps.md) for 
 9. Multi-language notification templates
 10. Revenue optimization and dynamic pricing
 11. Expanded voice capabilities: full-duplex voice, real-time STT/TTS, expanded NLU
-
-> **Code Review Status:** Code was developed during a 1-day hackathon. Formal code review and security clearance are pending for production deployment. All code follows AWS Lambda best practices and uses the AWS SDK v3.
 
 ---
 
