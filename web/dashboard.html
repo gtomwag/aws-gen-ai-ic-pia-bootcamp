@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=1400" />
   <title>Support Team Dashboard</title>
   <link rel="stylesheet" href="css/tokens.css" />
   <link rel="stylesheet" href="css/dark.css" />
@@ -73,7 +73,7 @@
     /* ── KPI Cards Grid ────────────────────────────── */
     .kpi-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: repeat(4, 1fr);
       gap: 16px;
       margin-bottom: 24px;
     }
@@ -149,7 +149,7 @@
     /* ── Chart Cards Grid ──────────────────────────── */
     .chart-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      grid-template-columns: repeat(2, 1fr);
       gap: 16px;
       margin-bottom: 24px;
     }
@@ -295,16 +295,7 @@
       .tier-badge.General { color: #ccc; }
     }
 
-    /* ── Responsive ────────────────────────────────── */
-    @media (max-width: 768px) {
-      body { padding-top: 120px; }
-      .dash-nav-inner { flex-direction: column; align-items: stretch; }
-      .dash-title { text-align: center; font-size: 17px; }
-      .dash-controls { justify-content: center; }
-      .kpi-grid { grid-template-columns: 1fr; }
-      .chart-grid { grid-template-columns: 1fr; }
-      .reason-label { flex: 0 0 140px; font-size: 12px; }
-    }
+
 
     @media (prefers-reduced-motion: no-preference) {
       .kpi-card, .chart-card, .reasons-card {
